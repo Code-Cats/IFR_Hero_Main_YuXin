@@ -1,0 +1,7 @@
+*.o
+*.crf
+*.d
+*.iex
+DebugConfig/*
+Listings/*
+Objects/*
