@@ -7,7 +7,7 @@
 
   <Targets>
     <Target>
-      <TargetName>Target 1</TargetName>
+      <TargetName>IFR_Hero_Main_2018</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
       <TargetOption>
@@ -46,14 +46,14 @@
             <NotGenerated>0</NotGenerated>
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
-          <OutputDirectory>.\</OutputDirectory>
+          <OutputDirectory>.\Objects\</OutputDirectory>
           <OutputName>IFR_Hero_Main_2018</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
-          <CreateHexFile>0</CreateHexFile>
+          <CreateHexFile>1</CreateHexFile>
           <DebugInformation>1</DebugInformation>
           <BrowseInformation>1</BrowseInformation>
-          <ListingPath>.\</ListingPath>
+          <ListingPath>.\Listings\</ListingPath>
           <HexFormatSelection>1</HexFormatSelection>
           <Merge32K>0</Merge32K>
           <CreateBatchFile>0</CreateBatchFile>
@@ -147,7 +147,7 @@
             <RestoreSysVw>1</RestoreSysVw>
           </Target>
           <RunDebugAfterBuild>0</RunDebugAfterBuild>
-          <TargetSelection>1</TargetSelection>
+          <TargetSelection>6</TargetSelection>
           <SimDlls>
             <CpuDll></CpuDll>
             <CpuDllArguments></CpuDllArguments>
@@ -161,7 +161,7 @@
             <PeripheralDll></PeripheralDll>
             <PeripheralDllArguments></PeripheralDllArguments>
             <InitializationFile></InitializationFile>
-            <Driver>BIN\UL2CM3.DLL</Driver>
+            <Driver>Segger\JL2CM3.dll</Driver>
           </TargetDlls>
         </DebugOption>
         <Utilities>
@@ -293,17 +293,17 @@
                 <Size>0x0</Size>
               </XRAM>
               <OCR_RVCT1>
-                <Type>0</Type>
+                <Type>1</Type>
                 <StartAddress>0x0</StartAddress>
                 <Size>0x0</Size>
               </OCR_RVCT1>
               <OCR_RVCT2>
-                <Type>0</Type>
+                <Type>1</Type>
                 <StartAddress>0x0</StartAddress>
                 <Size>0x0</Size>
               </OCR_RVCT2>
               <OCR_RVCT3>
-                <Type>0</Type>
+                <Type>1</Type>
                 <StartAddress>0x0</StartAddress>
                 <Size>0x0</Size>
               </OCR_RVCT3>
@@ -313,7 +313,7 @@
                 <Size>0x100000</Size>
               </OCR_RVCT4>
               <OCR_RVCT5>
-                <Type>0</Type>
+                <Type>1</Type>
                 <StartAddress>0x0</StartAddress>
                 <Size>0x0</Size>
               </OCR_RVCT5>
@@ -363,9 +363,9 @@
             <useXO>0</useXO>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define></Define>
+              <Define>USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath></IncludePath>
+              <IncludePath>..\STM32MCU;..\ROBOT\ALGO;..\ROBOT\APP;..\ROBOT\BSP;..\ROBOT\MODULE\MPU60500;..\USER;..\ROBOT\ANALYSIS;..\ROBOT\MODULE\IMU_Uranus</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -406,7 +406,309 @@
       </TargetOption>
       <Groups>
         <Group>
-          <GroupName>Source Group 1</GroupName>
+          <GroupName>USER</GroupName>
+          <Files>
+            <File>
+              <FileName>main.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\main.c</FilePath>
+            </File>
+            <File>
+              <FileName>common_definition.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\USER\common_definition.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>BSP</GroupName>
+          <Files>
+            <File>
+              <FileName>bsp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\BSP\bsp.c</FilePath>
+            </File>
+            <File>
+              <FileName>can1.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\BSP\can1.c</FilePath>
+            </File>
+            <File>
+              <FileName>can2.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\BSP\can2.c</FilePath>
+            </File>
+            <File>
+              <FileName>gpio.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\BSP\gpio.c</FilePath>
+            </File>
+            <File>
+              <FileName>heartbeat.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\BSP\heartbeat.c</FilePath>
+            </File>
+            <File>
+              <FileName>pwm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\BSP\pwm.c</FilePath>
+            </File>
+            <File>
+              <FileName>usart1_remote.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\BSP\usart1_remote.c</FilePath>
+            </File>
+            <File>
+              <FileName>usart3_viceboard.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\BSP\usart3_viceboard.c</FilePath>
+            </File>
+            <File>
+              <FileName>usart6_wifi_Debug.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\BSP\usart6_wifi_Debug.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>APP</GroupName>
+          <Files>
+            <File>
+              <FileName>auto_lift.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\APP\auto_lift.c</FilePath>
+            </File>
+            <File>
+              <FileName>chassis.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\APP\chassis.c</FilePath>
+            </File>
+            <File>
+              <FileName>control.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\APP\control.c</FilePath>
+            </File>
+            <File>
+              <FileName>gpioctrl.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\APP\gpioctrl.c</FilePath>
+            </File>
+            <File>
+              <FileName>protect.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\APP\protect.c</FilePath>
+            </File>
+            <File>
+              <FileName>shoot.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\APP\shoot.c</FilePath>
+            </File>
+            <File>
+              <FileName>yun.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\APP\yun.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>ALGO</GroupName>
+          <Files>
+            <File>
+              <FileName>delay.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\ALGO\delay.c</FilePath>
+            </File>
+            <File>
+              <FileName>filter.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\ALGO\filter.c</FilePath>
+            </File>
+            <File>
+              <FileName>pid.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\ALGO\pid.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>MPU6050</GroupName>
+          <Files>
+            <File>
+              <FileName>mpu6050_it.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\MODULE\MPU60500\mpu6050_it.c</FilePath>
+            </File>
+            <File>
+              <FileName>mpu6050_process.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\MODULE\MPU60500\mpu6050_process.c</FilePath>
+            </File>
+            <File>
+              <FileName>mpu6050IIC.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\MODULE\MPU60500\mpu6050IIC.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>STM32MCU</GroupName>
+          <Files>
+            <File>
+              <FileName>misc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STM32MCU\misc.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_adc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STM32MCU\stm32f4xx_adc.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_can.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STM32MCU\stm32f4xx_can.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_crc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STM32MCU\stm32f4xx_crc.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_dma.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STM32MCU\stm32f4xx_dma.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_exti.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STM32MCU\stm32f4xx_exti.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_gpio.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STM32MCU\stm32f4xx_gpio.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_i2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STM32MCU\stm32f4xx_i2c.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_it.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STM32MCU\stm32f4xx_it.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_iwdg.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STM32MCU\stm32f4xx_iwdg.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_rcc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STM32MCU\stm32f4xx_rcc.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_spi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STM32MCU\stm32f4xx_spi.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_syscfg.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STM32MCU\stm32f4xx_syscfg.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_tim.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STM32MCU\stm32f4xx_tim.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_usart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STM32MCU\stm32f4xx_usart.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_wwdg.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STM32MCU\stm32f4xx_wwdg.c</FilePath>
+            </File>
+            <File>
+              <FileName>system_stm32f4xx.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STM32MCU\system_stm32f4xx.c</FilePath>
+            </File>
+            <File>
+              <FileName>startup_stm32f4xx.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\STM32MCU\startup_stm32f4xx.s</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>ANALYSIS</GroupName>
+          <Files>
+            <File>
+              <FileName>can1_analysis.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\ANALYSIS\can1_analysis.c</FilePath>
+            </File>
+            <File>
+              <FileName>can2_analysis.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\ANALYSIS\can2_analysis.c</FilePath>
+            </File>
+            <File>
+              <FileName>remote_analysis.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\ANALYSIS\remote_analysis.c</FilePath>
+            </File>
+            <File>
+              <FileName>usart6_wifi_Debug_OSC.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\ANALYSIS\usart6_wifi_Debug_OSC.c</FilePath>
+            </File>
+            <File>
+              <FileName>viceboard_analysis.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\ANALYSIS\viceboard_analysis.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>IMU_URANUS</GroupName>
+          <Files>
+            <File>
+              <FileName>dma_uart4.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\MODULE\IMU_Uranus\dma_uart4.c</FilePath>
+            </File>
+            <File>
+              <FileName>imu_data_decode.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\MODULE\IMU_Uranus\imu_data_decode.c</FilePath>
+            </File>
+            <File>
+              <FileName>packet.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\MODULE\IMU_Uranus\packet.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart4.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\MODULE\IMU_Uranus\uart4.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>REDEME</GroupName>
+          <Files>
+            <File>
+              <FileName>readme.txt</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\readme.txt</FilePath>
+            </File>
+          </Files>
         </Group>
       </Groups>
     </Target>

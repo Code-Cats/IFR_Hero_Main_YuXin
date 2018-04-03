@@ -544,26 +544,30 @@ s16 t_pitch_Send=0;
 s16 t_pitch_offset=0;
 int16_t t_pitch_outsend=0;
 
+u32 t_send_count=0;
 void Motor_Send(void)
 {
 	switch (GetWorkState())	//2018.3.15
 	{	
 		case CHECK_STATE:	//自检模式
 		{	//板载外设初始化后便进入自检模式 //此时外设刚刚开启，需等待一段时间全局自检未检测到异常（2-3个自检触发周期以上），又因为时间计算起点为定时器启动点，故无需进行时间差记录
-			CAN_Yun_And_Shoot_SendMsg(0,0,0);	//CAN2	//yaw,pitch
-			CAN_Chassis_SendMsg(0,0,0,0);
-			CAN_Lift_SendMsg(0,0,0,0);
+			CAN1_Yun_SendMsg(0,0);	//CAN2	//yaw,pitch
+			CAN2_Chassis_SendMsg(0,0,0,0);
+			CAN1_Lift_SendMsg(0,0,0,0);
+			CAN2_Shoot_SendMsg(0,0);//下拨弹、上拨弹
 			break;
 		}
 		case PREPARE_STATE:	//预备模式
 		{	//等待车身状态稳定，并设置初值
-			CAN_Yun_And_Shoot_SendMsg(yunMotorData.yaw_output+Yaw_output_offset(yunMotorData.yaw_fdbP),yunMotorData.pitch_output+Pitch_output_offset(yunMotorData.pitch_tarP),0);	//CAN2-1000
-			CAN_Chassis_SendMsg(0,0,0,0);
-			CAN_Lift_SendMsg(0,0,0,0);
+			CAN1_Yun_SendMsg(yunMotorData.yaw_output+Yaw_output_offset(yunMotorData.yaw_fdbP),yunMotorData.pitch_output+Pitch_output_offset(yunMotorData.pitch_tarP));	//CAN2-1000
+			CAN2_Chassis_SendMsg(0,0,0,0);
+			CAN1_Lift_SendMsg(0,0,0,0);
+			CAN2_Shoot_SendMsg(0,0);//下拨弹、上拨弹
 			break;
 		}
 		case CALI_STATE:	//标定模式
 		{
+			t_send_count++;
 			SetFrictionWheelSpeed(FRICTION_INIT);
 			
 			
@@ -574,63 +578,71 @@ void Motor_Send(void)
 //		Entirety_PID(&lift_Data,cali_send);  	//整体PID补偿
 			Lift_Cali_GYRO_Compensate(cali_send);	//陀螺仪补偿.存在问题3.14
 			
-			CAN_Yun_And_Shoot_SendMsg(yunMotorData.yaw_output+Yaw_output_offset(yunMotorData.yaw_fdbP),yunMotorData.pitch_output+Pitch_output_offset(yunMotorData.pitch_tarP),0);	//CAN2-1000
-			CAN_Chassis_SendMsg(0,0,0,0);
+			CAN1_Yun_SendMsg(yunMotorData.yaw_output+Yaw_output_offset(yunMotorData.yaw_fdbP),yunMotorData.pitch_output+Pitch_output_offset(yunMotorData.pitch_tarP));	//CAN2-1000
+			CAN2_Chassis_SendMsg(0,0,0,0);
 //		CAN_Lift_SendMsg(0,0,0,0);
-			CAN_Lift_SendMsg((s16)cali_send[LF],(s16)cali_send[RF],(s16)cali_send[LB],(s16)cali_send[RB]);
+			CAN1_Lift_SendMsg((s16)cali_send[LF],(s16)cali_send[RF],(s16)cali_send[LB],(s16)cali_send[RB]);
+			CAN2_Shoot_SendMsg(0,0);//下拨弹、上拨弹
 			break;
 		}
 		case NORMAL_STATE:	//正常操作模式
 		{
-			CAN_Yun_And_Shoot_SendMsg(yunMotorData.yaw_output+Yaw_output_offset(yunMotorData.yaw_fdbP),yunMotorData.pitch_output+Pitch_output_offset(yunMotorData.pitch_tarP),(s16)shoot_Motor_Data.output);	//CAN2-1000
+			CAN1_Yun_SendMsg(yunMotorData.yaw_output+Yaw_output_offset(yunMotorData.yaw_fdbP),yunMotorData.pitch_output+Pitch_output_offset(yunMotorData.pitch_tarP));	//CAN2-1000
 //		CAN_Yun_SendMsg(0,0);
 //		CAN_Chassis_SendMsg((s16)remote_tem,(s16)remote_tem,(s16)remote_tem,(s16)remote_tem);
-			CAN_Chassis_SendMsg(chassis_Data.lf_wheel_output,chassis_Data.rf_wheel_output,chassis_Data.lb_wheel_output,chassis_Data.rb_wheel_output);
+			CAN2_Chassis_SendMsg(chassis_Data.lf_wheel_output,chassis_Data.rf_wheel_output,chassis_Data.lb_wheel_output,chassis_Data.rb_wheel_output);
 //			CAN_Chassis_SendMsg(0,0,0,0);
 //    CAN_Lift_SendMsg((s16)lift_tem,(s16)lift_tem,(s16)lift_tem,(s16)lift_tem);
-			CAN_Lift_SendMsg((s16)lift_Data.lf_lift_output,(s16)lift_Data.rf_lift_output,(s16)lift_Data.lb_lift_output,(s16)lift_Data.rb_lift_output);
+			CAN1_Lift_SendMsg((s16)lift_Data.lf_lift_output,(s16)lift_Data.rf_lift_output,(s16)lift_Data.lb_lift_output,(s16)lift_Data.rb_lift_output);
+			CAN2_Shoot_SendMsg((s16)shoot_Motor_Data.output,0);	//下拨弹、上拨弹
 			break;
 		}
 		case ERROR_STATE:	//错误模式
 		{
-			CAN_Yun_And_Shoot_SendMsg(0,0,0);	//CAN2	//yaw,pitch
-			CAN_Chassis_SendMsg(0,0,0,0);
-			CAN_Lift_SendMsg(0,0,0,0);
+			CAN1_Yun_SendMsg(0,0);	//CAN2	//yaw,pitch
+			CAN2_Chassis_SendMsg(0,0,0,0);
+			CAN1_Lift_SendMsg(0,0,0,0);
+			CAN2_Shoot_SendMsg(0,0);//下拨弹、上拨弹
 			break;
 		}
 		case STOP_STATE:	//停止状态
 		{
-			CAN_Yun_And_Shoot_SendMsg(0,0,0);	//CAN2	//yaw,pitch
-			CAN_Chassis_SendMsg(0,0,0,0);
-			CAN_Lift_SendMsg(0,0,0,0);
+			CAN1_Yun_SendMsg(0,0);	//CAN2	//yaw,pitch
+			CAN2_Chassis_SendMsg(0,0,0,0);
+			CAN1_Lift_SendMsg(0,0,0,0);
+			CAN2_Shoot_SendMsg(0,0);//下拨弹、上拨弹
 			break;
 		}
 		case PROTECT_STATE:	//自我保护模式
 		{
-			CAN_Yun_And_Shoot_SendMsg(0,0,0);	//CAN2	//yaw,pitch
-			CAN_Chassis_SendMsg(0,0,0,0);
-			CAN_Lift_SendMsg(0,0,0,0);
+			CAN1_Yun_SendMsg(0,0);	//CAN2	//yaw,pitch
+			CAN2_Chassis_SendMsg(0,0,0,0);
+			CAN1_Lift_SendMsg(0,0,0,0);
+			CAN2_Shoot_SendMsg(0,0);//下拨弹、上拨弹
 			break;
 		}
 		case ASCEND_STATE:	//自动上岛模式
 		{
-			CAN_Yun_And_Shoot_SendMsg(yunMotorData.yaw_output+Yaw_output_offset(yunMotorData.yaw_fdbP),yunMotorData.pitch_output+Pitch_output_offset(yunMotorData.pitch_tarP),0);	//CAN2-1000
-			CAN_Chassis_SendMsg(chassis_Data.lf_wheel_output,chassis_Data.rf_wheel_output,chassis_Data.lb_wheel_output,chassis_Data.rb_wheel_output);
-			CAN_Lift_SendMsg((s16)lift_Data.lf_lift_output,(s16)lift_Data.rf_lift_output,(s16)lift_Data.lb_lift_output,(s16)lift_Data.rb_lift_output);
+			CAN1_Yun_SendMsg(yunMotorData.yaw_output+Yaw_output_offset(yunMotorData.yaw_fdbP),yunMotorData.pitch_output+Pitch_output_offset(yunMotorData.pitch_tarP));	//CAN2-1000
+			CAN2_Chassis_SendMsg(chassis_Data.lf_wheel_output,chassis_Data.rf_wheel_output,chassis_Data.lb_wheel_output,chassis_Data.rb_wheel_output);
+			CAN1_Lift_SendMsg((s16)lift_Data.lf_lift_output,(s16)lift_Data.rf_lift_output,(s16)lift_Data.lb_lift_output,(s16)lift_Data.rb_lift_output);
+			CAN2_Shoot_SendMsg(0,0);//下拨弹、上拨弹
 			break;
 		}
 		case DESCEND_STATE:	//自动下岛模式
 		{
-			CAN_Yun_And_Shoot_SendMsg(yunMotorData.yaw_output+Yaw_output_offset(yunMotorData.yaw_fdbP),yunMotorData.pitch_output+Pitch_output_offset(yunMotorData.pitch_tarP),0);	//CAN2-1000
-			CAN_Chassis_SendMsg(chassis_Data.lf_wheel_output,chassis_Data.rf_wheel_output,chassis_Data.lb_wheel_output,chassis_Data.rb_wheel_output);
-			CAN_Lift_SendMsg((s16)lift_Data.lf_lift_output,(s16)lift_Data.rf_lift_output,(s16)lift_Data.lb_lift_output,(s16)lift_Data.rb_lift_output);
+			CAN1_Yun_SendMsg(yunMotorData.yaw_output+Yaw_output_offset(yunMotorData.yaw_fdbP),yunMotorData.pitch_output+Pitch_output_offset(yunMotorData.pitch_tarP));	//CAN2-1000
+			CAN2_Chassis_SendMsg(chassis_Data.lf_wheel_output,chassis_Data.rf_wheel_output,chassis_Data.lb_wheel_output,chassis_Data.rb_wheel_output);
+			CAN1_Lift_SendMsg((s16)lift_Data.lf_lift_output,(s16)lift_Data.rf_lift_output,(s16)lift_Data.lb_lift_output,(s16)lift_Data.rb_lift_output);
+			CAN2_Shoot_SendMsg(0,0);//下拨弹、上拨弹
 			break;
 		}
 		default:
 		{
-			CAN_Yun_And_Shoot_SendMsg(0,0,0);	//CAN2	//yaw,pitch
-			CAN_Chassis_SendMsg(0,0,0,0);
-			CAN_Lift_SendMsg(0,0,0,0);
+			CAN1_Yun_SendMsg(0,0);	//CAN2	//yaw,pitch
+			CAN2_Chassis_SendMsg(0,0,0,0);
+			CAN1_Lift_SendMsg(0,0,0,0);
+			CAN2_Shoot_SendMsg(0,0);//下拨弹、上拨弹
 			break;
 		}
 	}
