@@ -48,7 +48,7 @@ void Yun_Control_External_Solution(void)	//外置反馈方案
 				yunMotorData.yaw_tarP=yunMotorData.yaw_tarP<-1800?yunMotorData.yaw_tarP+3600:yunMotorData.yaw_tarP;	//过零点
 			}
 			
-			yunMotorData.pitch_tarP=(int32_t)(-(RC_Ctl.rc.ch3-1024)*430.0/660.0)+PITCH_INIT+50;	//-50是因为陀螺仪水平时云台上扬
+			yunMotorData.pitch_tarP=(int32_t)(-(RC_Ctl.rc.ch3-1024)*430.0/660.0)+PITCH_INIT;	//-50是因为陀螺仪水平时云台上扬
 		}
 	}
 	
@@ -209,19 +209,19 @@ s32 Yaw_output_offset(s32 yaw_fbdP)	//克服云台yaw轴非线性力及非对称性的补偿 //虽
 s16 Pitch_output_offset(s32 pitch_tarP)	//克服云台pitch轴非线性力及非对称性的补偿	//因为云台pitch阻尼曲线满足收敛（在外部激励情况下只存在一个最小值），故采用tarP作为补偿参照可以提高间接反应速度
 {
 	s16 offset=0;
-	int i=0;
-	
-	pitch_tarP=pitch_tarP>PITCH_OFFSET_VALUE[0][0]?PITCH_OFFSET_VALUE[0][0]:pitch_tarP;
-	pitch_tarP=pitch_tarP<PITCH_OFFSET_VALUE[PITCH_OFFSET_COUNT-1][0]?PITCH_OFFSET_VALUE[PITCH_OFFSET_COUNT-1][0]:pitch_tarP;
-	
-	for(i=0;i<PITCH_OFFSET_COUNT;i++)	//遍历数组寻找位置
-	{
-		if(pitch_tarP>=PITCH_OFFSET_VALUE[i][0]) break;
-	}
-	
-	i=i>PITCH_OFFSET_COUNT-2?PITCH_OFFSET_COUNT-2:i;	//限制到倒数第二个元素的位置，以免下一步运算数组越界
-	
-	offset=PITCH_OFFSET_VALUE[i][1]+(PITCH_OFFSET_VALUE[i+1][1]-PITCH_OFFSET_VALUE[i][1])*(PITCH_OFFSET_VALUE[i][0]-pitch_tarP)/(PITCH_OFFSET_VALUE[i][0]-PITCH_OFFSET_VALUE[i+1][0]);
+//	int i=0;
+//	
+//	pitch_tarP=pitch_tarP>PITCH_OFFSET_VALUE[0][0]?PITCH_OFFSET_VALUE[0][0]:pitch_tarP;
+//	pitch_tarP=pitch_tarP<PITCH_OFFSET_VALUE[PITCH_OFFSET_COUNT-1][0]?PITCH_OFFSET_VALUE[PITCH_OFFSET_COUNT-1][0]:pitch_tarP;
+//	
+//	for(i=0;i<PITCH_OFFSET_COUNT;i++)	//遍历数组寻找位置
+//	{
+//		if(pitch_tarP>=PITCH_OFFSET_VALUE[i][0]) break;
+//	}
+//	
+//	i=i>PITCH_OFFSET_COUNT-2?PITCH_OFFSET_COUNT-2:i;	//限制到倒数第二个元素的位置，以免下一步运算数组越界
+//	
+//	offset=PITCH_OFFSET_VALUE[i][1]+(PITCH_OFFSET_VALUE[i+1][1]-PITCH_OFFSET_VALUE[i][1])*(PITCH_OFFSET_VALUE[i][0]-pitch_tarP)/(PITCH_OFFSET_VALUE[i][0]-PITCH_OFFSET_VALUE[i+1][0]);
 	return offset;
 }
 

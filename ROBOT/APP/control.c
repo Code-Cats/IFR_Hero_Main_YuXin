@@ -17,8 +17,8 @@ extern GYRO_DATA Gyro_Data;
 extern YUN_MOTOR_DATA 	yunMotorData;
 extern CHASSIS_DATA chassis_Data;
 
-extern SHOOT_DATA shoot_Data;
-extern SHOOT_MOTOR_DATA shoot_Motor_Data;
+extern SHOOT_DATA shoot_Data_Down;
+extern SHOOT_MOTOR_DATA shoot_Motor_Data_Down;
 
 
 extern s16 Chassis_Vx;
@@ -62,7 +62,7 @@ void Control_Task(void)	//2ms
 				{
 					SetWorkState(PREPARE_STATE);	//此步意味自检通过，一切硬件模块正常
 					//数据初始化↓
-					yunMotorData.pitch_tarP=PITCH_INIT+50;	//-50是因为陀螺仪水平时云台上扬	//陀螺仪正方向云台向下
+					yunMotorData.pitch_tarP=PITCH_INIT;	//-50是因为陀螺仪水平时云台上扬	//陀螺仪正方向云台向下
 					yunMotorData.yaw_tarP=(s32)(Gyro_Data.angle[2]*10+(YAW_INIT-yunMotorData.yaw_fdbP)*3600/8192);	//反馈放大10倍并将目标位置置为中点
 				}
 			}
@@ -75,6 +75,7 @@ void Control_Task(void)	//2ms
 			{
 				SetWorkState(CALI_STATE);
 			}
+			Shoot_Task();	//临时调试
 			break;
 		}
 		case CALI_STATE:	//标定模式
@@ -85,6 +86,7 @@ void Control_Task(void)	//2ms
 			}
 			Yun_Task();	//开启云台处理
 			Lift_Task();	//开启升降
+			Shoot_Task();	//临时调试
 			break;
 		}
 		case NORMAL_STATE:	//正常操作模式
@@ -175,7 +177,7 @@ void Work_State_Change(void)
 			
 			if(RC_Ctl.rc.switch_left==RC_SWITCH_DOWN&&Switch_Right_Last==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_DOWN)
 			{
-				SetWorkState(ASCEND_STATE);
+//				SetWorkState(ASCEND_STATE);
 			}
 			else if(RC_Ctl.rc.switch_left==RC_SWITCH_DOWN&&Switch_Right_Last==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_UP)
 			{
@@ -554,7 +556,8 @@ void Motor_Send(void)
 			CAN1_Yun_SendMsg(0,0);	//CAN2	//yaw,pitch
 			CAN2_Chassis_SendMsg(0,0,0,0);
 			CAN1_Lift_SendMsg(0,0,0,0);
-			CAN2_Shoot_SendMsg(0,0);//下拨弹、上拨弹
+			//CAN2_Shoot_SendMsg(0,0);//下拨弹、上拨弹
+			CAN2_Shoot_SendMsg((s16)shoot_Motor_Data_Down.output,0);	//下拨弹、上拨弹
 			break;
 		}
 		case PREPARE_STATE:	//预备模式
@@ -562,7 +565,8 @@ void Motor_Send(void)
 			CAN1_Yun_SendMsg(yunMotorData.yaw_output+Yaw_output_offset(yunMotorData.yaw_fdbP),yunMotorData.pitch_output+Pitch_output_offset(yunMotorData.pitch_tarP));	//CAN2-1000
 			CAN2_Chassis_SendMsg(0,0,0,0);
 			CAN1_Lift_SendMsg(0,0,0,0);
-			CAN2_Shoot_SendMsg(0,0);//下拨弹、上拨弹
+			//CAN2_Shoot_SendMsg(0,0);//下拨弹、上拨弹
+			CAN2_Shoot_SendMsg((s16)shoot_Motor_Data_Down.output,0);	//下拨弹、上拨弹
 			break;
 		}
 		case CALI_STATE:	//标定模式
@@ -580,9 +584,10 @@ void Motor_Send(void)
 			
 			CAN1_Yun_SendMsg(yunMotorData.yaw_output+Yaw_output_offset(yunMotorData.yaw_fdbP),yunMotorData.pitch_output+Pitch_output_offset(yunMotorData.pitch_tarP));	//CAN2-1000
 			CAN2_Chassis_SendMsg(0,0,0,0);
-//		CAN_Lift_SendMsg(0,0,0,0);
+//		CAN1_Lift_SendMsg(0,0,0,0);
 			CAN1_Lift_SendMsg((s16)cali_send[LF],(s16)cali_send[RF],(s16)cali_send[LB],(s16)cali_send[RB]);
-			CAN2_Shoot_SendMsg(0,0);//下拨弹、上拨弹
+//			CAN2_Shoot_SendMsg(0,0);//下拨弹、上拨弹
+			CAN2_Shoot_SendMsg((s16)shoot_Motor_Data_Down.output,0);	//下拨弹、上拨弹
 			break;
 		}
 		case NORMAL_STATE:	//正常操作模式
@@ -594,7 +599,7 @@ void Motor_Send(void)
 //			CAN_Chassis_SendMsg(0,0,0,0);
 //    CAN_Lift_SendMsg((s16)lift_tem,(s16)lift_tem,(s16)lift_tem,(s16)lift_tem);
 			CAN1_Lift_SendMsg((s16)lift_Data.lf_lift_output,(s16)lift_Data.rf_lift_output,(s16)lift_Data.lb_lift_output,(s16)lift_Data.rb_lift_output);
-			CAN2_Shoot_SendMsg((s16)shoot_Motor_Data.output,0);	//下拨弹、上拨弹
+			CAN2_Shoot_SendMsg((s16)shoot_Motor_Data_Down.output,0);	//下拨弹、上拨弹
 			break;
 		}
 		case ERROR_STATE:	//错误模式
@@ -767,7 +772,7 @@ void Chassis_Attitude_Angle_Convert(void)	//综合得出底盘姿态
 	float deviation_pitch=PITCH_GYRO_INIT-yunMotorData.pitch_fdbP;	//对于底盘来说，云台中值即是底盘在云台坐标系上的位置
 	float deviation_yaw=YAW_INIT-yunMotorData.yaw_fdbP;
 	//对yaw轴进行限制，标准过零（-180——+180）
-	Chassis_GYRO[PITCH]=-Gyro_Data.angle[PITCH]-deviation_pitch*360.0f/8192+4;	//因为云台电机位置反馈正方向与陀螺仪正方向相反pitch？-2
+	Chassis_GYRO[PITCH]=-Gyro_Data.angle[PITCH]-deviation_pitch*360.0f/8192;	//因为云台电机位置反馈正方向与陀螺仪正方向相反pitch？-2
 	Chassis_GYRO[ROLL]=Gyro_Data.angle[ROLL]+2;	//roll
 	Chassis_GYRO[YAW]=Gyro_Data.angle[YAW]+deviation_yaw*360.0f/8192;	//因为云台电机位置反馈正方向与陀螺仪正方向相同
  

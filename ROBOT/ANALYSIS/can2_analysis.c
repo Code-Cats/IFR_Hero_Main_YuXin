@@ -3,8 +3,8 @@
 LIFT_POSITION_ENCODER chassis_position_encoder[4]={0};
 
 extern CHASSIS_DATA chassis_Data;
-extern SHOOT_DATA shoot_Data;
-extern SHOOT_MOTOR_DATA shoot_Motor_Data;
+extern SHOOT_DATA shoot_Data_Down;
+extern SHOOT_MOTOR_DATA shoot_Motor_Data_Down;
 
 /******************************************
 函数名：CAN2_Feedback_Analysis
@@ -46,7 +46,7 @@ void CAN2_Feedback_Analysis(CanRxMsg *rx_message)
 			}
 			case 0x205:	//shoot 下
 			{
-			  Shoot_Feedback_Deal(&shoot_Motor_Data,rx_message);	//临时用
+			  Shoot_Feedback_Deal(&shoot_Data_Down,&shoot_Motor_Data_Down,rx_message);	//临时用
 			  break;
 			}
 			 default:

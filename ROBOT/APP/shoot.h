@@ -6,20 +6,20 @@
 ////原参数：20 0 0 10890 12000 12000
 ////速度环：1 0.01 0 12000 8000 4900
 //位置反馈变小，位置环计算参数变大，输入限制变小，输出不表，速度环不变
-#define SHOOT_POSITION_PID_KP            30//120
-#define SHOOT_POSITION_PID_KI            0.0f
-#define SHOOT_POSITION_PID_KD            0
+#define SHOOT_POSITION_PID_KP            80//120
+#define SHOOT_POSITION_PID_KI            0.01f
+#define SHOOT_POSITION_PID_KD            0.01	//0
 #define SHOOT_POSITION_PID_MER					10000
 #define SHOOT_POSITION_PID_I_MAX				0.0f
 #define SHOOT_POSITION_PID_MAXIN        60000
-#define SHOOT_POSITION_MAXOUT           4000	//1200
+#define SHOOT_POSITION_MAXOUT           12000	//12000
 
-#define SHOOT_SPEED_PID_KP           0.32
-#define SHOOT_SPEED_PID_KI           0.002f
+#define SHOOT_SPEED_PID_KP           2	//0.32
+#define SHOOT_SPEED_PID_KI           0.01f	//0.002
 #define SHOOT_SPEED_PID_KD           0.0f 
-#define SHOOT_SPEED_PID_MER					4000
-#define SHOOT_SPEED_PID_I_MAX 			2000.0f/SHOOT_SPEED_PID_KI//3000.0f/SHOOT_SPEED_PID_KI
-#define SHOOT_SPEED_PID_MAXIN       4000
+#define SHOOT_SPEED_PID_MER					7000	//4000
+#define SHOOT_SPEED_PID_I_MAX 			3000.0f/SHOOT_SPEED_PID_KI//3000.0f/SHOOT_SPEED_PID_KI
+#define SHOOT_SPEED_PID_MAXIN       12000
 #define SHOOT_SPEED_MAXOUT      	  8000
 
 
@@ -117,8 +117,8 @@ typedef struct
 
 void Shoot_Instruction(void);	//发弹指令模块
 void Shoot_Task(void); 
-void Shoot_Feedback_Deal(SHOOT_MOTOR_DATA * shoot_motor_data,CanRxMsg *rx_message);
-void Prevent_Jam(void);	//防卡弹程序	//同时包含防鸡蛋的功能	//放在tarP计算出之后
+void Shoot_Feedback_Deal(SHOOT_DATA *shoot_data,SHOOT_MOTOR_DATA *shoot_motor_data,CanRxMsg *msg);
+void Prevent_Jam(SHOOT_DATA * shoot_data,SHOOT_MOTOR_DATA * shoot_motor_Data);	//防卡弹程序	//同时包含防鸡蛋的功能	//放在tarP计算出之后
 void Shoot_Frequency_Limit(int* ferquency,u16 rate,u16 heat);	//m/s为单位
 
 

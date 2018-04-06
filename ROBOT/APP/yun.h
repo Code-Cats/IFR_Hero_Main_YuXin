@@ -4,9 +4,9 @@
 
 #include "main.h"
 
-#define YAW_INIT             4900
-#define PITCH_INIT           6000	//2018.3.3	余鑫6000
-#define PITCH_GYRO_INIT 5281	//云台陀螺仪零点对应电机位置，陀螺仪更改位置需要重调
+#define YAW_INIT             900//4900
+#define PITCH_INIT           5600//5900//6000	//2018.3.3	余鑫6000
+#define PITCH_GYRO_INIT 5600	//云台陀螺仪零点对应电机位置，陀螺仪更改位置需要重调
 
 #define 		Yaw_MAX 			   YAW_INIT+1000
 #define 		Yaw_MIN				   YAW_INIT-1000
@@ -37,7 +37,7 @@
 #define PITCH_POSITION_PID_I 0
 #define PITCH_POSITION_PID_D 1	//1.2
 #define PITCH_POSITION_PID_MER 250	//最大偏差输入
-#define PITCH_POSITION_PID_MAXINPUT 6700	//最大期望输入
+#define PITCH_POSITION_PID_MAXINPUT 8190	//最大期望输入
 #define PITCH_POSITION_PID_MAXOUTPUT 250	//最大输出
 #define PITCH_POSITION_PID_I_MAX 0	//I累加限制
 #define PITCH_POSITION_PID_DEAD 1	//计算死区3
