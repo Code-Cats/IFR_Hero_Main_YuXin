@@ -30,8 +30,20 @@ void Remote_Task(void)
 //////		Chassis_Vx=RC_Ctl.rc.ch1-1024;
 		
 //		Chassis_Vw=RC_Ctl.rc.ch2-1024;
-		Chassis_Vw=PID_General(YAW_INIT,yunMotorData.yaw_fdbP,&PID_Chassis_Follow);
-		Chassis_Vw=chassis_Vw_filter(Chassis_Vw);
+		if(YAW_INIT-yunMotorData.yaw_fdbP>8192/2)
+		{
+			Chassis_Vw=PID_General(YAW_INIT,yunMotorData.yaw_fdbP+8192,&PID_Chassis_Follow);	//正常状况下
+		}
+		else if(YAW_INIT-yunMotorData.yaw_fdbP<-8192/2)
+		{
+			Chassis_Vw=PID_General(YAW_INIT,yunMotorData.yaw_fdbP-8192,&PID_Chassis_Follow);	//正常状况下
+		}
+		else
+		{
+			Chassis_Vw=PID_General(YAW_INIT,yunMotorData.yaw_fdbP,&PID_Chassis_Follow);	//正常状况下
+		}
+		
+		Chassis_Vw=chassis_Vw_filter(Chassis_Vw);	//对速度一阶滤波
 ////		Chassis_Vw=PID_Robust(YAW_INIT,yunMotorData.yaw_fdbP,-yunMotorData.yaw_fdbV,&PID_Chassis_Follow);	//云台速度无/错误反馈
 //		Chassis_Vw=(s16)(FirstOrder_General((YAW_INIT-yunMotorData.yaw_fdbP),&Yaw_Follow_Filter)*0.43f);
 //		Chassis_Vw=(s16)((YAW_INIT-yunMotorData.yaw_fdbP)*0.6f);	//YUN_INIT为目标位置，故为YAW_INIT-
