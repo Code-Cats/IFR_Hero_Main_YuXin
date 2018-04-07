@@ -21,34 +21,40 @@ void CAN1_Feedback_Analysis(CanRxMsg *rx_message)
 			 {
 				 Speed_Data_deal(&lift_Data.lf_lift_fdbV,rx_message);
 				 Position_Data_deal(&lift_Data.lf_lift_fdbP,&lift_position_encoder[LF],rx_message);
-				  break;
+				 LostCountFeed(&Error_Check.count[LOST_LIFT1]);
+				 break;
 			 }
 			 case 0x202:
 			 {
 				 Speed_Data_deal(&lift_Data.rf_lift_fdbV,rx_message);
 				 Position_Data_deal(&lift_Data.rf_lift_fdbP,&lift_position_encoder[RF],rx_message);
-				  break;
+				 LostCountFeed(&Error_Check.count[LOST_LIFT2]);
+				 break;
 			 }
 			 case 0x203:
 			 {
 				 Speed_Data_deal(&lift_Data.lb_lift_fdbV,rx_message);
 				 Position_Data_deal(&lift_Data.lb_lift_fdbP,&lift_position_encoder[LB],rx_message);
-				  break;
+				 LostCountFeed(&Error_Check.count[LOST_LIFT3]);
+				 break;
 			 }
 			 case 0x204:
 			 {
 				 Speed_Data_deal(&lift_Data.rb_lift_fdbV,rx_message);
 				 Position_Data_deal(&lift_Data.rb_lift_fdbP,&lift_position_encoder[RB],rx_message);
-				  break;
+				 LostCountFeed(&Error_Check.count[LOST_LIFT4]);
+				 break;
 			 }
 			 case 0x205:	//yaw
 			 {
 				 yunMotorData.yaw_fdbP=((rx_message->Data[0]<<8)|rx_message->Data[1])&0xffff;  //机械角度
-				  break;
+				 LostCountFeed(&Error_Check.count[LOST_YAW]);
+				 break;
 			 }case 0x206:	//pitch
 			 {
 				 yunMotorData.pitch_fdbP=((rx_message->Data[0]<<8)|rx_message->Data[1])&0xffff;  //机械角度
-				  break;
+				 LostCountFeed(&Error_Check.count[LOST_PITCH]);
+				 break;
 			 }
 			default:
 			break;

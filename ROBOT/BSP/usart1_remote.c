@@ -92,6 +92,7 @@ void DMA2_Stream2_IRQHandler(void)
 			
 			//Êý¾Ý½âÂë
 		RemoteData_analysis(sbus_rx_buffer);
+		LostCountFeed(&Error_Check.count[LOST_DBUS]);
 		}
 }
 

@@ -21,7 +21,7 @@ void LostCountAdd(u16* lostcount)
 
 void LostCountFeed(u16* lostcount)
 {
-	lostcount=0;
+	*lostcount=0;
 }
 
 u8 LostCountCheck(u16 lostcount,u8* statu,const u16 cycle)
@@ -33,3 +33,13 @@ u8 LostCountCheck(u16 lostcount,u8* statu,const u16 cycle)
 	return *statu;
 }
 
+
+void Check_Task(void)
+{
+	for(int i=0;i<LOST_TYPE_NUM;i++)
+	{
+		LostCountAdd(&Error_Check.count[i]);
+		LostCountCheck(Error_Check.count[i],&Error_Check.statu[i],Error_Check.cycle[i]);
+	}
+	
+}

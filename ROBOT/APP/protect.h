@@ -18,8 +18,8 @@ enum LOST_TYPES
 	LOST_LIFT2,
 	LOST_LIFT3,
 	LOST_LIFT4,
-	LOST_SM1,
-	LOST_SM2,
+	LOST_SM_UP,
+	LOST_SM_DOWN,
 	LOST_TYPE_NUM,
 };
 
@@ -35,7 +35,7 @@ extern Error_check_t Error_Check;
 
 #define LOST_CYCLE \
 {\
-	5,\
+	17,\
 	17,\
 	4,\
 	10,\
@@ -56,5 +56,9 @@ extern Error_check_t Error_Check;
 void LostCountAdd(u16* lostcount);
 void LostCountFeed(u16* lostcoun);
 	u8 LostCountCheck(u16 lostcoun,u8* statu,const u16 cycle);
+
+void Check_Task(void);	//control.c
+
+extern Error_check_t Error_Check;
 
 #endif

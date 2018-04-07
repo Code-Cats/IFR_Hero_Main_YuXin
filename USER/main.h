@@ -20,7 +20,7 @@
 #include "remote_analysis.h"
 #include "usart6_wifi_Debug_OSC.h"
 #include "chassis.h"
-//#include "protect.h"
+#include "protect.h"
 #include "shoot.h"
 
 #include "mpu6050IIC.h"

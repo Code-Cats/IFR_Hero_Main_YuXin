@@ -42,6 +42,8 @@ void Control_Task(void)	//2ms
 
 	Lift_Time_Gauge(&t_lift_time_start);
 	
+	Check_Task();
+	
 	if(time_1ms_count%50==0)
 	{
 		Debug_Send_OSC();
@@ -581,8 +583,9 @@ void Motor_Send(void)
 			Cali_Output_Limit(lift_Data.rb_lift_output,&cali_send[RB]);
 //		Entirety_PID(&lift_Data,cali_send);  	//整体PID补偿
 			Lift_Cali_GYRO_Compensate(cali_send);	//陀螺仪补偿.存在问题3.14
-			
-			CAN1_Yun_SendMsg(yunMotorData.yaw_output+Yaw_output_offset(yunMotorData.yaw_fdbP),yunMotorData.pitch_output+Pitch_output_offset(yunMotorData.pitch_tarP));	//CAN2-1000
+//			CAN1_Yun_SendMsg(yunMotorData.yaw_output+Yaw_output_offset(yunMotorData.yaw_fdbP),t_pitch_Send);	//CAN2-1000
+//			CAN1_Yun_SendMsg(yunMotorData.yaw_output+Yaw_output_offset(yunMotorData.yaw_fdbP),yunMotorData.pitch_output+Pitch_output_offset(yunMotorData.pitch_tarP));	//CAN2-1000	//加入反馈补偿
+			CAN1_Yun_SendMsg(yunMotorData.yaw_output,yunMotorData.pitch_output);	//CAN2-1000	//取消反馈补偿
 			CAN2_Chassis_SendMsg(0,0,0,0);
 //		CAN1_Lift_SendMsg(0,0,0,0);
 			CAN1_Lift_SendMsg((s16)cali_send[LF],(s16)cali_send[RF],(s16)cali_send[LB],(s16)cali_send[RB]);

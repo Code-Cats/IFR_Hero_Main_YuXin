@@ -24,29 +24,34 @@ void CAN2_Feedback_Analysis(CanRxMsg *rx_message)
 			{
 				Speed_Data_deal(&chassis_Data.lf_wheel_fdbV,rx_message);
 				Position_Data_deal(&chassis_Data.lf_wheel_fdbP,&chassis_position_encoder[LF],rx_message);
+				LostCountFeed(&Error_Check.count[LOST_CM1]);
 				break;
 			}
 			case 0x202:
 			{
 				Speed_Data_deal(&chassis_Data.rf_wheel_fdbV,rx_message);
 				Position_Data_deal(&chassis_Data.rf_wheel_fdbP,&chassis_position_encoder[RF],rx_message);
+				LostCountFeed(&Error_Check.count[LOST_CM2]);
 				break;
 			}
 			case 0x203:
 			{
 				Speed_Data_deal(&chassis_Data.lb_wheel_fdbV,rx_message);
 				Position_Data_deal(&chassis_Data.lb_wheel_fdbP,&chassis_position_encoder[LB],rx_message);
+				LostCountFeed(&Error_Check.count[LOST_CM3]);
 				break;
 			}
 			case 0x204:
 			{
 				Speed_Data_deal(&chassis_Data.rb_wheel_fdbV,rx_message);
 				Position_Data_deal(&chassis_Data.rb_wheel_fdbP,&chassis_position_encoder[RB],rx_message);
+				LostCountFeed(&Error_Check.count[LOST_CM4]);
 				break;
 			}
 			case 0x205:	//shoot œ¬
 			{
 			  Shoot_Feedback_Deal(&shoot_Data_Down,&shoot_Motor_Data_Down,rx_message);	//¡Ÿ ±”√
+				LostCountFeed(&Error_Check.count[LOST_SM_DOWN]);
 			  break;
 			}
 			 default:

@@ -1,4 +1,5 @@
 #include "dma_uart4.h"
+#include "protect.h"
 
 #define lenth_uart4 34	//34
 uint8_t  buffer_UART4[lenth_uart4];
@@ -58,14 +59,15 @@ void dma_uart4_init(void)
  * @param  void
  * @retval void
  */
-u32 t_imu_count=0;
+
 void DMA1_Stream2_IRQHandler(void)
-{t_imu_count++;
+{
 	if(DMA_GetITStatus(DMA1_Stream2,DMA_IT_TCIF2))
   {
 			DMA_ClearFlag(DMA1_Stream2,DMA_FLAG_TCIF2);
       DMA_ClearITPendingBit(DMA1_Stream2,DMA_IT_TCIF2);
 		    //DATA SHIFTING 
+		LostCountFeed(&Error_Check.count[LOST_IMU]);//////////////////////////////////////
 				if(buffer_UART4[0]==0x5A&&buffer_UART4[1]==0xA5)
 				{
 					int u;
