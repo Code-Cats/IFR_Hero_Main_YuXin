@@ -31,6 +31,8 @@ void Remote_Task(void)
 		
 //		Chassis_Vw=RC_Ctl.rc.ch2-1024;
 		Chassis_Vw=PID_General(YAW_INIT,yunMotorData.yaw_fdbP,&PID_Chassis_Follow);
+		Chassis_Vw=chassis_Vw_filter(Chassis_Vw);
+////		Chassis_Vw=PID_Robust(YAW_INIT,yunMotorData.yaw_fdbP,-yunMotorData.yaw_fdbV,&PID_Chassis_Follow);	//云台速度无/错误反馈
 //		Chassis_Vw=(s16)(FirstOrder_General((YAW_INIT-yunMotorData.yaw_fdbP),&Yaw_Follow_Filter)*0.43f);
 //		Chassis_Vw=(s16)((YAW_INIT-yunMotorData.yaw_fdbP)*0.6f);	//YUN_INIT为目标位置，故为YAW_INIT-
 	}
@@ -57,5 +59,15 @@ void Remote_Task(void)
 //	CAN_Chassis_SendMsg(chassis_Data.lf_wheel_output,chassis_Data.rf_wheel_output,chassis_Data.lb_wheel_output,chassis_Data.rb_wheel_output);
 }
 
+
+s16 chassis_Vw_filter(s16 now_V)
+{
+	static s32 Last_V=0;
+	static s32 now_acc_V=0;
+	static float a=0.25f;
+	now_acc_V=(s32)(Last_V*(1-a)+now_V*a);
+	Last_V=now_acc_V;
+	return now_acc_V;
+}
 
 

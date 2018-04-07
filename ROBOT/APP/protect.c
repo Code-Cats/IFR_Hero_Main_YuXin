@@ -1,4 +1,5 @@
 #include "protect.h"
+#include "control.h"
 /*
 该文件用途：提供传感器冗余算法，传感器切换，以及车体实时状态检测，保护状态切换
 预定义功能：
@@ -42,4 +43,22 @@ void Check_Task(void)
 		LostCountCheck(Error_Check.count[i],&Error_Check.statu[i],Error_Check.cycle[i]);
 	}
 	
+	if(Error_Check.statu[LOST_IMU]==1)
+	{
+		SetWorkState(ERROR_STATE);
+	}
+	
+	if(Error_Check.statu[LOST_DBUS]==1)
+	{
+		SetWorkState(PROTECT_STATE);
+	}
+	
+	for(int i=4;i<LOST_TYPE_NUM-1;i++)
+	{
+		if(Error_Check.statu[i]==1)
+			SetWorkState(ERROR_STATE);
+	}
 }
+
+
+

@@ -224,6 +224,10 @@ void Work_State_Change(void)
 		}
 		case PROTECT_STATE:	//自我保护模式
 		{
+			if(Error_Check.statu[LOST_DBUS]==0||abs(RC_Ctl.rc.ch0+RC_Ctl.rc.ch1+RC_Ctl.rc.ch2+RC_Ctl.rc.ch3-1024*4)>8)
+			{
+				SetWorkState(NORMAL_STATE);
+			}
 			break;
 		}
 	}
@@ -403,12 +407,12 @@ u8 Lift_Cali(void)
 			PID_Lift_Speed[LB].k_i=2*LIFT_SPEED_PID_I;
 			PID_Lift_Speed[RB].k_i=2*LIFT_SPEED_PID_I;
 			
-			lift_Data.lf_lift_tarP=100;
-			lift_Data.rf_lift_tarP=100;
-			lift_Data.lb_lift_tarP=100;
-			lift_Data.rb_lift_tarP=100;
+			lift_Data.lf_lift_tarP=70;
+			lift_Data.rf_lift_tarP=70;
+			lift_Data.lb_lift_tarP=70;
+			lift_Data.rb_lift_tarP=70;
 
-			if(lift_Data.lf_lift_fdbP>40&&lift_Data.rf_lift_fdbP>40&&lift_Data.lb_lift_fdbP>40&&lift_Data.rb_lift_fdbP>40)
+			if(lift_Data.lf_lift_fdbP>30&&lift_Data.rf_lift_fdbP>30&&lift_Data.lb_lift_fdbP>30&&lift_Data.rb_lift_fdbP>30)
 			{
 				liftcaliState=WAIT_STATE;
 				cali_state_Entirety_PID=1;
@@ -859,7 +863,7 @@ void Lift_Time_Gauge(u8 *trigger)	//升降时间自测量
 
 void RC_Calibration(void)	//上电检测遥控器接收值并与默认参数比较，判断是否正常，否则软复位
 {													//注：必须放在遥控器接收初始化后
-	if(abs(RC_Ctl.rc.ch0+RC_Ctl.rc.ch1+RC_Ctl.rc.ch2+RC_Ctl.rc.ch3-1024*4)>7)
+	if(abs(RC_Ctl.rc.ch0+RC_Ctl.rc.ch1+RC_Ctl.rc.ch2+RC_Ctl.rc.ch3-1024*4)>8)
 	{
 		NVIC_SystemReset();
 	}

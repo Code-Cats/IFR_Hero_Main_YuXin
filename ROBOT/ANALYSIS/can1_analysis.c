@@ -48,11 +48,13 @@ void CAN1_Feedback_Analysis(CanRxMsg *rx_message)
 			 case 0x205:	//yaw
 			 {
 				 yunMotorData.yaw_fdbP=((rx_message->Data[0]<<8)|rx_message->Data[1])&0xffff;  //机械角度
+				 yunMotorData.yaw_fdbV=(s16)((rx_message->Data[2]<<8)|rx_message->Data[3]);  //转速
 				 LostCountFeed(&Error_Check.count[LOST_YAW]);
 				 break;
 			 }case 0x206:	//pitch
 			 {
 				 yunMotorData.pitch_fdbP=((rx_message->Data[0]<<8)|rx_message->Data[1])&0xffff;  //机械角度
+				 yunMotorData.pitch_fdbV=(s16)((rx_message->Data[2]<<8)|rx_message->Data[3]);  //转速
 				 LostCountFeed(&Error_Check.count[LOST_PITCH]);
 				 break;
 			 }

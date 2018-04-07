@@ -27,5 +27,6 @@ typedef __packed struct
 
 
 float PID_General(float target,float current,PID_GENERAL *pid);
+float PID_Robust(float target,float current,float differential,PID_GENERAL *pid);
 
 #endif
