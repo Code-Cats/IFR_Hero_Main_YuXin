@@ -1,9 +1,7 @@
-#include "usart6_wifi_Debug.h"
+#include "usart6_viceboard.h"
 
-
-void USART6_WIFIDEBUG_Init(uint32_t baud_rate)
+void USART6_ViceBoard_Init(uint32_t baud_rate)
 {
-
     GPIO_InitTypeDef gpio;
 	  USART_InitTypeDef usart;
 	  NVIC_InitTypeDef nvic;
@@ -72,7 +70,7 @@ void USART6_WIFIDEBUG_Init(uint32_t baud_rate)
     USART_Cmd(USART6, ENABLE);
 }
 
-
+u32 vice_count=0;
 u8 USART6_Res=0;
 void USART6_IRQHandler(void)
 {
@@ -80,12 +78,13 @@ void USART6_IRQHandler(void)
 ////		{
 //	static uint32_t this_time_rx_len = 0;
 
-
+	vice_count++;
+	
 	if(USART_GetITStatus(USART6, USART_IT_RXNE) != RESET)
 	{
 		
 		USART6_Res=USART_ReceiveData(USART6);
-		//Data_Receive(USART6_Res);
+		Data_Receive(USART6_Res);
 		//clear the idle pending flag 
 		(void)USART6->SR;
 		(void)USART6->DR;

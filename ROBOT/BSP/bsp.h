@@ -8,9 +8,10 @@
 #include "gpio.h"
 #include "usart1_remote.h"
 #include "heartbeat.h"
-#include "usart3_viceboard.h"
+#include "usart6_viceboard.h"
 #include "viceboard_analysis.h"
-#include "usart6_wifi_Debug.h"
+#include "usart5_wifi_Debug.h"
+#include "usart3_judge.h"
 
 #include "uart4.h"
 #include "imu_data_decode.h"

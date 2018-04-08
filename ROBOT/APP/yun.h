@@ -5,8 +5,8 @@
 #include "main.h"
 
 #define YAW_INIT             900//4900
-#define PITCH_INIT           5050//5900//6000	//2018.3.3	余鑫6000
-#define PITCH_GYRO_INIT 5050	//云台陀螺仪零点对应电机位置，陀螺仪更改位置需要重调
+#define PITCH_INIT           6650//5900//6000	//2018.3.3	余鑫6000
+#define PITCH_GYRO_INIT 6650	//云台陀螺仪零点对应电机位置，陀螺仪更改位置需要重调
 
 #define 		Yaw_MAX 			   YAW_INIT+1000
 #define 		Yaw_MIN				   YAW_INIT-1000

@@ -41,7 +41,7 @@ void Yun_Control_External_Solution(void)	//外置反馈方案
 		}
 		
 		{	//RC控制数据
-			if(time_1ms_count%20==0)	//50hz
+			if(time_1ms_count%15==0)	//66.67hz
 			{
 				yunMotorData.yaw_tarP-=(int32_t)((RC_Ctl.rc.ch2-1024)*20.0/660.0);
 				yunMotorData.yaw_tarP=yunMotorData.yaw_tarP>1800?yunMotorData.yaw_tarP-3600:yunMotorData.yaw_tarP;	//过零点

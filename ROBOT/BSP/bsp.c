@@ -14,8 +14,9 @@ void BSP_Init(void)
 	 PWM_Config();
 	 Laser_Config();
 	 USART1_DMA_Config(100000);  
-   USART3_ViceBoard_Init(14400);
-	 USART6_WIFIDEBUG_Init(115200);
+   USART6_ViceBoard_Init(14400);
+	 USART3_Configuration(115200);
+//	 USART5_WIFIDEBUG_Init(115200);
 	 t_error_iic=MPU6050_Initialization();
    MPU6050_Gyro_calibration();
 	 MPU6050_IntConfiguration(); 

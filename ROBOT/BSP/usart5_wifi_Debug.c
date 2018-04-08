@@ -1,7 +1,7 @@
-#include "usart3_viceboard.h"
+#include "usart5_wifi_Debug.h"
 
 
-void USART3_ViceBoard_Init(uint32_t baud_rate)
+void USART5_WIFIDEBUG_Init(uint32_t baud_rate)	//´ýÐÞ¸Ä
 {
 
     GPIO_InitTypeDef gpio;
@@ -9,21 +9,21 @@ void USART3_ViceBoard_Init(uint32_t baud_rate)
 	  NVIC_InitTypeDef nvic;
 //    DMA_InitTypeDef dma;
     
-    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE); 
-//    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA1, ENABLE);
-		RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE); 
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE); 
+//     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA1, ENABLE);
+		RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART6, ENABLE); 
     
-    GPIO_PinAFConfig(GPIOB,GPIO_PinSource10,GPIO_AF_USART3);
-    GPIO_PinAFConfig(GPIOB,GPIO_PinSource11,GPIO_AF_USART3); 
+    GPIO_PinAFConfig(GPIOC,GPIO_PinSource6,GPIO_AF_USART6);
+    GPIO_PinAFConfig(GPIOC,GPIO_PinSource7,GPIO_AF_USART6); 
 
-    gpio.GPIO_Pin = GPIO_Pin_10 | GPIO_Pin_11;
+    gpio.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;
     gpio.GPIO_Mode = GPIO_Mode_AF;
     gpio.GPIO_OType = GPIO_OType_PP;
     gpio.GPIO_Speed = GPIO_Speed_100MHz;
     gpio.GPIO_PuPd = GPIO_PuPd_NOPULL;
-    GPIO_Init(GPIOB,&gpio);
+    GPIO_Init(GPIOC,&gpio);
     
-    USART_DeInit(USART3);
+    USART_DeInit(USART6);
     USART_StructInit(&usart);
     usart.USART_BaudRate = baud_rate;
     usart.USART_WordLength = USART_WordLength_8b;
@@ -32,7 +32,7 @@ void USART3_ViceBoard_Init(uint32_t baud_rate)
    // usart.USART_Parity = USART_Parity_Even;
     usart.USART_Mode = USART_Mode_Rx|USART_Mode_Tx;
     usart.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-    USART_Init(USART3, &usart);
+    USART_Init(USART6, &usart);
 //		
 //		USART_DMACmd(USART3, USART_DMAReq_Rx, ENABLE);
 //		
@@ -62,34 +62,33 @@ void USART3_ViceBoard_Init(uint32_t baud_rate)
 //    
 //    DMA_Cmd(DMA1_Stream1, ENABLE);
 		
-    nvic.NVIC_IRQChannel = USART3_IRQn;
+    nvic.NVIC_IRQChannel = USART6_IRQn;
     nvic.NVIC_IRQChannelPreemptionPriority = 2;
-    nvic.NVIC_IRQChannelSubPriority = 1;	//1
+    nvic.NVIC_IRQChannelSubPriority = 1;
     nvic.NVIC_IRQChannelCmd = ENABLE; 
     NVIC_Init(&nvic);
 		
-		USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);        //usart rx idle interrupt  enabled
-    USART_Cmd(USART3, ENABLE);
+		USART_ITConfig(USART6, USART_IT_RXNE, ENABLE);        //usart rx idle interrupt  enabled
+    USART_Cmd(USART6, ENABLE);
 }
 
-u32 vice_count=0;
-u8 USART3_Res=0;
-void USART3_IRQHandler(void)
+
+u8 USART5_Res=0;
+void USART5_IRQHandler(void)
 {
 ////		if(Vision_Flag==0)
 ////		{
 //	static uint32_t this_time_rx_len = 0;
 
-	vice_count++;
-	
-	if(USART_GetITStatus(USART3, USART_IT_RXNE) != RESET)
+
+	if(USART_GetITStatus(UART5, USART_IT_RXNE) != RESET)
 	{
 		
-		USART3_Res=USART_ReceiveData(USART3);
-		Data_Receive(USART3_Res);
+		USART5_Res=USART_ReceiveData(UART5);
+		//Data_Receive(USART6_Res);
 		//clear the idle pending flag 
-		(void)USART3->SR;
-		(void)USART3->DR;
+		(void)UART5->SR;
+		(void)UART5->DR;
 	}
 
 }

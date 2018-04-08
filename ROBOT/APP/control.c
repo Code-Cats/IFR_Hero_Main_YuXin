@@ -44,11 +44,10 @@ void Control_Task(void)	//2ms
 	
 	Check_Task();
 	
-	if(time_1ms_count%50==0)
-	{
-		Debug_Send_OSC();
-	}
-
+//////	if(time_1ms_count%50==0)
+//////	{
+//////		Debug_Send_OSC();
+//////	} 
 	Vw_tem=Chassis_Attitude_Correct(Chassis_GYRO[2],Gyro_Data.angvel[2]+2);
   Chassis_Vw+=Vw_tem;
 	
