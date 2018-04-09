@@ -22,6 +22,7 @@
 #include "chassis.h"
 #include "protect.h"
 #include "shoot.h"
+#include "lift.h"
 
 #include "mpu6050IIC.h"
 #include "mpu6050_it.h"

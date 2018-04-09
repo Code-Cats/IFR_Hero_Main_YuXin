@@ -1,5 +1,9 @@
 #include "control.h"
 
+#define PITCH 0
+#define ROLL 1
+#define YAW 2
+
 WorkState_e workState=PREPARE_STATE;
 
 
@@ -95,6 +99,7 @@ void Control_Task(void)	//2ms
 			Teleconltroller_Data_protect();	//遥控器数据保护
 			Yun_Task();	//开启云台处理
 			Remote_Task();	//执行移动
+			AutoChassisAttitude_Lift(Chassis_GYRO[PITCH]);
 			Lift_Task();	//开启升降
 			Shoot_Task();
 			break;
@@ -773,9 +778,9 @@ void Cali_Output_Limit(float cm_out,float * cali_out)
 }
 
 
-#define PITCH 0
-#define ROLL 1
-#define YAW 2
+//#define PITCH 0	//移到上面去了
+//#define ROLL 1
+//#define YAW 2
 float Chassis_GYRO[3]={0};	//pitch roll yaw
 /*************************************************
 功能：经数据融合给出底盘姿态供其他模块调用
