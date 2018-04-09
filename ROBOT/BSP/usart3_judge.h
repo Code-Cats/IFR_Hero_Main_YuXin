@@ -1,5 +1,6 @@
-#ifndef __USART3_JUDGE_H__
-#define __USART3_JUDGE_H__
+
+#ifndef __USART_JUDGE_H__
+#define __USART_JUDGE_H__
 
 
 #include "bsp.h"
@@ -126,19 +127,15 @@ typedef __packed struct
 typedef struct  __JUDGEMENT_DATA__
 {
   char flag;	
-//int16_t life;	
   char shootflag;	
-//float  chassis_out_V;
-//float  chassis_out_A;
-//float  chassis_out_P;	
-//float  remainPower;	
-//int32_t compass;
+
 }JUDGEMENT_DATA;
 extern u8 JudgeSendBuff[21];
 void judgementDataHandler(void);
 void Judgement_DataSend(float a,float b,float c);
 void Judagement_Send_Change_hero(float *a,float *b,float *c);
 extern uint8_t judgementBuf[];
+extern JUDGEMENT_DATA judgementData;
 extern tFrameHeader            testFrameHeader;
 extern tGameRobotState         testGameRobotState;      //比赛机器人状态
 extern tRobotHurt              testRobotHurt;          //机器人伤害数据

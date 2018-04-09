@@ -15,9 +15,9 @@ s16 Chassis_Vw=0;
 extern RC_Ctl_t RC_Ctl;
 extern GYRO_DATA Gyro_Data;
 extern YUN_MOTOR_DATA 	yunMotorData;
+extern tPowerHeatData 	testPowerHeatData;      //实时功率热量数据
 
-
-#define K_SPEED 8
+#define K_SPEED 10
 s32 t_Vw_PID=0;
 s32 yaw_follow_tarP=YAW_INIT;
 s32 yaw_follow_error=0;
@@ -123,6 +123,18 @@ void Remote_Task(void)
 	chassis_Data.rf_wheel_output=PID_General(chassis_Data.rf_wheel_tarV,chassis_Data.rf_wheel_fdbV,&PID_Chassis_Speed[RF]);
 	chassis_Data.lb_wheel_output=PID_General(chassis_Data.lb_wheel_tarV,chassis_Data.lb_wheel_fdbV,&PID_Chassis_Speed[LB]);
 	chassis_Data.rb_wheel_output=PID_General(chassis_Data.rb_wheel_tarV,chassis_Data.rb_wheel_fdbV,&PID_Chassis_Speed[RB]);
+
+	{	//功率限制块
+		float limit_k=Limit_Power(testPowerHeatData.chassisPower,testPowerHeatData.chassisPowerBuffer);	//testPowerHeatData.chassisPowerBuffer
+		float output_limit_lf=chassis_Data.lf_wheel_output*limit_k;
+		float output_limit_rf=chassis_Data.rf_wheel_output*limit_k;
+		float output_limit_lb=chassis_Data.lb_wheel_output*limit_k;
+		float output_limit_rb=chassis_Data.rb_wheel_output*limit_k;
+		chassis_Data.lf_wheel_output=(s32)output_limit_lf;
+		chassis_Data.rf_wheel_output=(s32)output_limit_rf;
+		chassis_Data.lb_wheel_output=(s32)output_limit_lb;
+		chassis_Data.rb_wheel_output=(s32)output_limit_rb;
+	}
 	
 //	CAN_Chassis_SendMsg(chassis_Data.lf_wheel_output,chassis_Data.rf_wheel_output,chassis_Data.lb_wheel_output,chassis_Data.rb_wheel_output);
 }
@@ -138,4 +150,17 @@ s16 chassis_Vw_filter(s16 now_V)
 	return now_acc_V;
 }
 
+#define POWERLIMIT 120 	//120w功率限制
+#define POWERBUFFER 60	//60J功率缓冲
+float Limit_Power(float power,float powerbuffer)	//英雄120J热量限制，直接限制总输出
+{
+	float limit_k=1;
+//	if(power>POWERLIMIT*0.6)
+//	{
+		limit_k=3.0f*powerbuffer/200.0f+0.1f;	//0.4
+		limit_k=limit_k>1?1:limit_k;
+		limit_k=limit_k<0.1f?0.1f:limit_k;
+//	}
+	return limit_k;
+}
 

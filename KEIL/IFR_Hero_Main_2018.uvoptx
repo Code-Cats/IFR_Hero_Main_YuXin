@@ -174,7 +174,6 @@
         <SetRegEntry>
           <Number>0</Number>
           <Key>DLGUARM</Key>
-          <Name></Name>
         </SetRegEntry>
         <SetRegEntry>
           <Number>0</Number>
@@ -298,6 +297,11 @@
           <count>18</count>
           <WinNumber>1</WinNumber>
           <ItemText>testPowerHeatData,0x0A</ItemText>
+        </Ww>
+        <Ww>
+          <count>19</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>t_chesk_protect_count,0x0A</ItemText>
         </Ww>
       </WatchWindow1>
       <WatchWindow2>
@@ -491,8 +495,8 @@
       <Focus>0</Focus>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\ROBOT\BSP\usart3_judge.c</PathWithFileName>
-      <FilenameWithoutPath>usart3_judge.c</FilenameWithoutPath>
+      <PathWithFileName>..\ROBOT\BSP\usart5_wifi_Debug.c</PathWithFileName>
+      <FilenameWithoutPath>usart5_wifi_Debug.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>
@@ -504,8 +508,8 @@
       <Focus>0</Focus>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\ROBOT\BSP\usart5_wifi_Debug.c</PathWithFileName>
-      <FilenameWithoutPath>usart5_wifi_Debug.c</FilenameWithoutPath>
+      <PathWithFileName>..\ROBOT\BSP\usart6_viceboard.c</PathWithFileName>
+      <FilenameWithoutPath>usart6_viceboard.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>
@@ -517,8 +521,8 @@
       <Focus>0</Focus>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\ROBOT\BSP\usart6_viceboard.c</PathWithFileName>
-      <FilenameWithoutPath>usart6_viceboard.c</FilenameWithoutPath>
+      <PathWithFileName>..\ROBOT\BSP\usart3_judge.c</PathWithFileName>
+      <FilenameWithoutPath>usart3_judge.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>

@@ -34,7 +34,7 @@ u8 LostCountCheck(u16 lostcount,u8* statu,const u16 cycle)
 	return *statu;
 }
 
-
+u16 t_chesk_protect_count=0;
 void Check_Task(void)
 {
 	for(int i=0;i<LOST_TYPE_NUM;i++)
@@ -50,6 +50,7 @@ void Check_Task(void)
 	
 	if(Error_Check.statu[LOST_DBUS]==1)
 	{
+		t_chesk_protect_count++;
 		SetWorkState(PROTECT_STATE);
 	}
 	

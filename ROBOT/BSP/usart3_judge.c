@@ -1,14 +1,10 @@
 #include "usart3_judge.h"
 
 static uint8_t   _USART3_DMA_RX_BUF[2][BSP_USART3_DMA_RX_BUF_LEN];
-uint8_t testBuff[200]={0};
 u8              JudgeSendBuff[21];
 char            this_dma_type=0;
-int16_t         testNum;
 uint16_t        testcmdId;
-uint8_t cnt = 5;
-
-JUDGEMENT_DATA Judgement_Data={0};
+JUDGEMENT_DATA judgementData={0};
 tFrameHeader            testFrameHeader;
 tGameRobotState         testGameRobotState;      //比赛机器人状态
 tRobotHurt              testRobotHurt;          //机器人伤害数据
@@ -261,7 +257,6 @@ void Append_CRC16_Check_Sum(uint8_t * pchMessage,uint32_t dwLength)
 void USART3_IRQHandler(void)
 {
 	 static uint32_t this_frame_rx_len = 0;
-	 GREEN_LED_ON();
 	 if(USART_GetITStatus(USART3, USART_IT_IDLE) != RESET)
 	 {
 		  (void)USART3->SR;
@@ -289,26 +284,29 @@ void USART3_IRQHandler(void)
 	 }
 
 }
+
+
 void judgementDataHandler(void)
 {
- // uint8_t cnt = 5;
+  uint8_t cnt = 5;
   memcpy(&testFrameHeader, _USART3_DMA_RX_BUF[this_dma_type],FRAMEHEADER_LEN);
-	memcpy(&testBuff,(_USART3_DMA_RX_BUF[this_dma_type]),200);	
+	if(judgementData.flag==0)
+	{
+	  judgementData.flag=1;
+	}
+	
   if((testFrameHeader.sOF==(uint16_t)SOF_FIXED) \
       &&(1==Verify_CRC8_Check_Sum(_USART3_DMA_RX_BUF[this_dma_type],FRAMEHEADER_LEN)) \
       &&(1==Verify_CRC16_Check_Sum(_USART3_DMA_RX_BUF[this_dma_type], testFrameHeader.dataLenth+9)))
   {
-    memcpy(&testcmdId, (_USART3_DMA_RX_BUF[this_dma_type]+cnt), sizeof(testcmdId)); //sizeof(testcmdId)=2
+    memcpy(&testcmdId, (_USART3_DMA_RX_BUF[this_dma_type]+cnt), sizeof(testcmdId)); 
      cnt+=2;
 		
      switch(testcmdId)
      {
         case GameRobotStateId://比赛机器人状态0x0001
 			  { 
-					if(Judgement_Data.shootflag==0)
-				   {
               memcpy(&testGameRobotState,(_USART3_DMA_RX_BUF[this_dma_type]+cnt),testFrameHeader.dataLenth); 
-			     }
 				}break;
         case RobotHurtId://机器人伤害数据0x0002
 			  {
@@ -316,13 +314,10 @@ void judgementDataHandler(void)
 			  }break;
         case ShootDataId://实时射击数据0x0003
 			  {		  
-					if(Judgement_Data.shootflag==0)
-				   {
                memcpy(&testShootData, (_USART3_DMA_RX_BUF[this_dma_type]+cnt), testFrameHeader.dataLenth);
-					 }
 				}break;
 			  case PowerHeatDataId://实时功率热量数据0x0004
-			  {				
+			  {		
             memcpy(&testPowerHeatData, (_USART3_DMA_RX_BUF[this_dma_type]+cnt), testFrameHeader.dataLenth);		  
 				}break;		  
 		 }

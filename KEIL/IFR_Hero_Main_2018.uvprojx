@@ -459,11 +459,6 @@
               <FilePath>..\ROBOT\BSP\usart1_remote.c</FilePath>
             </File>
             <File>
-              <FileName>usart3_judge.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\ROBOT\BSP\usart3_judge.c</FilePath>
-            </File>
-            <File>
               <FileName>usart5_wifi_Debug.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\ROBOT\BSP\usart5_wifi_Debug.c</FilePath>
@@ -472,6 +467,11 @@
               <FileName>usart6_viceboard.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\ROBOT\BSP\usart6_viceboard.c</FilePath>
+            </File>
+            <File>
+              <FileName>usart3_judge.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\BSP\usart3_judge.c</FilePath>
             </File>
           </Files>
         </Group>

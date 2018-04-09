@@ -72,7 +72,7 @@ void Control_Task(void)	//2ms
 		case PREPARE_STATE:	//预备模式
 		{	//等待车身状态稳定，并设置初值
 			Yun_Task();	//开启底盘
-			if(abs(Gyro_Data.angvel[0])<20&&abs(Gyro_Data.angvel[2])<20)	//云台已就位
+			if(abs(Gyro_Data.angvel[0])<20&&abs(Gyro_Data.angvel[2])<20&&abs(yunMotorData.pitch_tarP-(Gyro_Data.angle[0]*8192/360.0f+PITCH_INIT))<50)	//云台已就位
 			{
 				SetWorkState(CALI_STATE);
 			}
@@ -234,9 +234,10 @@ void Work_State_Change(void)
 }
 
 
-
+s16 t_work_state_record=0;
 void LED_Indicate(void)
 {
+	t_work_state_record=GetWorkState();
 	switch (GetWorkState())	//2018.3.15
 	{
 		case CHECK_STATE:	//自检模式
@@ -247,7 +248,11 @@ void LED_Indicate(void)
 		}
 		case PREPARE_STATE:	//预备模式
 		{	
-			RED_LED_ON();
+			if(time_1ms_count%100==0)
+			{
+				RED_LED_TOGGLE();
+			}
+			//RED_LED_ON();
 			GREEN_LED_OFF();
 			break;
 		}
@@ -266,6 +271,7 @@ void LED_Indicate(void)
 			if(time_1ms_count%500==0)
 			{
 				GREEN_LED_TOGGLE();
+				//GREEN_LED_ON();
 			}
 			break;
 		}
@@ -289,6 +295,11 @@ void LED_Indicate(void)
 		}
 		case ERROR_STATE:	//错误模式
 		{
+			if(time_1ms_count%100==0)
+			{
+				RED_LED_TOGGLE();
+				GREEN_LED_TOGGLE();
+			}
 			break;
 		}
 		case LOST_STATE:	//错误模式

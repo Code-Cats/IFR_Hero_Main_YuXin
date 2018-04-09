@@ -73,6 +73,7 @@
 
 void Remote_Task(void);
 s16 chassis_Vw_filter(s16 now_V);
+float Limit_Power(float power,float powerbuffer);	//英雄120J热量限制，直接限制总输出
 
 #endif
 
