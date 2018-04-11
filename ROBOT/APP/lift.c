@@ -46,7 +46,7 @@ void AutoChassisAttitude_Lift(float chassis_pitch_raw)	//×Ô¶¯µ÷Õû×ËÌ¬	//pitchÕı·
 				if(steady_flat_count<0xFFFE)
 				{
 					steady_flat_count++;
-				}
+				}    
 			}
 				
 			if(abs(lift_Data.lf_lift_fdbP+lift_Data.rf_lift_fdbP-2*FALL)>18&&abs(lift_Data.lb_lift_fdbP+lift_Data.rb_lift_fdbP-2*FALL)>18)

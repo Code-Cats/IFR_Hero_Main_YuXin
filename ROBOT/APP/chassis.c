@@ -16,6 +16,7 @@ extern RC_Ctl_t RC_Ctl;
 extern GYRO_DATA Gyro_Data;
 extern YUN_MOTOR_DATA 	yunMotorData;
 extern tPowerHeatData 	testPowerHeatData;      //实时功率热量数据
+extern u32 time_1ms_count;
 
 #define K_SPEED 10
 s32 t_Vw_PID=0;
@@ -41,7 +42,24 @@ void Remote_Task(void)
 	
 	if(GetWorkState()==NORMAL_STATE)
 	{
-		Chassis_Vx=RC_Ctl.rc.ch1-1024;
+		static s16 Chassis_Vx_last=0;
+		if(time_1ms_count%1==0)
+		{
+			if(RC_Ctl.rc.ch1-1024-Chassis_Vx_last>1)
+			{
+				Chassis_Vx+=1;
+			}
+//			else if(RC_Ctl.rc.ch1-1024-Chassis_Vx_last<-1)	//刹车按不缓冲
+//			{
+//				Chassis_Vx-=1;
+//			}
+			else
+			{
+				Chassis_Vx=RC_Ctl.rc.ch1-1024;
+			}
+		}
+//		Chassis_Vx=RC_Ctl.rc.ch1-1024;	//代替为斜坡函数
+		Chassis_Vx_last=Chassis_Vx;
 	}
 	
 	if(GetWorkState()==NORMAL_STATE||GetWorkState()==ASCEND_STATE)	//仅在正常情况下遥控器可驱动电机，(自动)登岛模式下交由程序自动控制
@@ -137,6 +155,56 @@ void Remote_Task(void)
 	}
 	
 //	CAN_Chassis_SendMsg(chassis_Data.lf_wheel_output,chassis_Data.rf_wheel_output,chassis_Data.lb_wheel_output,chassis_Data.rb_wheel_output);
+}
+
+extern KeyBoardTypeDef KeyBoardData[KEY_NUMS];
+void PC_Control_Chassis(s16 * chassis_vx,s16 * chassis_vy)	//1000Hz
+{
+	if(KeyBoardData[KEY_W].statu!=0)
+	{
+		if(*chassis_vx<660&&*chassis_vx>=0)
+		{
+			(*chassis_vx)++;
+		}
+		else if(*chassis_vx<0)
+		{
+			*chassis_vx=0;
+		}
+	}
+	else if(KeyBoardData[KEY_S].statu!=0)
+	{
+		if(*chassis_vx>-660&&*chassis_vx<=0)
+		{
+			(*chassis_vx)--;
+		}
+		else if(*chassis_vx>0)
+		{
+			*chassis_vx=0;
+		}
+	}
+	///////////////////////////////////////
+	if(KeyBoardData[KEY_D].statu!=0)
+	{
+		if(*chassis_vy<660&&*chassis_vy>=0)
+		{
+			(*chassis_vy)++;
+		}
+		else if(*chassis_vy<0)
+		{
+			*chassis_vy=0;
+		}
+	}
+	else if(KeyBoardData[KEY_A].statu!=0)
+	{
+		if(*chassis_vy>-660&&*chassis_vy<=0)
+		{
+			(*chassis_vy)--;
+		}
+		else if(*chassis_vy>0)
+		{
+			*chassis_vy=0;
+		}
+	}
 }
 
 

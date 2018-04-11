@@ -72,6 +72,7 @@
 
 
 void Remote_Task(void);
+void PC_Control_Chassis(s16 * chassis_vx,s16 * chassis_vy);	//1000Hz
 s16 chassis_Vw_filter(s16 now_V);
 float Limit_Power(float power,float powerbuffer);	//英雄120J热量限制，直接限制总输出
 
