@@ -4,7 +4,7 @@
 extern LIFT_DATA lift_Data;
 extern u32 time_1ms_count;
 
-#define AUTOCHASSIS_LIFT 10
+#define AUTOCHASSIS_LIFT 12
 void AutoChassisAttitude_Lift(float chassis_pitch_raw)	//自动调整姿态	//pitch正方向为前上	//注意放在lift_task前面
 {
 	static float chassis_pitch=0;
@@ -129,9 +129,19 @@ void AutoChassisAttitude_Lift_V2(float chassis_pitch_raw)	//自动调整姿态	//pitch
 				lift_Data.rf_lift_tarP=FALL;
 				lift_Data.lb_lift_tarP=FALL;
 				lift_Data.rb_lift_tarP=FALL;
-				if(abs(chassis_pitch)>8)	//触发阈值	为7时有意外触发现象
+				if(abs(chassis_pitch)>8&&tilt_change_count<0xFFFE)	//触发阈值	为7时有意外触发现象
+				{
+					tilt_change_count++;
+				}
+				else
+				{
+					tilt_change_count=0;
+				}
+				
+				if(tilt_change_count>100)
 				{
 					Adjust_Statu=TILT;
+					tilt_change_count=0;
 				}
 				break;
 			}
@@ -194,7 +204,7 @@ void AutoChassisAttitude_Lift_V2(float chassis_pitch_raw)	//自动调整姿态	//pitch
 //					}
 //				}
 				
-				if(abs(chassis_pitch)<2&&staedy_adjust_count<0xFFFE)
+				if(abs(chassis_pitch)<2.2f&&staedy_adjust_count<0xFFFE)
 				{
 					staedy_adjust_count++;
 				}
@@ -203,7 +213,7 @@ void AutoChassisAttitude_Lift_V2(float chassis_pitch_raw)	//自动调整姿态	//pitch
 					staedy_adjust_count=0;
 				}
 				
-				if(staedy_adjust_count>500)	//稳定了	//待调整
+				if(staedy_adjust_count>300)	//稳定了	//待调整
 				{
 					Adjust_Statu=STAEDY_ADJUST;
 					staedy_adjust_count=0;
@@ -225,7 +235,7 @@ void AutoChassisAttitude_Lift_V2(float chassis_pitch_raw)	//自动调整姿态	//pitch
 					}
 				}
 				
-				if(staedy_real_count>200)	//0.3s
+				if(staedy_real_count>150)	//0.3s
 				{
 					Adjust_Statu=STAEDY_REAL;
 					staedy_real_count=0;
