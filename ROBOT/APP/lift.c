@@ -4,13 +4,13 @@
 extern LIFT_DATA lift_Data;
 extern u32 time_1ms_count;
 
-#define AUTOCHASSIS_LIFT 15
+#define AUTOCHASSIS_LIFT 10
 void AutoChassisAttitude_Lift(float chassis_pitch_raw)	//×Ô¶¯µ÷Õû×ËÌ¬	//pitchÕı·½ÏòÎªÇ°ÉÏ	//×¢Òâ·ÅÔÚlift_taskÇ°Ãæ
 {
 	static float chassis_pitch=0;
 	static float ka=0.1f;
 	static u16 steady_flat_count=0;
-	
+
 	chassis_pitch=chassis_pitch*(1-ka)+chassis_pitch_raw*ka;
 	
 	if(GetWorkState()==NORMAL_STATE)	//Õı³£×´Ì¬
@@ -73,7 +73,7 @@ void AutoChassisAttitude_Lift(float chassis_pitch_raw)	//×Ô¶¯µ÷Õû×ËÌ¬	//pitchÕı·
 			
 		}
 		
-		if(steady_flat_count>1000)
+		if(steady_flat_count>800)
 		{
 			lift_Data.lf_lift_tarP=FALL;
 			lift_Data.rf_lift_tarP=FALL;
@@ -106,4 +106,152 @@ void AutoChassisAttitude_Lift(float chassis_pitch_raw)	//×Ô¶¯µ÷Õû×ËÌ¬	//pitchÕı·
 		lift_Data.rb_lift_tarP=lift_Data.rb_lift_tarP>ISLAND?ISLAND:lift_Data.rb_lift_tarP;
 	}
 }
+
+#define TILT 1	//ÇãĞ±×´Ì¬
+#define STAEDY_REAL 0	//Æ½ÎÈ×´Ì¬
+#define STAEDY_ADJUST 2	//¾­µ÷ÕûÆ½ÎÈ×´Ì¬
+u8 Adjust_Statu=STAEDY_REAL;
+void AutoChassisAttitude_Lift_V2(float chassis_pitch_raw)	//×Ô¶¯µ÷Õû×ËÌ¬	//pitchÕı·½ÏòÎªÇ°ÉÏ	//×¢Òâ·ÅÔÚlift_taskÇ°Ãæ
+{
+	static float chassis_pitch=0;
+	static float ka=0.05f;
+	
+	chassis_pitch=chassis_pitch*(1-ka)+chassis_pitch_raw*ka;
+	
+	if(GetWorkState()==NORMAL_STATE)
+	{
+		switch(Adjust_Statu)
+		{
+			case STAEDY_REAL:
+			{
+				lift_Data.lf_lift_tarP=FALL;
+				lift_Data.rf_lift_tarP=FALL;
+				lift_Data.lb_lift_tarP=FALL;
+				lift_Data.rb_lift_tarP=FALL;
+				if(abs(chassis_pitch)>8)	//´¥·¢ãĞÖµ	Îª7Ê±ÓĞÒâÍâ´¥·¢ÏÖÏó
+				{
+					Adjust_Statu=TILT;
+				}
+				break;
+			}
+			case TILT:
+			{
+				static u16 staedy_adjust_count=0;
+				if(chassis_pitch>0)	//Ç°Ñö£¬¿ÉÒÔÍ¨¹ıÏÂÇ°½â¾ö£¬µ±ÏÂÇ°ÎŞ·¨½â¾ö£¬²ÉÓÃÉÏºó
+				{
+					if(lift_Data.lf_lift_tarP>FALL)	//ÏÂÇ°
+					{
+						if(time_1ms_count%20==0)
+						{
+							lift_Data.lf_lift_tarP-=5;
+							lift_Data.rf_lift_tarP=lift_Data.lf_lift_tarP;
+						}
+					}
+					
+					lift_Data.lb_lift_tarP=chassis_pitch*AUTOCHASSIS_LIFT+lift_Data.lb_lift_fdbP;
+					lift_Data.rb_lift_tarP=lift_Data.lb_lift_tarP;
+				}
+				else	//Ç°¸©£¬¿ÉÒÔÍ¨¹ıÏÂºó½â¾ö£¬ÈôÏÂºóÎŞ·¨½â¾ö£¬²ÉÓÃÉÏÇ°
+				{
+					if(lift_Data.lb_lift_tarP>FALL)	//ÏÂÇ°
+					{
+						if(time_1ms_count%20==0)
+						{
+							lift_Data.lb_lift_tarP-=5;
+							lift_Data.rb_lift_tarP=lift_Data.lb_lift_tarP;
+						}
+					}
+					
+					lift_Data.lf_lift_tarP=-chassis_pitch*AUTOCHASSIS_LIFT+lift_Data.lf_lift_fdbP;
+					lift_Data.rf_lift_tarP=lift_Data.lf_lift_tarP;	//ÒÔ×óÇ°µç»úÎª»ù×¼
+				}
+				
+//				lift_Data.lf_lift_tarP=-chassis_pitch*AUTOCHASSIS_LIFT+lift_Data.lf_lift_fdbP;
+//				lift_Data.rf_lift_tarP=lift_Data.lf_lift_tarP;	//ÒÔ×óÇ°µç»úÎª»ù×¼
+//				lift_Data.lb_lift_tarP=chassis_pitch*AUTOCHASSIS_LIFT+lift_Data.lb_lift_fdbP;
+//				lift_Data.rb_lift_tarP=lift_Data.lb_lift_tarP;
+				
+////////				if(chassis_pitch>0)	//Ç°Ñö£¬¿ÉÒÔÍ¨¹ıÏÂÇ°½â¾ö£¬µ±ÏÂÇ°ÎŞ·¨½â¾ö£¬²ÉÓÃÉÏºó	´ıÔÚ´Ë´¦Ğ´Ç¿ÖÆÏÂ½µÏÂÇ°ÏÂºó
+////////				{
+////////					if(abs(lift_Data.lf_lift_tarP-FALL)>)
+////////				}
+////////				else	//Ç°¸©£¬¿ÉÒÔÍ¨¹ıÏÂºó½â¾ö£¬ÈôÏÂºóÎŞ·¨½â¾ö£¬²ÉÓÃÉÏÇ°
+////////				{
+////////					
+////////				}
+				
+//				if(abs(lift_Data.lf_lift_tarP-FALL)>10&&abs(lift_Data.lb_lift_tarP-FALL)>10)	//Î´ÔÚÖØĞÄ×î¸ßµã	ÎŞĞ§
+//				{
+//					if(time_1ms_count%20==0)
+//					{
+//						lift_Data.lf_lift_tarP-=5;
+//						lift_Data.rf_lift_tarP-=5;
+//						lift_Data.lb_lift_tarP-=5;
+//						lift_Data.rb_lift_tarP-=5;
+//					}
+//				}
+				
+				if(abs(chassis_pitch)<2&&staedy_adjust_count<0xFFFE)
+				{
+					staedy_adjust_count++;
+				}
+				else
+				{
+					staedy_adjust_count=0;
+				}
+				
+				if(staedy_adjust_count>500)	//ÎÈ¶¨ÁË
+				{
+					Adjust_Statu=STAEDY_ADJUST;
+					staedy_adjust_count=0;
+				}
+				break;
+			}
+			case STAEDY_ADJUST:
+			{
+				static u16 staedy_real_count=0;
+				if(abs(chassis_pitch)>4)
+				{
+					Adjust_Statu=TILT;
+				}
+				else
+				{
+					if(abs(lift_Data.lf_lift_tarP-lift_Data.lb_lift_tarP)<300&&staedy_real_count<0xFFFE)
+					{
+						staedy_real_count++;
+					}
+				}
+				
+				if(staedy_real_count>200)	//0.3s
+				{
+					Adjust_Statu=STAEDY_REAL;
+					staedy_real_count=0;
+				}
+				break;
+			}
+		}	
+	}
+	
+	
+	lift_Data.lf_lift_tarP=lift_Data.lf_lift_tarP<FALL?FALL:lift_Data.lf_lift_tarP;	//ÏŞÖÆĞĞ³Ì
+	lift_Data.lf_lift_tarP=lift_Data.lf_lift_tarP>ISLAND?ISLAND:lift_Data.lf_lift_tarP;
+	
+	lift_Data.rf_lift_tarP=lift_Data.rf_lift_tarP<FALL?FALL:lift_Data.rf_lift_tarP;	//ÏŞÖÆĞĞ³Ì
+	lift_Data.rf_lift_tarP=lift_Data.rf_lift_tarP>ISLAND?ISLAND:lift_Data.rf_lift_tarP;
+	
+	lift_Data.lb_lift_tarP=lift_Data.lb_lift_tarP<FALL?FALL:lift_Data.lb_lift_tarP;	//ÏŞÖÆĞĞ³Ì
+	lift_Data.lb_lift_tarP=lift_Data.lb_lift_tarP>ISLAND?ISLAND:lift_Data.lb_lift_tarP;
+	
+	lift_Data.rb_lift_tarP=lift_Data.rb_lift_tarP<FALL?FALL:lift_Data.rb_lift_tarP;	//ÏŞÖÆĞĞ³Ì
+	lift_Data.rb_lift_tarP=lift_Data.rb_lift_tarP>ISLAND?ISLAND:lift_Data.rb_lift_tarP;
+}
+
+
+/***********************************************************
+¶ÔÓÚV2°æ±¾£¬³öÏÖ»ØÖĞÊ±ÖØĞÄÉı¸ßÎÊÌâ½â¾öË¼Ïë
+1.·¢Éúºó¼°Ê±´¦Àí£¬ÔÚ¼ì²âµ½ÂÖÆ½ÃæµÍÓÚÒ»ãĞÖµÊ±¼°Ê±½µµ½×îµÍÆ½Ãæ£¨·½°¸ãĞÖµ¼ì²âÂ³°ôĞÔÑÓ³ÙÎÊÌâ£©
+2.ÔÚ·¢Éú½×¶Î±ÜÃâ£¬µ±pitch>0,³µÉíÇ°Ñö£¬ÔÚTITLµ÷Õû½×¶Î
+	ÎŞĞèÉÏÉıµÄ²»ÉÏÉı£¬¿ÉÍ¨¹ıÏÂ½µ½â¾öµÄÈ«Í¨¹ıÏÂ½µ½â¾ö
+	
+***********************************************************/
 

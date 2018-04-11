@@ -99,7 +99,7 @@ void Control_Task(void)	//2ms
 			Teleconltroller_Data_protect();	//遥控器数据保护
 			Yun_Task();	//开启云台处理
 			Remote_Task();	//执行移动
-			AutoChassisAttitude_Lift(Chassis_GYRO[PITCH]);
+			AutoChassisAttitude_Lift_V2(Chassis_GYRO[PITCH]);
 			Lift_Task();	//开启升降
 			Shoot_Task();
 			break;
@@ -763,9 +763,9 @@ void Motor_Send(void)
 
 void Cali_Output_Limit(float cm_out,float * cali_out)
 {
-	if(cm_out>LIFT_CALI_OUTPUT_MAX+3000)
+	if(cm_out>LIFT_CALI_OUTPUT_MAX+4000)
 	{
-		*cali_out=LIFT_CALI_OUTPUT_MAX+3000;
+		*cali_out=LIFT_CALI_OUTPUT_MAX+4000;
 	}
 	else if(cm_out<-LIFT_CALI_OUTPUT_MAX)
 	{
