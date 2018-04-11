@@ -124,6 +124,7 @@ void AutoChassisAttitude_Lift_V2(float chassis_pitch_raw)	//自动调整姿态	//pitch
 		{
 			case STAEDY_REAL:
 			{
+				static u16 tilt_change_count=0;	//若阈值检测效果不好，则使用消抖检测
 				lift_Data.lf_lift_tarP=FALL;
 				lift_Data.rf_lift_tarP=FALL;
 				lift_Data.lb_lift_tarP=FALL;
@@ -139,31 +140,33 @@ void AutoChassisAttitude_Lift_V2(float chassis_pitch_raw)	//自动调整姿态	//pitch
 				static u16 staedy_adjust_count=0;
 				if(chassis_pitch>0)	//前仰，可以通过下前解决，当下前无法解决，采用上后
 				{
-					if(lift_Data.lf_lift_tarP>FALL)	//下前
+					if(lift_Data.lf_lift_tarP<=FALL)	//若下前至极限
 					{
-						if(time_1ms_count%20==0)
-						{
-							lift_Data.lf_lift_tarP-=5;
-							lift_Data.rf_lift_tarP=lift_Data.lf_lift_tarP;
-						}
+						lift_Data.lb_lift_tarP=chassis_pitch*AUTOCHASSIS_LIFT+lift_Data.lb_lift_fdbP;
+						lift_Data.rb_lift_tarP=lift_Data.lb_lift_tarP;
+					}
+					else
+					{
+						lift_Data.lf_lift_tarP=-chassis_pitch*AUTOCHASSIS_LIFT+lift_Data.lf_lift_fdbP;
+						lift_Data.rf_lift_tarP=lift_Data.lf_lift_tarP;	//以左前电机为基准
 					}
 					
-					lift_Data.lb_lift_tarP=chassis_pitch*AUTOCHASSIS_LIFT+lift_Data.lb_lift_fdbP;
-					lift_Data.rb_lift_tarP=lift_Data.lb_lift_tarP;
+				
 				}
 				else	//前俯，可以通过下后解决，若下后无法解决，采用上前
 				{
-					if(lift_Data.lb_lift_tarP>FALL)	//下前
+					if(lift_Data.lb_lift_tarP<=FALL)	//下后
 					{
-						if(time_1ms_count%20==0)
-						{
-							lift_Data.lb_lift_tarP-=5;
-							lift_Data.rb_lift_tarP=lift_Data.lb_lift_tarP;
-						}
+						lift_Data.lf_lift_tarP=-chassis_pitch*AUTOCHASSIS_LIFT+lift_Data.lf_lift_fdbP;
+						lift_Data.rf_lift_tarP=lift_Data.lf_lift_tarP;	//以左前电机为基准
+					}
+					else
+					{
+						lift_Data.lb_lift_tarP=chassis_pitch*AUTOCHASSIS_LIFT+lift_Data.lb_lift_fdbP;
+						lift_Data.rb_lift_tarP=lift_Data.lb_lift_tarP;
 					}
 					
-					lift_Data.lf_lift_tarP=-chassis_pitch*AUTOCHASSIS_LIFT+lift_Data.lf_lift_fdbP;
-					lift_Data.rf_lift_tarP=lift_Data.lf_lift_tarP;	//以左前电机为基准
+					
 				}
 				
 //				lift_Data.lf_lift_tarP=-chassis_pitch*AUTOCHASSIS_LIFT+lift_Data.lf_lift_fdbP;
@@ -200,7 +203,7 @@ void AutoChassisAttitude_Lift_V2(float chassis_pitch_raw)	//自动调整姿态	//pitch
 					staedy_adjust_count=0;
 				}
 				
-				if(staedy_adjust_count>500)	//稳定了
+				if(staedy_adjust_count>500)	//稳定了	//待调整
 				{
 					Adjust_Statu=STAEDY_ADJUST;
 					staedy_adjust_count=0;

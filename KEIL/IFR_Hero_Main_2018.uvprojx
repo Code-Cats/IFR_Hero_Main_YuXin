@@ -473,6 +473,11 @@
               <FileType>1</FileType>
               <FilePath>..\ROBOT\BSP\usart3_judge.c</FilePath>
             </File>
+            <File>
+              <FileName>usart6_wifi_Debug.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\BSP\usart6_wifi_Debug.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

@@ -1,11 +1,16 @@
 #include "usart6_wifi_Debug_OSC.h"
 #include "control.h"
 
+#define PITCH 0
+#define ROLL 1
+#define YAW 2
+
 extern float tar_attitude;
 extern float Attitude_error;
 extern s16 t_Vw_correct;
 extern s16 Chassis_Vw;
 extern WorkState_e workState;
+extern GYRO_DATA Gyro_Data;
 
 u8 Bufsize=10;//数据字节长度
 u8 t=0;//计数用
@@ -16,12 +21,12 @@ void Debug_Send_OSC(void)
 {
 	tar_att_tem=(s16)tar_attitude;
 	att_err=(s16)Attitude_error;
-	OSC_Data[0]=tar_att_tem>>8;//Pitch_speed_pid.output>>8;
-	OSC_Data[1]=tar_att_tem;//Pitch_speed_pid.output;
-	OSC_Data[2]=att_err>>8;//MPU6050.x>>8;
-	OSC_Data[3]=att_err;//MPU6050.x;
-	OSC_Data[4]=t_Vw_correct>>8;
-	OSC_Data[5]=t_Vw_correct;
+	OSC_Data[0]=(s16)Gyro_Data.angle[YAW]>8;//tar_att_tem>>8;
+	OSC_Data[1]=(s16)Gyro_Data.angle[YAW];//tar_att_tem;
+	OSC_Data[2]=0;//att_err>>8;
+	OSC_Data[3]=0;//att_err;
+	OSC_Data[4]=0;//t_Vw_correct>>8;
+	OSC_Data[5]=0;//t_Vw_correct;
 	OSC_Data[6]=Chassis_Vw>>8;
 	OSC_Data[7]=Chassis_Vw;
 	OSC_Data[8]=workState;

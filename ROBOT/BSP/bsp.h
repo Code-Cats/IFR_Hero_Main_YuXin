@@ -11,6 +11,7 @@
 #include "usart6_viceboard.h"
 #include "viceboard_analysis.h"
 #include "usart5_wifi_Debug.h"
+#include "usart6_wifi_Debug.h"
 #include "usart3_judge.h"
 
 #include "uart4.h"
