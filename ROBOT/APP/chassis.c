@@ -71,7 +71,7 @@ void Remote_Task(void)
 //////		Chassis_Vx=RC_Ctl.rc.ch1-1024;
 		
 //		Chassis_Vw=RC_Ctl.rc.ch2-1024;
-		if(abs(RC_Ctl.rc.ch2-1024)<40&&abs(YAW_INIT-yunMotorData.yaw_fdbP)<200)//此处陀螺仪在加速度过大时反馈会有较大误差，因此采用低转向普通跟随，高转向智能跟随模式	//此处应把fdb改为tarP
+		if(abs(RC_Ctl.rc.ch2-1024)<40&&abs(YAW_INIT-yaw_follow_tarP)<200)//此处陀螺仪在加速度过大时反馈会有较大误差，因此采用低转向普通跟随，高转向智能跟随模式	//此处应把fdb改为tarP
 		{
 			if(YAW_INIT-yunMotorData.yaw_fdbP>8192/2)	//智能跟随块	
 			{
