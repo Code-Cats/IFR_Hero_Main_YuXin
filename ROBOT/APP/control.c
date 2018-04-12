@@ -51,9 +51,19 @@ void Control_Task(void)	//2ms
 	if(time_1ms_count%50==0)
 	{
 		Debug_Send_OSC();
-	} 
+	}
+	
 	Vw_tem=Chassis_Attitude_Correct(Chassis_GYRO[2],Gyro_Data.angvel[2]+2);
   Chassis_Vw+=Vw_tem;
+	
+	if(time_1ms_count%10==0)	//100hz
+	{
+		for(int keyid=0;keyid<KEY_NUMS;keyid++)	//放在定时器里
+		{
+			ButtonStatu_Verdict(&KeyBoardData[keyid]);
+		}
+	}
+	
 	
 	Work_State_Change();
 	switch (GetWorkState())	//2018.3.15

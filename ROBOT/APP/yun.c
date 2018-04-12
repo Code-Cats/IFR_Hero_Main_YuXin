@@ -25,7 +25,8 @@ extern	RC_Ctl_t RC_Ctl;
 extern GYRO_DATA Gyro_Data;
 
 extern u32 time_1ms_count;
-
+s32 t_pitch____=0;
+s32 t_yaw___=0;
 void Yun_Task(void)	//云台控制任务 
 {
 	Yun_Control_External_Solution();
@@ -37,7 +38,7 @@ void Yun_Control_External_Solution(void)	//外置反馈方案
 	if(GetWorkState()==NORMAL_STATE)	//仅在正常模式下受控
 	{
 		{	//PC控制数据
-			
+			PC_Control_Yun(&yunMotorData.yaw_tarP,&yunMotorData.pitch_tarP);
 		}
 		
 		{	//RC控制数据
@@ -48,7 +49,7 @@ void Yun_Control_External_Solution(void)	//外置反馈方案
 				yunMotorData.yaw_tarP=yunMotorData.yaw_tarP<-1800?yunMotorData.yaw_tarP+3600:yunMotorData.yaw_tarP;	//过零点
 			}
 			
-			yunMotorData.pitch_tarP=(int32_t)(-(RC_Ctl.rc.ch3-1024)*430.0/660.0)+PITCH_INIT;	//-50是因为陀螺仪水平时云台上扬
+			//yunMotorData.pitch_tarP=(int32_t)(-(RC_Ctl.rc.ch3-1024)*430.0/660.0)+PITCH_INIT;	//-50是因为陀螺仪水平时云台上扬
 		}
 	}
 	
@@ -88,6 +89,37 @@ void Yun_Control_Inscribe_Solution(void)	//内接反馈方案
 
 
 //	yunMotorData.pitch_tarV=yun_pitch_tarV(yunMotorData.pitch_tarV);
+}
+
+#define YUN_UPMAX 430
+#define YUN_DOWNMAX 430	//偏差量
+extern KeyBoardTypeDef KeyBoardData[KEY_NUMS];
+void PC_Control_Yun(s32 * yaw_tarp,s32 * pitch_tarp)	//1000Hz	//采用
+{
+	static float yaw_tarp_float=0;
+	static float pitch_tarp_float=PITCH_INIT;
+	static u8 start_state=0;	//初始位置
+	
+	if(start_state==0)
+	{
+		yaw_tarp_float=(float)*yaw_tarp;
+		start_state=1;
+	}
+	
+	if(time_1ms_count%10==0)
+	{
+		yaw_tarp_float-=RC_Ctl.mouse.x*15.0f/40.0f;
+		pitch_tarp_float+=RC_Ctl.mouse.y*2.0f/4.0f;
+		
+		yaw_tarp_float=yaw_tarp_float>1800?yaw_tarp_float-3600:yaw_tarp_float;	//过零点
+		yaw_tarp_float=yaw_tarp_float<-1800?yaw_tarp_float+3600:yaw_tarp_float;	//过零点
+		
+		pitch_tarp_float=pitch_tarp_float>(PITCH_INIT+430)?(PITCH_INIT+430):pitch_tarp_float;	//限制行程
+		pitch_tarp_float=pitch_tarp_float<(PITCH_INIT-430)?(PITCH_INIT-430):pitch_tarp_float;	//限制行程
+		
+		*yaw_tarp=(s32)yaw_tarp_float;
+		*pitch_tarp=(s32)pitch_tarp_float;
+	}
 }
 
 

@@ -208,5 +208,8 @@ s32 t_yun_yaw_tarV(s32 now_V);	//对速度的一阶滞后滤波
 
 void __yun_yaw_offset(void);
 
+
+void PC_Control_Yun(s32 * yaw_tarp,s32 * pitch_tarp);	//1000Hz
+
 #endif
 

@@ -54,10 +54,10 @@ void Key_Analysis(void)
 	KeyBoardData[KEY_V].value=(RC_Ctl.key.v_h&0x40)>>6;
 	KeyBoardData[KEY_B].value=(RC_Ctl.key.v_h&0x80)>>7;
 	
-	for(int keyid=0;keyid<KEY_NUMS;keyid++)	//循环处理
-	{
-		ButtonStatu_Verdict(&KeyBoardData[keyid]);
-	}
+//	for(int keyid=0;keyid<KEY_NUMS;keyid++)	//放在定时器里
+//	{
+//		ButtonStatu_Verdict(&KeyBoardData[keyid]);
+//	}
 	
 
 }
@@ -68,7 +68,7 @@ void Key_Analysis(void)
 //两种短按的触发方式 自行注释选择
 //2017.4.29
 void ButtonStatu_Verdict(KeyBoardTypeDef * Key)	//有两种检测方法，一种是以时间为分界点和后来者即为最终值的原理。另一种修复了长按状态前始终会存在另一状态的缺点
-{																			//处理频率100HZ
+{																			//处理频率100HZ，还是放在定时器里，，
 	if(Key->last==1)
 	{
 		Key->count++;

@@ -22,6 +22,8 @@ extern u32 time_1ms_count;
 s32 t_Vw_PID=0;
 s32 yaw_follow_tarP=YAW_INIT;
 s32 yaw_follow_error=0;
+
+s16 t_pc_chassis_vx,t_pc_chassis_vy=0;
 void Remote_Task(void)
 {
 //	yaw_follow_tarP=yunMotorData.yaw_fdbP;
@@ -39,7 +41,7 @@ void Remote_Task(void)
 	}
 	
 	
-	
+/******************************************	
 	if(GetWorkState()==NORMAL_STATE)
 	{
 		static s16 Chassis_Vx_last=0;
@@ -62,12 +64,19 @@ void Remote_Task(void)
 		Chassis_Vx_last=Chassis_Vx;
 	}
 	
+	Chassis_Vy=RC_Ctl.rc.ch0-1024;
+******************************************/	
+	if(GetWorkState()==NORMAL_STATE)
+	{	//键盘控制
+		PC_Control_Chassis(&Chassis_Vx,&Chassis_Vy);
+	}
+	
 	if(GetWorkState()==NORMAL_STATE||GetWorkState()==ASCEND_STATE)	//仅在正常情况下遥控器可驱动电机，(自动)登岛模式下交由程序自动控制
 	{
 //////		Chassis_Vx=RC_Ctl.rc.ch1-1024;
 		
 //		Chassis_Vw=RC_Ctl.rc.ch2-1024;
-		if(abs(RC_Ctl.rc.ch2-1024)<40&&abs(YAW_INIT-yunMotorData.yaw_fdbP)<200)//此处陀螺仪在加速度过大时反馈会有较大误差，因此采用低转向普通跟随，高转向智能跟随模式
+		if(abs(RC_Ctl.rc.ch2-1024)<40&&abs(YAW_INIT-yunMotorData.yaw_fdbP)<200)//此处陀螺仪在加速度过大时反馈会有较大误差，因此采用低转向普通跟随，高转向智能跟随模式	//此处应把fdb改为tarP
 		{
 			if(YAW_INIT-yunMotorData.yaw_fdbP>8192/2)	//智能跟随块	
 			{
@@ -112,7 +121,7 @@ void Remote_Task(void)
 //		Chassis_Vw=(s16)(FirstOrder_General((YAW_INIT-yunMotorData.yaw_fdbP),&Yaw_Follow_Filter)*0.43f);
 //		Chassis_Vw=(s16)((YAW_INIT-yunMotorData.yaw_fdbP)*0.6f);	//YUN_INIT为目标位置，故为YAW_INIT-
 	}
-	Chassis_Vy=RC_Ctl.rc.ch0-1024;
+	
 
 	if(GetWorkState()==NORMAL_STATE)
 	{	//智能转向块
@@ -157,10 +166,37 @@ void Remote_Task(void)
 //	CAN_Chassis_SendMsg(chassis_Data.lf_wheel_output,chassis_Data.rf_wheel_output,chassis_Data.lb_wheel_output,chassis_Data.rb_wheel_output);
 }
 
+void RC_Control_Chassis()
+{
+	if(GetWorkState()==NORMAL_STATE)
+	{
+		static s16 Chassis_Vx_last=0;
+		if(time_1ms_count%1==0)
+		{
+			if(RC_Ctl.rc.ch1-1024-Chassis_Vx_last>1)
+			{
+				Chassis_Vx+=1;
+			}
+//			else if(RC_Ctl.rc.ch1-1024-Chassis_Vx_last<-1)	//刹车按不缓冲
+//			{
+//				Chassis_Vx-=1;
+//			}
+			else
+			{
+				Chassis_Vx=RC_Ctl.rc.ch1-1024;
+			}
+		}
+//		Chassis_Vx=RC_Ctl.rc.ch1-1024;	//代替为斜坡函数
+		Chassis_Vx_last=Chassis_Vx;
+	}
+	
+	Chassis_Vy=RC_Ctl.rc.ch0-1024;
+}
+
 extern KeyBoardTypeDef KeyBoardData[KEY_NUMS];
 void PC_Control_Chassis(s16 * chassis_vx,s16 * chassis_vy)	//1000Hz
 {
-	if(KeyBoardData[KEY_W].statu!=0)
+	if(KeyBoardData[KEY_W].value!=0)
 	{
 		if(*chassis_vx<660&&*chassis_vx>=0)
 		{
@@ -171,7 +207,7 @@ void PC_Control_Chassis(s16 * chassis_vx,s16 * chassis_vy)	//1000Hz
 			*chassis_vx=0;
 		}
 	}
-	else if(KeyBoardData[KEY_S].statu!=0)
+	else if(KeyBoardData[KEY_S].value!=0)
 	{
 		if(*chassis_vx>-660&&*chassis_vx<=0)
 		{
@@ -182,8 +218,12 @@ void PC_Control_Chassis(s16 * chassis_vx,s16 * chassis_vy)	//1000Hz
 			*chassis_vx=0;
 		}
 	}
+	else
+	{
+		*chassis_vx=0;
+	}
 	///////////////////////////////////////
-	if(KeyBoardData[KEY_D].statu!=0)
+	if(KeyBoardData[KEY_D].value!=0)
 	{
 		if(*chassis_vy<660&&*chassis_vy>=0)
 		{
@@ -194,7 +234,7 @@ void PC_Control_Chassis(s16 * chassis_vx,s16 * chassis_vy)	//1000Hz
 			*chassis_vy=0;
 		}
 	}
-	else if(KeyBoardData[KEY_A].statu!=0)
+	else if(KeyBoardData[KEY_A].value!=0)
 	{
 		if(*chassis_vy>-660&&*chassis_vy<=0)
 		{
@@ -204,6 +244,10 @@ void PC_Control_Chassis(s16 * chassis_vx,s16 * chassis_vy)	//1000Hz
 		{
 			*chassis_vy=0;
 		}
+	}
+	else
+	{
+		*chassis_vy=0;
 	}
 }
 
