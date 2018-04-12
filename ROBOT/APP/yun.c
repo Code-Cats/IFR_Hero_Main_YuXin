@@ -33,28 +33,34 @@ void Yun_Task(void)	//ÔÆÌ¨¿ØÖÆÈÎÎñ
 }
 
 
+u8 Yun_Control_RCorPC=RC_CONTROL;
 void Yun_Control_External_Solution(void)	//ÍâÖÃ·´À¡·½°¸
 {
-	if(GetWorkState()==NORMAL_STATE)	//½öÔÚÕı³£Ä£Ê½ÏÂÊÜ¿Ø
+	if(GetWorkState()!=PREPARE_STATE&&GetWorkState()!=CALI_STATE)	//Ä£Ê½ÇĞ»»
 	{
-		{	//PC¿ØÖÆÊı¾İ
-			PC_Control_Yun(&yunMotorData.yaw_tarP,&yunMotorData.pitch_tarP);
+		if(RC_Ctl.mouse.press_l==1||RC_Ctl.mouse.press_r==1||RC_Ctl.mouse.x>1||RC_Ctl.mouse.y>1)
+		{
+			Yun_Control_RCorPC=PC_CONTROL;
 		}
-		
-		{	//RC¿ØÖÆÊı¾İ
-			if(time_1ms_count%15==0)	//66.67hz
-			{
-				yunMotorData.yaw_tarP-=(int32_t)((RC_Ctl.rc.ch2-1024)*20.0/660.0);
-				yunMotorData.yaw_tarP=yunMotorData.yaw_tarP>1800?yunMotorData.yaw_tarP-3600:yunMotorData.yaw_tarP;	//¹ıÁãµã
-				yunMotorData.yaw_tarP=yunMotorData.yaw_tarP<-1800?yunMotorData.yaw_tarP+3600:yunMotorData.yaw_tarP;	//¹ıÁãµã
-			}
-			
-			//yunMotorData.pitch_tarP=(int32_t)(-(RC_Ctl.rc.ch3-1024)*430.0/660.0)+PITCH_INIT;	//-50ÊÇÒòÎªÍÓÂİÒÇË®Æ½Ê±ÔÆÌ¨ÉÏÑï
+		else if(abs(RC_Ctl.rc.ch2-1024)>3||abs(RC_Ctl.rc.ch3-1024)>3)
+		{
+			Yun_Control_RCorPC=RC_CONTROL;
 		}
 	}
 	
+	if(GetWorkState()==NORMAL_STATE)	//½öÔÚÕı³£Ä£Ê½ÏÂÊÜ¿Ø
+	{
+		if(Yun_Control_RCorPC==PC_CONTROL)
+		{	//PC¿ØÖÆÊı¾İ
+			PC_Control_Yun(&yunMotorData.yaw_tarP,&yunMotorData.pitch_tarP);
+		}
+		else if(Yun_Control_RCorPC==RC_CONTROL)
+		{	//RC¿ØÖÆÊı¾İ
+			RC_Control_Yun(&yunMotorData.yaw_tarP,&yunMotorData.pitch_tarP);
+		}
+	}
 	
-	
+
 	yunMotorData.pitch_tarV=-PID_General(yunMotorData.pitch_tarP,(Gyro_Data.angle[0]*8192/360.0+PITCH_INIT),&PID_PITCH_POSITION);
 		
 	if(yunMotorData.yaw_tarP-Gyro_Data.angle[2]*10>1800)	//¹ıÁãµã
@@ -91,10 +97,23 @@ void Yun_Control_Inscribe_Solution(void)	//ÄÚ½Ó·´À¡·½°¸
 //	yunMotorData.pitch_tarV=yun_pitch_tarV(yunMotorData.pitch_tarV);
 }
 
+void RC_Control_Yun(s32 * yaw_tarp,s32 * pitch_tarp)	//1000Hz
+{
+	if(time_1ms_count%15==0)	//66.67hz
+	{
+		yunMotorData.yaw_tarP-=(int32_t)((RC_Ctl.rc.ch2-1024)*20.0/660.0);
+		yunMotorData.yaw_tarP=yunMotorData.yaw_tarP>1800?yunMotorData.yaw_tarP-3600:yunMotorData.yaw_tarP;	//¹ıÁãµã
+		yunMotorData.yaw_tarP=yunMotorData.yaw_tarP<-1800?yunMotorData.yaw_tarP+3600:yunMotorData.yaw_tarP;	//¹ıÁãµã
+	}
+	
+	yunMotorData.pitch_tarP=(int32_t)(-(RC_Ctl.rc.ch3-1024)*430.0/660.0)+PITCH_INIT;	//-50ÊÇÒòÎªÍÓÂİÒÇË®Æ½Ê±ÔÆÌ¨ÉÏÑï
+}
+
+
 #define YUN_UPMAX 430
 #define YUN_DOWNMAX 430	//Æ«²îÁ¿
 extern KeyBoardTypeDef KeyBoardData[KEY_NUMS];
-void PC_Control_Yun(s32 * yaw_tarp,s32 * pitch_tarp)	//1000Hz	//²ÉÓÃ
+void PC_Control_Yun(s32 * yaw_tarp,s32 * pitch_tarp)	//1000Hz	
 {
 	static float yaw_tarp_float=0;
 	static float pitch_tarp_float=PITCH_INIT;
@@ -259,32 +278,4 @@ s16 Pitch_output_offset(s32 pitch_tarP)	//¿Ë·şÔÆÌ¨pitchÖá·ÇÏßĞÔÁ¦¼°·Ç¶Ô³ÆĞÔµÄ²¹³
 
 
 
-//extern char g_Yun_State_Change_Flag;
-//extern char g_frictionWheelState;
 
-//float Yaw_move_save[3]={0.0,0.0,0.0};
-//volatile float Pitch_Tp_V=0;
-//volatile float Yaw_Tp_V=0;
-//volatile char  g_Yun_State = 0;
-//volatile char  yunPID_Choose = 0;
-
-///************************************
-//º¯ÊıÃû³Æ£ºYun_Move_Mouse
-//º¯Êı¹¦ÄÜ£ºÊó±ê¼üÅÌ¿ØÖÆÔÆÌ¨µÃµ½YAWÖáºÍPITCHÖáµÄÄ¿±êÎ»ÖÃ
-//º¯Êı²ÎÊı£ºÎŞ
-//º¯Êı·µ»ØÖµ£ºÎŞ
-//ÃèÊö£º
-//*************************************/
-//void Yun_Move_Mouse(void)
-//{
-//		yunData.yaw_move = yunData.value_mouse_X*12;
-//		yunData.pitch_move = yunData.value_mouse_Y*2;       
-//	  Yaw_move_save[0]=Yaw_move_save[1];
-//	  Yaw_move_save[1]=yunData.yaw_move ;
-//	  Yaw_move_save[2]=abs(Yaw_move_save[1]- Yaw_move_save[0]);
-//	
-//		yunMotorData.yaw_Tp=YAW_INIT;		//9170						
-//		Pitch_Tp_V=-yunData.pitch_move;
-//	  yunMotorData.pitch_Tp-=Pitch_Tp_V;					
-//		yunMotorData.yaw_Tp=Filter_firstOrder(yunMotorData.yaw_Tp,&FILTER_MOUSE_YAW);			
-//}	

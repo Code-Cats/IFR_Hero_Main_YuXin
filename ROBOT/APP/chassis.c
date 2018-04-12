@@ -23,9 +23,33 @@ s32 t_Vw_PID=0;
 s32 yaw_follow_tarP=YAW_INIT;
 s32 yaw_follow_error=0;
 
-s16 t_pc_chassis_vx,t_pc_chassis_vy=0;
+u8 Chassis_Control_RCorPC=RC_CONTROL;
 void Remote_Task(void)
 {
+	
+	if(GetWorkState()!=PREPARE_STATE&&GetWorkState()!=CALI_STATE)	//模式切换
+	{
+		if(RC_Ctl.key.v_h!=0||RC_Ctl.key.v_l!=0)
+		{
+			Chassis_Control_RCorPC=PC_CONTROL;
+		}
+		else if(abs(RC_Ctl.rc.ch0-1024)>3||abs(RC_Ctl.rc.ch1-1024)>3)
+		{
+			Chassis_Control_RCorPC=RC_CONTROL;
+		}
+	}
+	
+	if(Chassis_Control_RCorPC==RC_CONTROL)
+	{
+		RC_Control_Chassis();
+	}
+	else if(Chassis_Control_RCorPC==PC_CONTROL)
+	{
+		PC_Control_Chassis(&Chassis_Vx,&Chassis_Vy);
+	}
+	
+	
+	
 //	yaw_follow_tarP=yunMotorData.yaw_fdbP;
 	if(yunMotorData.yaw_tarP-Gyro_Data.angle[2]*10>1800)	//过零点
 	{
@@ -41,35 +65,6 @@ void Remote_Task(void)
 	}
 	
 	
-/******************************************	
-	if(GetWorkState()==NORMAL_STATE)
-	{
-		static s16 Chassis_Vx_last=0;
-		if(time_1ms_count%1==0)
-		{
-			if(RC_Ctl.rc.ch1-1024-Chassis_Vx_last>1)
-			{
-				Chassis_Vx+=1;
-			}
-//			else if(RC_Ctl.rc.ch1-1024-Chassis_Vx_last<-1)	//刹车按不缓冲
-//			{
-//				Chassis_Vx-=1;
-//			}
-			else
-			{
-				Chassis_Vx=RC_Ctl.rc.ch1-1024;
-			}
-		}
-//		Chassis_Vx=RC_Ctl.rc.ch1-1024;	//代替为斜坡函数
-		Chassis_Vx_last=Chassis_Vx;
-	}
-	
-	Chassis_Vy=RC_Ctl.rc.ch0-1024;
-******************************************/	
-	if(GetWorkState()==NORMAL_STATE)
-	{	//键盘控制
-		PC_Control_Chassis(&Chassis_Vx,&Chassis_Vy);
-	}
 	
 	if(GetWorkState()==NORMAL_STATE||GetWorkState()==ASCEND_STATE)	//仅在正常情况下遥控器可驱动电机，(自动)登岛模式下交由程序自动控制
 	{
@@ -166,7 +161,7 @@ void Remote_Task(void)
 //	CAN_Chassis_SendMsg(chassis_Data.lf_wheel_output,chassis_Data.rf_wheel_output,chassis_Data.lb_wheel_output,chassis_Data.rb_wheel_output);
 }
 
-void RC_Control_Chassis()
+void RC_Control_Chassis(void)
 {
 	if(GetWorkState()==NORMAL_STATE)
 	{
@@ -196,58 +191,61 @@ void RC_Control_Chassis()
 extern KeyBoardTypeDef KeyBoardData[KEY_NUMS];
 void PC_Control_Chassis(s16 * chassis_vx,s16 * chassis_vy)	//1000Hz
 {
-	if(KeyBoardData[KEY_W].value!=0)
+	if(GetWorkState()==NORMAL_STATE)
 	{
-		if(*chassis_vx<660&&*chassis_vx>=0)
+		if(KeyBoardData[KEY_W].value!=0)
 		{
-			(*chassis_vx)++;
+			if(*chassis_vx<660&&*chassis_vx>=0)
+			{
+				(*chassis_vx)++;
+			}
+			else if(*chassis_vx<0)
+			{
+				*chassis_vx=0;
+			}
 		}
-		else if(*chassis_vx<0)
+		else if(KeyBoardData[KEY_S].value!=0)
+		{
+			if(*chassis_vx>-660&&*chassis_vx<=0)
+			{
+				(*chassis_vx)--;
+			}
+			else if(*chassis_vx>0)
+			{
+				*chassis_vx=0;
+			}
+		}
+		else
 		{
 			*chassis_vx=0;
 		}
-	}
-	else if(KeyBoardData[KEY_S].value!=0)
-	{
-		if(*chassis_vx>-660&&*chassis_vx<=0)
+		///////////////////////////////////////
+		if(KeyBoardData[KEY_D].value!=0)
 		{
-			(*chassis_vx)--;
+			if(*chassis_vy<660&&*chassis_vy>=0)
+			{
+				(*chassis_vy)++;
+			}
+			else if(*chassis_vy<0)
+			{
+				*chassis_vy=0;
+			}
 		}
-		else if(*chassis_vx>0)
+		else if(KeyBoardData[KEY_A].value!=0)
 		{
-			*chassis_vx=0;
+			if(*chassis_vy>-660&&*chassis_vy<=0)
+			{
+				(*chassis_vy)--;
+			}
+			else if(*chassis_vy>0)
+			{
+				*chassis_vy=0;
+			}
 		}
-	}
-	else
-	{
-		*chassis_vx=0;
-	}
-	///////////////////////////////////////
-	if(KeyBoardData[KEY_D].value!=0)
-	{
-		if(*chassis_vy<660&&*chassis_vy>=0)
-		{
-			(*chassis_vy)++;
-		}
-		else if(*chassis_vy<0)
-		{
-			*chassis_vy=0;
-		}
-	}
-	else if(KeyBoardData[KEY_A].value!=0)
-	{
-		if(*chassis_vy>-660&&*chassis_vy<=0)
-		{
-			(*chassis_vy)--;
-		}
-		else if(*chassis_vy>0)
+		else
 		{
 			*chassis_vy=0;
 		}
-	}
-	else
-	{
-		*chassis_vy=0;
 	}
 }
 

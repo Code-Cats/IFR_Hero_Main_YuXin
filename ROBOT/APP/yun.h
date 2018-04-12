@@ -13,6 +13,9 @@
 #define 		Pitch_MAX 		   PITCH_INIT+250
 #define 		Pitch_MIN 		   PITCH_INIT-600
 
+#define RC_CONTROL 0	//遥控器操纵模式
+#define PC_CONTROL 1	//键盘操纵模式
+
 
 #define YUN_MOTOR_DATA_DEFAULT \
 {\
@@ -208,7 +211,7 @@ s32 t_yun_yaw_tarV(s32 now_V);	//对速度的一阶滞后滤波
 
 void __yun_yaw_offset(void);
 
-
+void RC_Control_Yun(s32 * yaw_tarp,s32 * pitch_tarp);	//1000Hz
 void PC_Control_Yun(s32 * yaw_tarp,s32 * pitch_tarp);	//1000Hz
 
 #endif

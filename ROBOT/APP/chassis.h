@@ -3,6 +3,9 @@
 
 #include "main.h"
 
+#define RC_CONTROL 0	//遥控器操纵模式
+#define PC_CONTROL 1	//键盘操纵模式
+
 #define CHASSIS_SPEED_PID_P 3.0f	//底盘PID参数
 #define CHASSIS_SPEED_PID_I 0.035f
 #define CHASSIS_SPEED_PID_D 0
@@ -72,6 +75,7 @@
 
 
 void Remote_Task(void);
+void RC_Control_Chassis(void);
 void PC_Control_Chassis(s16 * chassis_vx,s16 * chassis_vy);	//1000Hz
 s16 chassis_Vw_filter(s16 now_V);
 float Limit_Power(float power,float powerbuffer);	//英雄120J热量限制，直接限制总输出
