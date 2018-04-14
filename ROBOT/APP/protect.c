@@ -48,17 +48,27 @@ void Check_Task(void)
 		SetWorkState(ERROR_STATE);
 	}
 	
-	if(Error_Check.statu[LOST_DBUS]==1)
-	{
-		t_chesk_protect_count++;
-		SetWorkState(PROTECT_STATE);
-	}
-	
-	for(int i=4;i<LOST_TYPE_NUM-1;i++)
+	for(int i=4;i<LOST_TYPE_NUM-1;i++)	//电机比控更重要
 	{
 		if(Error_Check.statu[i]==1)
 			SetWorkState(ERROR_STATE);
 	}
+	
+	if(Error_Check.statu[LOST_DBUS]==1)
+	{
+		t_chesk_protect_count++;
+		if(GetWorkState()==CHECK_STATE)
+		{
+			SetWorkState(LOST_STATE);	//启动时没有遥控信号的选择
+		}
+		else
+		{
+			SetWorkState(PROTECT_STATE);
+		}
+		
+	}
+	
+
 }
 
 

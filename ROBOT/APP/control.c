@@ -226,6 +226,8 @@ void Work_State_Change(void)
 		}
 		case LOST_STATE:	//错误模式
 		{
+			SetWorkState(CHECK_STATE);
+			time_1ms_count=0;	//进入初始状态重新自检
 			break;
 		}
 		case STOP_STATE:	//停止状态
@@ -319,6 +321,11 @@ void LED_Indicate(void)
 		}
 		case LOST_STATE:	//错误模式
 		{
+			if(time_1ms_count%800==0)
+			{
+				RED_LED_TOGGLE();
+				GREEN_LED_TOGGLE();
+			}
 			break;
 		}
 		case STOP_STATE:	//停止状态	红闪
@@ -332,7 +339,7 @@ void LED_Indicate(void)
 		}
 		case PROTECT_STATE:	//自我保护模式	双闪
 		{
-			if(time_1ms_count%500==0)
+			if(time_1ms_count%800==0)
 			{
 				RED_LED_TOGGLE();
 				GREEN_LED_TOGGLE();
@@ -612,9 +619,9 @@ void Motor_Send(void)
 			Cali_Output_Limit(lift_Data.rb_lift_output,&cali_send[RB]);
 //		Entirety_PID(&lift_Data,cali_send);  	//整体PID补偿
 			Lift_Cali_GYRO_Compensate(cali_send);	//陀螺仪补偿.存在问题3.14
-//			CAN1_Yun_SendMsg(yunMotorData.yaw_output+Yaw_output_offset(yunMotorData.yaw_fdbP),t_pitch_Send);	//CAN2-1000
 //			CAN1_Yun_SendMsg(yunMotorData.yaw_output+Yaw_output_offset(yunMotorData.yaw_fdbP),yunMotorData.pitch_output+Pitch_output_offset(yunMotorData.pitch_tarP));	//CAN2-1000	//加入反馈补偿
 			CAN1_Yun_SendMsg(yunMotorData.yaw_output,yunMotorData.pitch_output);	//CAN2-1000	//取消反馈补偿
+//			CAN1_Yun_SendMsg(0,0);
 			CAN2_Chassis_SendMsg(0,0,0,0);
 //		CAN1_Lift_SendMsg(0,0,0,0);
 			CAN1_Lift_SendMsg((s16)cali_send[LF],(s16)cali_send[RF],(s16)cali_send[LB],(s16)cali_send[RB]);
@@ -805,7 +812,7 @@ void Chassis_Attitude_Angle_Convert(void)	//综合得出底盘姿态
 	float deviation_yaw=YAW_INIT-yunMotorData.yaw_fdbP;
 	//对yaw轴进行限制，标准过零（-180——+180）
 	Chassis_GYRO[PITCH]=-Gyro_Data.angle[PITCH]-deviation_pitch*360.0f/8192;	//因为云台电机位置反馈正方向与陀螺仪正方向相反pitch？-2
-	Chassis_GYRO[ROLL]=Gyro_Data.angle[ROLL]+2;	//roll
+	Chassis_GYRO[ROLL]=Gyro_Data.angle[ROLL]-3;	//roll	-3为静止时补偿
 	Chassis_GYRO[YAW]=Gyro_Data.angle[YAW]+deviation_yaw*360.0f/8192;	//因为云台电机位置反馈正方向与陀螺仪正方向相同
  
 	//限制-180_+180

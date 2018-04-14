@@ -5,8 +5,8 @@
 #include "main.h"
 
 #define YAW_INIT             900//4900
-#define PITCH_INIT           6650//5900//6000	//2018.3.3	余鑫6000
-#define PITCH_GYRO_INIT 6650	//云台陀螺仪零点对应电机位置，陀螺仪更改位置需要重调
+#define PITCH_INIT           7430//5900//6000	//2018.3.3	余鑫6000
+#define PITCH_GYRO_INIT 7430	//云台陀螺仪零点对应电机位置，陀螺仪更改位置需要重调
 
 #define 		Yaw_MAX 			   YAW_INIT+1000
 #define 		Yaw_MIN				   YAW_INIT-1000
@@ -36,18 +36,18 @@
 
 
 /*PID参数-外接陀螺仪*/
-#define PITCH_POSITION_PID_P 0.9	//0.81
-#define PITCH_POSITION_PID_I 0
+#define PITCH_POSITION_PID_P 0.88//0.9	//0.81
+#define PITCH_POSITION_PID_I 0.005
 #define PITCH_POSITION_PID_D 1	//1.2
 #define PITCH_POSITION_PID_MER 260	//最大偏差输入
 #define PITCH_POSITION_PID_MAXINPUT 8190	//最大期望输入
 #define PITCH_POSITION_PID_MAXOUTPUT 260	//最大输出
-#define PITCH_POSITION_PID_I_MAX 0	//I累加限制
+#define PITCH_POSITION_PID_I_MAX 3000	//I累加限制
 #define PITCH_POSITION_PID_DEAD 1	//计算死区3
 //参数记录：
-#define PITCH_SPEED_PID_P 30	//22
+#define PITCH_SPEED_PID_P 28	//30//22
 #define PITCH_SPEED_PID_I 0.014	//0.026
-#define PITCH_SPEED_PID_D 1	//0.08
+#define PITCH_SPEED_PID_D 8	//0.08
 #define PITCH_SPEED_PID_MER 260	//最大偏差输入240
 #define PITCH_SPEED_PID_MAXINPUT 260	//最大期望输入
 #define PITCH_SPEED_PID_MAXOUTPUT 7000	//最大输出5500

@@ -9,6 +9,7 @@ int main(void)
 	 SetWorkState(CHECK_STATE);	//进入自检状态
 	 delay_ms(100);
 
+
 	while(1)
 	 {
 //		 if(GetWorkState()==CALI_STATE)	//标定在这里进行
