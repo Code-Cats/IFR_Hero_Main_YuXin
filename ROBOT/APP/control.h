@@ -181,12 +181,13 @@ typedef enum
     CHECK_STATE,			//自检状态 在此阶段能够通过内核重启解决的问题发生时将会自动内核重启
 		CALI_STATE,    		//校准状态标定
 		LOST_STATE,				//硬件帧率丢失
-		ERROR_STATE,			//硬件错误状态，包括但不限于检测出传感器失效，数据失常等重启无法解决的问题
     NORMAL_STATE,			//正常输入状态	即底盘跟随云台模式
+		WAIST_STATE,			//扭腰模式
     STOP_STATE,       //停止运动状态(由遥控器控制的保护状态)
 		ASCEND_STATE,			//登岛状态
 		DESCEND_STATE,		//下岛状态
 		PROTECT_STATE,		//保护状态，在程序循环时执行，当检测到程序发生异常或者传感器异常时进入该模式
+		ERROR_STATE,			//硬件错误状态，包括但不限于检测出传感器失效，数据失常等重启无法解决的问题
 }WorkState_e;
 
 extern WorkState_e workState;

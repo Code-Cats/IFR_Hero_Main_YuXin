@@ -33,8 +33,7 @@ u8 LostCountCheck(u16 lostcount,u8* statu,const u16 cycle)
 		*statu=0;
 	return *statu;
 }
-
-u16 t_chesk_protect_count=0;
+static s32 test_error_Satrt=0;
 void Check_Task(void)
 {
 	for(int i=0;i<LOST_TYPE_NUM;i++)
@@ -45,25 +44,30 @@ void Check_Task(void)
 	
 	if(Error_Check.statu[LOST_IMU]==1)
 	{
+		test_error_Satrt=1;
 		SetWorkState(ERROR_STATE);
 	}
 	
 	for(int i=4;i<LOST_TYPE_NUM-1;i++)	//电机比控更重要
 	{
 		if(Error_Check.statu[i]==1)
+		{
+			test_error_Satrt=-1;
 			SetWorkState(ERROR_STATE);
+			test_error_Satrt=-1;
+		}
+			
 	}
 	
 	if(Error_Check.statu[LOST_DBUS]==1)
 	{
-		t_chesk_protect_count++;
 		if(GetWorkState()==CHECK_STATE)
 		{
 			SetWorkState(LOST_STATE);	//启动时没有遥控信号的选择
 		}
 		else
 		{
-			SetWorkState(PROTECT_STATE);
+//			SetWorkState(PROTECT_STATE);
 		}
 		
 	}

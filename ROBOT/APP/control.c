@@ -112,6 +112,17 @@ void Control_Task(void)	//2ms
 			AutoChassisAttitude_Lift_V2(Chassis_GYRO[PITCH]);
 			Lift_Task();	//开启升降
 			Shoot_Task();
+			LASER_ON();
+			break;
+		}
+		case WAIST_STATE:
+		{
+			Teleconltroller_Data_protect();	//遥控器数据保护
+			Yun_Task();	//开启云台处理
+			Remote_Task();	//执行移动
+			AutoChassisAttitude_Lift_V2(Chassis_GYRO[PITCH]);
+			Lift_Task();	//开启升降
+			Shoot_Task();
 			break;
 		}
 		case ASCEND_STATE:	//自动上岛模式
@@ -132,6 +143,7 @@ void Control_Task(void)	//2ms
 		}
 		case ERROR_STATE:	//错误模式
 		{
+			LASER_OFF();
 			break;
 		}
 		case LOST_STATE:	//错误模式
@@ -167,6 +179,8 @@ void Work_State_Change(void)
 	static u8 Switch_Right_Last=0;
 	static WorkState_e State_Record=CHECK_STATE;	
 	State_Record=GetWorkState();
+	
+	
 	switch (GetWorkState())	//2018.3.15
 	{
 		case CHECK_STATE:	//自检模式
@@ -200,6 +214,22 @@ void Work_State_Change(void)
 //				SetWorkState(DESCEND_STATE);
 			}
 			
+			if(RC_Ctl.mouse.press_r==1&&RC_Ctl.rc.switch_left!=RC_SWITCH_MIDDLE)
+			{
+				SetWorkState(WAIST_STATE);
+			}
+			break;
+		}
+		case WAIST_STATE:
+		{
+			if(RC_Ctl.mouse.press_r!=1)
+			{
+				SetWorkState(NORMAL_STATE);
+			}
+			if(RC_Ctl.rc.switch_left==RC_SWITCH_MIDDLE)	//左中
+			{
+				SetWorkState(STOP_STATE);
+			}
 			break;
 		}
 		case ASCEND_STATE:	//自动上岛模式
@@ -292,6 +322,16 @@ void LED_Indicate(void)
 			}
 			break;
 		}
+		case WAIST_STATE:
+		{
+			RED_LED_OFF();
+			if(time_1ms_count%500==0)
+			{
+				GREEN_LED_TOGGLE();
+				//GREEN_LED_ON();
+			}
+			break;
+		}
 		case ASCEND_STATE:	//自动上岛模式	绿闪
 		{
 			RED_LED_OFF();
@@ -362,13 +402,13 @@ void Lift_Task(void)
 	if(GetWorkState()==NORMAL_STATE)
 	{
 		
-		if(RC_Ctl.rc.switch_left!=3)	//左边不在中值
+		if(RC_Ctl.rc.switch_left==RC_SWITCH_UP)	//左上
 		{
 			if(time_1ms_count%10==0)
 			{
 				switch (RC_Ctl.rc.switch_right)
 				{
-					case 1:
+					case RC_SWITCH_UP:
 					{
 						lift_Data.lf_lift_tarP+=(s16)(12*(RC_Ctl.rc.ch3-1024)/660.0);
 						lift_Data.rf_lift_tarP+=(s16)(12*(RC_Ctl.rc.ch3-1024)/660.0);
@@ -376,7 +416,7 @@ void Lift_Task(void)
 						lift_Data.rb_lift_tarP+=(s16)(12*(RC_Ctl.rc.ch3-1024)/660.0);
 						break;
 					}
-					case 2:
+					case RC_SWITCH_DOWN:
 					{
 						lift_Data.lf_lift_tarP+=(s16)(7*(RC_Ctl.rc.ch3-1024)/660.0);
 						lift_Data.rf_lift_tarP+=(s16)(7*(RC_Ctl.rc.ch3-1024)/660.0);
@@ -385,7 +425,7 @@ void Lift_Task(void)
 						lift_Data.rb_lift_tarP-=(s16)(7*(RC_Ctl.rc.ch3-1024)/660.0);
 						break;
 					}
-					case 3:
+					case RC_SWITCH_MIDDLE:
 					{
 						
 					}
@@ -631,13 +671,25 @@ void Motor_Send(void)
 		}
 		case NORMAL_STATE:	//正常操作模式
 		{
-			CAN1_Yun_SendMsg(yunMotorData.yaw_output+Yaw_output_offset(yunMotorData.yaw_fdbP),yunMotorData.pitch_output+Pitch_output_offset(yunMotorData.pitch_tarP));	//CAN2-1000
+			CAN1_Yun_SendMsg(yunMotorData.yaw_output,yunMotorData.pitch_output);	//CAN2-1000	//取消反馈补偿
 //		CAN_Yun_SendMsg(0,0);
 //		CAN_Chassis_SendMsg((s16)remote_tem,(s16)remote_tem,(s16)remote_tem,(s16)remote_tem);
 			CAN2_Chassis_SendMsg(chassis_Data.lf_wheel_output,chassis_Data.rf_wheel_output,chassis_Data.lb_wheel_output,chassis_Data.rb_wheel_output);
 //			CAN_Chassis_SendMsg(0,0,0,0);
 //    CAN_Lift_SendMsg((s16)lift_tem,(s16)lift_tem,(s16)lift_tem,(s16)lift_tem);
 			CAN1_Lift_SendMsg((s16)lift_Data.lf_lift_output,(s16)lift_Data.rf_lift_output,(s16)lift_Data.lb_lift_output,(s16)lift_Data.rb_lift_output);
+			CAN2_Shoot_SendMsg((s16)shoot_Motor_Data_Down.output,0);	//下拨弹、上拨弹
+			break;
+		}
+		case WAIST_STATE:
+		{
+			CAN1_Yun_SendMsg(yunMotorData.yaw_output,yunMotorData.pitch_output);	//CAN2-1000	//取消反馈补偿
+//		CAN_Yun_SendMsg(0,0);
+//		CAN_Chassis_SendMsg((s16)remote_tem,(s16)remote_tem,(s16)remote_tem,(s16)remote_tem);
+			CAN2_Chassis_SendMsg(chassis_Data.lf_wheel_output,chassis_Data.rf_wheel_output,chassis_Data.lb_wheel_output,chassis_Data.rb_wheel_output);
+//			CAN_Chassis_SendMsg(0,0,0,0);
+//    CAN_Lift_SendMsg((s16)lift_tem,(s16)lift_tem,(s16)lift_tem,(s16)lift_tem);
+			CAN1_Lift_SendMsg(0,0,0,0);
 			CAN2_Shoot_SendMsg((s16)shoot_Motor_Data_Down.output,0);	//下拨弹、上拨弹
 			break;
 		}

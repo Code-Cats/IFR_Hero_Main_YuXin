@@ -1,5 +1,5 @@
 #include "yun.h"
-
+s32 YAW_INIT=YAW_INIT_DEFINE;
 /*
 整体结构：yaw轴暂定单独速度环//后期计划增加外接陀螺仪位置环进行选择
 pitch轴位置环
@@ -48,7 +48,7 @@ void Yun_Control_External_Solution(void)	//外置反馈方案
 		}
 	}
 	
-	if(GetWorkState()==NORMAL_STATE)	//仅在正常模式下受控
+	if(GetWorkState()==NORMAL_STATE||GetWorkState()==WAIST_STATE)	//仅在正常模式下受控
 	{
 		if(Yun_Control_RCorPC==PC_CONTROL)
 		{	//PC控制数据
@@ -118,29 +118,49 @@ void PC_Control_Yun(s32 * yaw_tarp,s32 * pitch_tarp)	//1000Hz
 	static float yaw_tarp_float=0;
 	static float pitch_tarp_float=PITCH_INIT;
 	static u8 start_state=0;	//初始位置
-	
+
 	if(start_state==0)
 	{
 		yaw_tarp_float=(float)*yaw_tarp;
 		start_state=1;
 	}
 	
+	if(KeyBoardData[KEY_Q].last==0&&KeyBoardData[KEY_Q].value==1)
+	{
+		yaw_tarp_float+=900;
+		yaw_tarp_float=yaw_tarp_float>1800?yaw_tarp_float-3600:yaw_tarp_float;	//过零点
+		yaw_tarp_float=yaw_tarp_float<-1800?yaw_tarp_float+3600:yaw_tarp_float;	//过零点
+	}
+	if(KeyBoardData[KEY_E].last==0&&KeyBoardData[KEY_E].value==1)
+	{
+		yaw_tarp_float-=900;
+		yaw_tarp_float=yaw_tarp_float>1800?yaw_tarp_float-3600:yaw_tarp_float;	//过零点
+		yaw_tarp_float=yaw_tarp_float<-1800?yaw_tarp_float+3600:yaw_tarp_float;	//过零点
+	}
+	
+	
+	
 	if(time_1ms_count%10==0)
 	{
 		yaw_tarp_float-=RC_Ctl.mouse.x*15.0f/40.0f;
-		pitch_tarp_float+=RC_Ctl.mouse.y*2.0f/4.0f;
+		pitch_tarp_float+=RC_Ctl.mouse.y*2.0f/3.2f;	//2/4
 		
 		yaw_tarp_float=yaw_tarp_float>1800?yaw_tarp_float-3600:yaw_tarp_float;	//过零点
 		yaw_tarp_float=yaw_tarp_float<-1800?yaw_tarp_float+3600:yaw_tarp_float;	//过零点
 		
-		pitch_tarp_float=pitch_tarp_float>(PITCH_INIT+430)?(PITCH_INIT+430):pitch_tarp_float;	//限制行程
-		pitch_tarp_float=pitch_tarp_float<(PITCH_INIT-430)?(PITCH_INIT-430):pitch_tarp_float;	//限制行程
+		pitch_tarp_float=pitch_tarp_float>(PITCH_INIT+450)?(PITCH_INIT+450):pitch_tarp_float;	//限制行程
+		pitch_tarp_float=pitch_tarp_float<(PITCH_INIT-450)?(PITCH_INIT-450):pitch_tarp_float;	//限制行程
 		
 		*yaw_tarp=(s32)yaw_tarp_float;
 		*pitch_tarp=(s32)pitch_tarp_float;
 	}
 }
 
+
+float yaw_move_optimize_PC(s16 mouse_x)
+{
+	return 0;
+}
 
 //s16 __t_yaw_offset=0;
 //	void __yun_yaw_offset(void)
