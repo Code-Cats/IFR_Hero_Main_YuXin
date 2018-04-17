@@ -67,7 +67,7 @@ void Check_Task(void)
 		}
 		else
 		{
-//			SetWorkState(PROTECT_STATE);
+			SetWorkState(PROTECT_STATE);
 		}
 		
 	}

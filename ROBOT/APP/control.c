@@ -56,7 +56,7 @@ void Control_Task(void)	//2ms
 	Vw_tem=Chassis_Attitude_Correct(Chassis_GYRO[2],Gyro_Data.angvel[2]+2);
   Chassis_Vw+=Vw_tem;
 	
-	if(time_1ms_count%10==0)	//100hz
+	if(time_1ms_count%1==0)	//1000hz
 	{
 		for(int keyid=0;keyid<KEY_NUMS;keyid++)	//放在定时器里
 		{
@@ -652,7 +652,6 @@ void Motor_Send(void)
 			t_send_count++;
 			SetFrictionWheelSpeed(FRICTION_INIT);
 			
-			
 			Cali_Output_Limit(lift_Data.lf_lift_output,&cali_send[LF]);
 			Cali_Output_Limit(lift_Data.rf_lift_output,&cali_send[RF]);
 			Cali_Output_Limit(lift_Data.lb_lift_output,&cali_send[LB]);
@@ -676,7 +675,7 @@ void Motor_Send(void)
 //		CAN_Chassis_SendMsg((s16)remote_tem,(s16)remote_tem,(s16)remote_tem,(s16)remote_tem);
 			CAN2_Chassis_SendMsg(chassis_Data.lf_wheel_output,chassis_Data.rf_wheel_output,chassis_Data.lb_wheel_output,chassis_Data.rb_wheel_output);
 //			CAN_Chassis_SendMsg(0,0,0,0);
-//    CAN_Lift_SendMsg((s16)lift_tem,(s16)lift_tem,(s16)lift_tem,(s16)lift_tem);
+//    CAN1_Lift_SendMsg((s16)lift_tem,(s16)lift_tem,(s16)lift_tem,(s16)lift_tem);
 			CAN1_Lift_SendMsg((s16)lift_Data.lf_lift_output,(s16)lift_Data.rf_lift_output,(s16)lift_Data.lb_lift_output,(s16)lift_Data.rb_lift_output);
 			CAN2_Shoot_SendMsg((s16)shoot_Motor_Data_Down.output,0);	//下拨弹、上拨弹
 			break;

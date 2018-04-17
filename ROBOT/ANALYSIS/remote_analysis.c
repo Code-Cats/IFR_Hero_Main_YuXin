@@ -78,9 +78,9 @@ void ButtonStatu_Verdict(KeyBoardTypeDef * Key)	//有两种检测方法，一种是以时间为
 		Key->count=0;
 	}
 	
-	if(Key->count>1)	//防抖动部分 10ms
+	if(Key->count>10)	//防抖动部分 10ms
 	{
-		if(Key->count<100)	//1s
+		if(Key->count<1000)	//1s
 		{
 			if(Key->last==1&&Key->value==0)
 			{

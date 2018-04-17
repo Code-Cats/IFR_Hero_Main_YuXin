@@ -18,11 +18,13 @@ extern YUN_MOTOR_DATA 	yunMotorData;
 extern tPowerHeatData 	testPowerHeatData;      //ÊµÊ±¹¦ÂÊÈÈÁ¿Êý¾Ý
 extern u32 time_1ms_count;
 
+#define WAIST_RANGE 750
 #define K_SPEED 10
 s32 t_Vw_PID=0;
 s32 yaw_follow_tarP=YAW_INIT_DEFINE;
-s32 yaw_follow_error=0;
-
+float yaw_follow_error=0;	//»¡¶ÈÖÆ±ØÐë¸¡µã
+float t_Vy_k=0;
+float t_Vx_k=0;
 u8 Chassis_Control_RCorPC=RC_CONTROL;
 void Remote_Task(void)
 {
@@ -50,17 +52,17 @@ void Remote_Task(void)
 	
 	
 	
-	
+	static u8 turn_flag=0;
 	if(GetWorkState()==WAIST_STATE)
 	{
-		static u8 turn_flag=0;
+		
 		s32 yaw_init_def=YAW_INIT_DEFINE;
 		switch(turn_flag)
 		{
 			case 0:
 			{
-				YAW_INIT=yaw_init_def-750;
-				if(abs(YAW_INIT-yunMotorData.yaw_fdbP)<15)
+				YAW_INIT=yaw_init_def-WAIST_RANGE;
+				if(abs(YAW_INIT-yunMotorData.yaw_fdbP)<0)
 				{
 					turn_flag=1;
 				}
@@ -68,7 +70,7 @@ void Remote_Task(void)
 			}
 			case 1:
 			{
-				YAW_INIT=yaw_init_def+750;
+				YAW_INIT=yaw_init_def+WAIST_RANGE;
 				if(abs(YAW_INIT-yunMotorData.yaw_fdbP)<15)
 				{
 					turn_flag=0;
@@ -77,7 +79,7 @@ void Remote_Task(void)
 			}
 		}
 		
-		PID_Chassis_Follow.k_p=CHASSIS_FOLLOW_PID_P/2.0f;
+		PID_Chassis_Follow.k_p=CHASSIS_FOLLOW_PID_P/1.2f;
 	}
 	else
 	{
@@ -158,14 +160,42 @@ void Remote_Task(void)
 	}
 	
 
-	if(GetWorkState()==NORMAL_STATE)
+	if(GetWorkState()==NORMAL_STATE)	//¹ýÍäÆ¯ÒÆ
 	{	//ÖÇÄÜ×ªÏò¿é
 		s16 Vx_record=Chassis_Vx;
 		Chassis_Vx=0;
-		yaw_follow_error=yaw_follow_error/8192*2*PI;
+		yaw_follow_error=yaw_follow_error/8192.0f*2*PI;
 		Chassis_Vx+=(s16)(Vx_record*(cos(yaw_follow_error)));
-		Chassis_Vy+=(s16)(Vx_record*(sin(yaw_follow_error)));
+		Chassis_Vy+=(s16)(Vx_record*(sin(yaw_follow_error))*1);
 	}
+	
+	
+	if(GetWorkState()==WAIST_STATE)	//Å¤ÑüÇ°½ø	//ÎÞÐ§´ý²éÕÒ
+	{
+		float yaw_follow_real_error=0;
+		s16 Vx_record=Chassis_Vx;
+		if(YAW_INIT_DEFINE-yaw_follow_tarP>8192/2)	//·ÀÖ¹¹ý½ç
+		{
+			yaw_follow_real_error=YAW_INIT_DEFINE-(yaw_follow_tarP+8192);
+		}
+		else if(YAW_INIT_DEFINE-yaw_follow_tarP<-8192/2)
+		{
+			yaw_follow_real_error=YAW_INIT_DEFINE-(yaw_follow_tarP-8192);
+		}
+		else
+		{
+			yaw_follow_real_error=YAW_INIT_DEFINE-yaw_follow_tarP;
+		}
+
+		Chassis_Vx=0;
+		yaw_follow_real_error=yaw_follow_real_error/8192.0f*2*PI;
+		Chassis_Vx+=(s16)(Vx_record*(cos(yaw_follow_real_error)));
+		Chassis_Vy+=(s16)(Vx_record*(sin(yaw_follow_real_error))*1);	
+		t_Vy_k=sin(yaw_follow_real_error);
+		t_Vx_k=cos(yaw_follow_real_error);
+	}
+	
+	
 	
 	if(RC_Ctl.rc.switch_left==RC_SWITCH_DOWN)	//ÔÆÌ¨ÖÐÐÄ×ªÏò
 	{
@@ -213,21 +243,21 @@ void RC_Control_Chassis(void)
 	if(GetWorkState()==NORMAL_STATE||GetWorkState()==WAIST_STATE)
 	{
 		
-		if(time_1ms_count%1==0)
-		{
-			if(RC_Ctl.rc.ch1-1024-Chassis_Vx_last>1&&RC_Ctl.rc.ch1-1024>10)	//Ö»ÔÚÇ°½ø¼ÓËÙÊ±ÉúÐ§£¬
-			{
-				Chassis_Vx+=1;
-			}
-			else if(RC_Ctl.rc.ch1-1024-Chassis_Vx_last<-1&&RC_Ctl.rc.ch1-1024<-10)	//Ö»ÔÚºóÍË¼ÓËÙÊ±ÉúÐ§
-			{
-				Chassis_Vx-=1;
-			}
-			else
-			{
+//////		if(time_1ms_count%1==0)
+//////		{
+//////			if(RC_Ctl.rc.ch1-1024-Chassis_Vx_last>1&&RC_Ctl.rc.ch1-1024>10)	//Ö»ÔÚÇ°½ø¼ÓËÙÊ±ÉúÐ§£¬
+//////			{
+//////				Chassis_Vx+=1;
+//////			}
+//////			else if(RC_Ctl.rc.ch1-1024-Chassis_Vx_last<-1&&RC_Ctl.rc.ch1-1024<-10)	//Ö»ÔÚºóÍË¼ÓËÙÊ±ÉúÐ§
+//////			{
+//////				Chassis_Vx-=1;
+//////			}
+//////			else
+//////			{
 				Chassis_Vx=RC_Ctl.rc.ch1-1024;
-			}
-		}
+//////			}
+//////		}
 //		Chassis_Vx=RC_Ctl.rc.ch1-1024;	//´úÌæÎªÐ±ÆÂº¯Êý
 		Chassis_Vx_last=Chassis_Vx;
 	}
@@ -254,63 +284,67 @@ void RC_Control_Chassis(void)
 extern KeyBoardTypeDef KeyBoardData[KEY_NUMS];
 void PC_Control_Chassis(s16 * chassis_vx,s16 * chassis_vy)	//1000Hz
 {
+	static s16 chassis_vx_record=0;
+	static s16 chassis_vy_record=0;
 	if(GetWorkState()==NORMAL_STATE||GetWorkState()==WAIST_STATE)
 	{
 		if(time_1ms_count%2==0)
 		{
 			if(KeyBoardData[KEY_W].value!=0)
 			{
-				if(*chassis_vx<660&&*chassis_vx>=0)
+				if(chassis_vx_record<660&&chassis_vx_record>=0)
 				{
-					(*chassis_vx)++;
+					chassis_vx_record++;
 				}
-				else if(*chassis_vx<0)
+				else if(chassis_vx_record<0)
 				{
-					*chassis_vx=0;
+					chassis_vx_record=0;
 				}
 			}
 			else if(KeyBoardData[KEY_S].value!=0)
 			{
-				if(*chassis_vx>-660&&*chassis_vx<=0)
+				if(chassis_vx_record>-660&&chassis_vx_record<=0)
 				{
-					(*chassis_vx)--;
+					chassis_vx_record--;
 				}
-				else if(*chassis_vx>0)
+				else if(chassis_vx_record>0)
 				{
-					*chassis_vx=0;
+					chassis_vx_record=0;
 				}
 			}
 			else
 			{
-				*chassis_vx=0;
+				chassis_vx_record=0;
 			}
 			///////////////////////////////////////
 			if(KeyBoardData[KEY_D].value!=0)
 			{
-				if(*chassis_vy<660&&*chassis_vy>=0)
+				if(chassis_vy_record<660&&chassis_vy_record>=0)
 				{
-					(*chassis_vy)++;
+					chassis_vy_record++;
 				}
 				else if(*chassis_vy<0)
 				{
-					*chassis_vy=0;
+					chassis_vy_record=0;
 				}
 			}
 			else if(KeyBoardData[KEY_A].value!=0)
 			{
-				if(*chassis_vy>-660&&*chassis_vy<=0)
+				if(chassis_vy_record>-660&&chassis_vy_record<=0)
 				{
-					(*chassis_vy)--;
+					chassis_vy_record--;
 				}
-				else if(*chassis_vy>0)
+				else if(chassis_vy_record>0)
 				{
-					*chassis_vy=0;
+					chassis_vy_record=0;
 				}
 			}
 			else
 			{
-				*chassis_vy=0;
+				chassis_vy_record=0;
 			}
+			*chassis_vx=chassis_vx_record;
+			*chassis_vy=chassis_vy_record;
 		}
 
 	}
@@ -339,6 +373,7 @@ float Limit_Power(float power,float powerbuffer)	//Ó¢ÐÛ120JÈÈÁ¿ÏÞÖÆ£¬Ö±½ÓÏÞÖÆ×ÜÊ
 		limit_k=limit_k>1?1:limit_k;
 		limit_k=limit_k<0.1f?0.1f:limit_k;
 //	}
+	limit_k=0.9;	//È¡Ïû¹¦ÂÊÏÞÖÆ
 	return limit_k;
 }
 
