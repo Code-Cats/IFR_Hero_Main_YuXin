@@ -50,7 +50,7 @@ extern Error_check_t Error_Check;
 	1,\
 	1,\
 	1,\
-	1,\
+	3,\
 }
 
 void LostCountAdd(u16* lostcount);

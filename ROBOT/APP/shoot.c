@@ -10,6 +10,9 @@ SHOOT_MOTOR_DATA shoot_Motor_Data_Up ={0};
 PID_GENERAL   PID_Shoot_Down_Position=PID_SHOOT_POSITION_DEFAULT;
 PID_GENERAL   PID_Shoot_Down_Speed=PID_SHOOT_SPEED_DEFAULT;
 
+PID_GENERAL   PID_Shoot_Up_Position=PID_SHOOT_POSITION_DEFAULT;
+PID_GENERAL   PID_Shoot_Up_Speed=PID_SHOOT_SPEED_DEFAULT;
+
 extern u32 time_1ms_count;
 
 s16 tem=0;
@@ -25,7 +28,10 @@ void Shoot_Task(void)	//定时频率：1ms
 	
 	Shoot_Instruction();
 	shoot_Motor_Data_Down.tarP=(s32)shoot_Data_Down.motor_tarP;
+	shoot_Motor_Data_Up.tarP=(s32)shoot_Data_Up.motor_tarP;
+	
 	shoot_Motor_Data_Down.tarV=PID_General(shoot_Motor_Data_Down.tarP,shoot_Motor_Data_Down.fdbP,&PID_Shoot_Down_Position);
+	shoot_Motor_Data_Up.tarV=PID_General(shoot_Motor_Data_Up.tarP,shoot_Motor_Data_Up.fdbP,&PID_Shoot_Up_Position);
 	
 	static u8 swicth_Last_state=0;	//右拨杆
 
@@ -92,7 +98,8 @@ void Shoot_Task(void)	//定时频率：1ms
 ////////////////		shoot_Motor_Data_Down.tarV=2000;
 ////////////////	}
 ////////////////swicth_Last_state=RC_Ctl.rc.switch_right;
-	shoot_Motor_Data_Down.output=PID_General(shoot_Motor_Data_Down.tarV,shoot_Motor_Data_Down.fdbV,&PID_Shoot_Down_Speed);
+	shoot_Motor_Data_Down.output=PID_General(shoot_Motor_Data_Down.tarV,shoot_Motor_Data_Down.fdbV,&PID_Shoot_Down_Speed);//down
+	shoot_Motor_Data_Up.output=PID_General(shoot_Motor_Data_Up.tarV,shoot_Motor_Data_Up.fdbV,&PID_Shoot_Up_Speed);//Up
 	SetFrictionWheelSpeed(fri_t);
 	swicth_Last_state=RC_Ctl.rc.switch_right;
 //	CAN_Shoot_SendMsg(shoot_Motor_Data.output);
@@ -126,7 +133,7 @@ u16 shoot_time_measure(const s16 tarP,const s16 fbdP,const u8 last_mouse_press_l
 
 
 #define SINGLE_INCREMENT_OLD_2006 196.608f	//8192*96/4/1000	一圈的累加值8192*96除上一圈7个子弹除以编码器转换倍数=发射一颗子弹的位置增量
-#define SINGLE_INCREMENT_NEW_2006 37.45f		//8192*32/7/1000
+#define SINGLE_INCREMENT_NEW_2006 65.536f		//8192*32/7/1000
 #define SINGLE_INCREMENT SINGLE_INCREMENT_OLD_2006
 //输出为发弹量，单位颗
 //注：应当在本函数或者另一指令解析函数中设置逻辑：切换状态就重置发弹指令（以免突发情况使程序具有滞后性）
@@ -138,11 +145,13 @@ void Shoot_Instruction(void)	//发弹指令模块
 	if(RC_Ctl.mouse.press_l==1&&last_mouse_press_l==0)	//shoot_Motor_Data.tarP-shoot_Motor_Data.fdbP	//待加入
 	{
 		shoot_Data_Down.count++;
+		shoot_Data_Up.count++;
 	}
 	
 	if(swicth_Last_state==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_DOWN)
 	{
 		shoot_Data_Down.count+=3;
+		shoot_Data_Up.count+=3;
 	}
 	
 	shoot_time_record=shoot_time_measure(shoot_Data_Down.count,shoot_Data_Down.count_fdb,last_mouse_press_l);////////////////////////////////
@@ -150,6 +159,7 @@ void Shoot_Instruction(void)	//发弹指令模块
 	swicth_Last_state=RC_Ctl.rc.switch_right;
 	
 	shoot_Data_Down.motor_tarP=shoot_Data_Down.count*SINGLE_INCREMENT;
+	shoot_Data_Up.motor_tarP=shoot_Data_Up.count*SINGLE_INCREMENT_NEW_2006;	//新2006
 	Prevent_Jam(&shoot_Data_Down,&shoot_Motor_Data_Down);
 }
 

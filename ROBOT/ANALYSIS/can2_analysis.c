@@ -6,6 +6,10 @@ extern CHASSIS_DATA chassis_Data;
 extern SHOOT_DATA shoot_Data_Down;
 extern SHOOT_MOTOR_DATA shoot_Motor_Data_Down;
 
+extern SHOOT_DATA shoot_Data_Up;
+extern SHOOT_MOTOR_DATA shoot_Motor_Data_Up;
+
+extern u16 t_up_sm_count_1s;
 /******************************************
 函数名：CAN2_Feedback_Analysis
 函数功能：对底盘电机以及云台电机进行数据解析
@@ -52,6 +56,13 @@ void CAN2_Feedback_Analysis(CanRxMsg *rx_message)
 			{
 			  Shoot_Feedback_Deal(&shoot_Data_Down,&shoot_Motor_Data_Down,rx_message);	//临时用
 				LostCountFeed(&Error_Check.count[LOST_SM_DOWN]);
+			  break;
+			}
+			case 0x206:	//shoot 上
+			{
+				t_up_sm_count_1s++;
+			  Shoot_Feedback_Deal(&shoot_Data_Up,&shoot_Motor_Data_Up,rx_message);	//临时用
+				LostCountFeed(&Error_Check.count[LOST_SM_UP]);
 			  break;
 			}
 			 default:

@@ -6,6 +6,8 @@
 
 WorkState_e workState=PREPARE_STATE;
 
+u16 t_up_sm_count_1s=0;
+u16 t_up_sm_recorf=0;
 
 LIFT_DATA lift_Data={0};
 
@@ -23,6 +25,9 @@ extern CHASSIS_DATA chassis_Data;
 
 extern SHOOT_DATA shoot_Data_Down;
 extern SHOOT_MOTOR_DATA shoot_Motor_Data_Down;
+
+extern SHOOT_DATA shoot_Data_Up;
+extern SHOOT_MOTOR_DATA shoot_Motor_Data_Up;
 
 
 extern s16 Chassis_Vx;
@@ -43,7 +48,11 @@ u32 time_1ms_count=0;
 void Control_Task(void)	//2ms
 {
 	time_1ms_count++;
-
+if(time_1ms_count%1000==0)
+{
+	t_up_sm_recorf=t_up_sm_count_1s;
+	t_up_sm_count_1s=0;
+}
 	Lift_Time_Gauge(&t_lift_time_start);
 	
 	Check_Task();
@@ -453,8 +462,8 @@ void Lift_Task(void)
 	
 	lift_Data.lf_lift_tarV=(int32_t)PID_General(lift_Data.lf_lift_tarP,lift_Data.lf_lift_fdbP,&PID_Lift_Position[LF]);	//位置环PID计算
 	lift_Data.rf_lift_tarV=(int32_t)PID_General(lift_Data.rf_lift_tarP,lift_Data.rf_lift_fdbP,&PID_Lift_Position[RF]);
-	lift_Data.lb_lift_tarV=(int32_t)PID_General((lift_Data.lb_lift_tarP+13),lift_Data.lb_lift_fdbP,&PID_Lift_Position[LB]);
-	lift_Data.rb_lift_tarV=(int32_t)PID_General((lift_Data.rb_lift_tarP-5),lift_Data.rb_lift_fdbP,&PID_Lift_Position[RB]);
+	lift_Data.lb_lift_tarV=(int32_t)PID_General((lift_Data.lb_lift_tarP),lift_Data.lb_lift_fdbP,&PID_Lift_Position[LB]);
+	lift_Data.rb_lift_tarV=(int32_t)PID_General((lift_Data.rb_lift_tarP),lift_Data.rb_lift_fdbP,&PID_Lift_Position[RB]);
 	
 	lift_Data.lf_lift_output=PID_General(lift_Data.lf_lift_tarV,lift_Data.lf_lift_fdbV,&PID_Lift_Speed[LF]);	//速度环PID计算
 	lift_Data.rf_lift_output=PID_General(lift_Data.rf_lift_tarV,lift_Data.rf_lift_fdbV,&PID_Lift_Speed[RF]);
@@ -665,6 +674,7 @@ void Motor_Send(void)
 //		CAN1_Lift_SendMsg(0,0,0,0);
 			CAN1_Lift_SendMsg((s16)cali_send[LF],(s16)cali_send[RF],(s16)cali_send[LB],(s16)cali_send[RB]);
 //			CAN2_Shoot_SendMsg(0,0);//下拨弹、上拨弹
+
 			CAN2_Shoot_SendMsg((s16)shoot_Motor_Data_Down.output,0);	//下拨弹、上拨弹
 			break;
 		}
@@ -677,7 +687,7 @@ void Motor_Send(void)
 //			CAN_Chassis_SendMsg(0,0,0,0);
 //    CAN1_Lift_SendMsg((s16)lift_tem,(s16)lift_tem,(s16)lift_tem,(s16)lift_tem);
 			CAN1_Lift_SendMsg((s16)lift_Data.lf_lift_output,(s16)lift_Data.rf_lift_output,(s16)lift_Data.lb_lift_output,(s16)lift_Data.rb_lift_output);
-			CAN2_Shoot_SendMsg((s16)shoot_Motor_Data_Down.output,0);	//下拨弹、上拨弹
+			CAN2_Shoot_SendMsg((s16)shoot_Motor_Data_Down.output,(s16)shoot_Motor_Data_Up.output);	//下拨弹、上拨弹
 			break;
 		}
 		case WAIST_STATE:

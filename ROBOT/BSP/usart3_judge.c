@@ -290,6 +290,7 @@ void judgementDataHandler(void)
 {
   uint8_t cnt = 5;
   memcpy(&testFrameHeader, _USART3_DMA_RX_BUF[this_dma_type],FRAMEHEADER_LEN);
+	LostCountFeed(&Error_Check.count[LOST_REFEREE]);
 	if(judgementData.flag==0)
 	{
 	  judgementData.flag=1;
@@ -345,7 +346,7 @@ void Judgement_DataSend(float a,float b,float c)
 		JudgeSendBuff[2]=testJudgementSendData.dataLenth>>8;
 		JudgeSendBuff[3]=testJudgementSendData.cRC8;
 		Append_CRC8_Check_Sum(JudgeSendBuff,5);
-		JudgeSendBuff[5]=StudentSend;
+//		JudgeSendBuff[5]=StudentSend;
 		JudgeSendBuff[6]=StudentSend>>8;
 		
 		Data_A.f=testJudgementSendData.Data_A;	

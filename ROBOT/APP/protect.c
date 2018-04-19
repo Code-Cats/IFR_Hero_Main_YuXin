@@ -13,7 +13,7 @@
 
 Error_check_t Error_Check={LOST_CYCLE,{0},{0}};
 
-
+s16 t_error_record=0;
 void LostCountAdd(u16* lostcount)
 {
 	if(*lostcount<0xFFFE)
@@ -33,7 +33,7 @@ u8 LostCountCheck(u16 lostcount,u8* statu,const u16 cycle)
 		*statu=0;
 	return *statu;
 }
-static s32 test_error_Satrt=0;
+s32 test_error_Satrt=0;
 void Check_Task(void)
 {
 	for(int i=0;i<LOST_TYPE_NUM;i++)
@@ -48,13 +48,13 @@ void Check_Task(void)
 		SetWorkState(ERROR_STATE);
 	}
 	
-	for(int i=4;i<LOST_TYPE_NUM-1;i++)	//电机比控更重要
+	for(int i=4;i<LOST_TYPE_NUM;i++)	//电机比控更重要
 	{
 		if(Error_Check.statu[i]==1)
 		{
 			test_error_Satrt=-1;
+			t_error_record=i;
 			SetWorkState(ERROR_STATE);
-			test_error_Satrt=-1;
 		}
 			
 	}

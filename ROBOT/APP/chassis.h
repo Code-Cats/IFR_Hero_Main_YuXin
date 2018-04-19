@@ -74,11 +74,42 @@
 }\
 
 
+typedef struct
+{
+	 int32_t lf_wheel_fdbV; //201 
+	 int32_t rf_wheel_fdbV; //202
+	 int32_t lb_wheel_fdbV; //203
+	 int32_t rb_wheel_fdbV;	//204	  
+	
+   int32_t lf_wheel_tarV;
+	 int32_t rf_wheel_tarV;
+	 int32_t lb_wheel_tarV;
+	 int32_t rb_wheel_tarV;
+	  
+   int32_t lf_wheel_fdbP;
+	 int32_t rf_wheel_fdbP;
+	 int32_t lb_wheel_fdbP;
+	 int32_t rb_wheel_fdbP;
+	 
+	 int32_t lf_wheel_tarP;
+	 int32_t rf_wheel_tarP;
+	 int32_t lb_wheel_tarP;
+	 int32_t rb_wheel_tarP;
+	 
+	 int32_t lf_wheel_output;
+	 int32_t rf_wheel_output;	
+	 int32_t lb_wheel_output;
+	 int32_t rb_wheel_output;
+	
+}CHASSIS_DATA;	//CAN2
+
+
 void Remote_Task(void);
 void RC_Control_Chassis(void);
 void PC_Control_Chassis(s16 * chassis_vx,s16 * chassis_vy);	//1000Hz
 s16 chassis_Vw_filter(s16 now_V);
 float Limit_Power(float power,float powerbuffer);	//英雄120J热量限制，直接限制总输出
+void Extended_Integral_PID(CHASSIS_DATA* chassis_data);	//扩展型整体PID，适用于任意动作场景	2018.4.19
 
 #endif
 
