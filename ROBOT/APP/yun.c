@@ -23,6 +23,8 @@ extern  FIRST_ORDER_FILTER   FILTER_WAIST_YAW;
 extern  MPU6050_REAL_DATA    MPU6050_Real_Data;
 extern	RC_Ctl_t RC_Ctl;
 extern GYRO_DATA Gyro_Data;
+extern IslandAttitudeCorrectState_e IslandAttitude_Correct_State;	//登岛姿态自校正
+extern bool Chassis_Follow_Statu;	//底盘跟随标志位
 
 extern u32 time_1ms_count;
 s32 t_pitch____=0;
@@ -60,7 +62,25 @@ void Yun_Control_External_Solution(void)	//外置反馈方案
 		}
 	}
 	
+	
+	if(GetWorkState()==ASCEND_STATE)	//登岛姿态调整 当自校正状态时利用底盘跟随，其他主动矫正状态进行云台归位
+	{
+		switch(IslandAttitude_Correct_State)
+		{
+			case CALI_SELF_STATE:
+			{
+				yunMotorData.yaw_tarP=(s32)(Gyro_Data.angle[2]*10+(YAW_INIT-yunMotorData.yaw_fdbP)*3600/8192);	//反馈放大10倍并将目标位置置为中点
+				break;
+			}
+			case CORRECT_CHASSIS_STATE:
+			{
+				
+				break;
+			}
+		}
+	}
 
+	
 	yunMotorData.pitch_tarV=-PID_General(yunMotorData.pitch_tarP,(Gyro_Data.angle[0]*8192/360.0+PITCH_INIT),&PID_PITCH_POSITION);
 		
 	if(yunMotorData.yaw_tarP-Gyro_Data.angle[2]*10>1800)	//过零点

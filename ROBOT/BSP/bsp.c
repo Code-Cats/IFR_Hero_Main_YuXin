@@ -14,13 +14,13 @@ void BSP_Init(void)
 	 PWM_Config();
 	 Laser_Config();
 	 USART1_DMA_Config(100000);  
-////////////   USART6_ViceBoard_Init(14400);
+   USART6_ViceBoard_Init(14400);
 	 USART3_Configuration(115200);
 //	 USART5_WIFIDEBUG_Init(115200);
-	USART6_WIFIDEBUG_Init(115200);
-////////////	 t_error_iic=MPU6050_Initialization();
-////////////   MPU6050_Gyro_calibration();
-////////////	 MPU6050_IntConfiguration(); 
+//	USART6_WIFIDEBUG_Init(115200);
+//////	 t_error_iic=MPU6050_Initialization();//
+//////   MPU6050_Gyro_calibration();//
+//////	 MPU6050_IntConfiguration(); //
 	 uart4_init();              										  //UART4 INIT UART4->GYRO PORT
 	 imu_data_decode_init();
 	 dma_uart4_init();

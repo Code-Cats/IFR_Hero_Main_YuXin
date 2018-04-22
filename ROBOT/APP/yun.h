@@ -4,7 +4,7 @@
 
 #include "main.h"
 
-#define  YAW_INIT_DEFINE 910//4900
+#define  YAW_INIT_DEFINE 4950//4900
 //s32 YAW_INIT=YAW_INIT_DEFINE;
 extern s32 YAW_INIT;
 #define PITCH_INIT           2360//5900//6000	//2018.3.3	余鑫6000
@@ -80,9 +80,9 @@ extern s32 YAW_INIT;
 #define YAW_SPEED_PID_I 0.03	//0.02
 #define YAW_SPEED_PID_D 1
 #define YAW_SPEED_PID_MER 260	//最大偏差输入
-#define YAW_SPEED_PID_MAXINPUT 260	//最大期望输入
+#define YAW_SPEED_PID_MAXINPUT 300	//最大期望输入
 #define YAW_SPEED_PID_MAXOUTPUT 7000	//最大输出
-#define YAW_SPEED_PID_I_MAX 1000/YAW_SPEED_PID_I	//I累加限制
+#define YAW_SPEED_PID_I_MAX 1500/YAW_SPEED_PID_I	//I累加限制
 #define YAW_SPEED_PID_DEAD 0	//计算死区
 
 #define YAW_POSITION_PID_P 1.2  
@@ -90,7 +90,7 @@ extern s32 YAW_INIT;
 #define YAW_POSITION_PID_D 1	//经过实验观察数据发现D过大引起tarV波动过大，但D对于减弱波形超调猜测有效用，采用非线性D	//原值6
 #define YAW_POSITION_PID_MER 280	//最大偏差输入
 #define YAW_POSITION_PID_MAXINPUT 5350	//最大期望输入
-#define YAW_POSITION_PID_MAXOUTPUT 260	//最大输出
+#define YAW_POSITION_PID_MAXOUTPUT 300	//最大输出
 #define YAW_POSITION_PID_I_MAX 0///YAW_SPEED_PID_I	//I累加限制
 #define YAW_POSITION_PID_DEAD 0	//计算死区
 

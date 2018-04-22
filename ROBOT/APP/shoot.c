@@ -81,7 +81,15 @@ void Shoot_Task(void)	//定时频率：1ms
 	{
 		static u8 frc_state=0;
 		frc_state=!frc_state;
-		fri_t=800-(800-2000)*frc_state;
+		if(frc_state==0)
+		{
+			LASER_OFF();
+		}
+		else
+		{
+			LASER_ON();
+		}
+		fri_t=800-(800-1888)*frc_state;	//2000对应射速20
 	}
 ////////////////	if(swicth_Last_state==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_UP)
 /////临时///////	{

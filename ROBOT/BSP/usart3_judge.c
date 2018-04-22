@@ -290,7 +290,7 @@ void judgementDataHandler(void)
 {
   uint8_t cnt = 5;
   memcpy(&testFrameHeader, _USART3_DMA_RX_BUF[this_dma_type],FRAMEHEADER_LEN);
-	LostCountFeed(&Error_Check.count[LOST_REFEREE]);
+	LostCountFeed(&Error_Check.count[LOST_REFEREE]);//////////////////////////////
 	if(judgementData.flag==0)
 	{
 	  judgementData.flag=1;

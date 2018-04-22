@@ -26,10 +26,9 @@ void MainBoard_SendData(void)
 
 
 ReceiveDataTypeDef ReceiveData={0};
-u16 t_vice_count=0;
-void Data_Receive(u8 data)	//从主板传过来的数据解析（主副板通用）
+void ViceData_Receive(u8 data)	//从主板传过来的数据解析（主副板通用）
 {
-	t_vice_count++;
+	LostCountFeed(&Error_Check.count[LOST_VICEBOARD]);
 	if(data==0x5A&&ReceiveData.headOK_state==0)
 	{
 		ReceiveData.valid_state=0;	//数据接受期间不进行数据解析

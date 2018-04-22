@@ -56,14 +56,14 @@ if(time_1ms_count%1000==0)
 	Lift_Time_Gauge(&t_lift_time_start);
 	
 	Check_Task();
-	
+	#ifdef USART6_WIFIDEBUG
 	if(time_1ms_count%50==0)
 	{
 		Debug_Send_OSC();
 	}
-	
-	Vw_tem=Chassis_Attitude_Correct(Chassis_GYRO[2],Gyro_Data.angvel[2]+2);
-  Chassis_Vw+=Vw_tem;
+	#endif
+//	Vw_tem=Chassis_Attitude_Correct(Chassis_GYRO[2],Gyro_Data.angvel[2]+2);
+//  Chassis_Vw+=Vw_tem;
 	
 	if(time_1ms_count%1==0)	//1000hz
 	{
@@ -121,7 +121,7 @@ if(time_1ms_count%1000==0)
 			AutoChassisAttitude_Lift_V2(Chassis_GYRO[PITCH]);
 			Lift_Task();	//开启升降
 			Shoot_Task();
-			LASER_ON();
+			
 			break;
 		}
 		case WAIST_STATE:
@@ -152,7 +152,7 @@ if(time_1ms_count%1000==0)
 		}
 		case ERROR_STATE:	//错误模式
 		{
-			LASER_OFF();
+			
 			break;
 		}
 		case LOST_STATE:	//错误模式
@@ -216,7 +216,7 @@ void Work_State_Change(void)
 			
 			if(RC_Ctl.rc.switch_left==RC_SWITCH_DOWN&&Switch_Right_Last==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_DOWN)
 			{
-//				SetWorkState(ASCEND_STATE);
+				SetWorkState(ASCEND_STATE);
 			}
 			else if(RC_Ctl.rc.switch_left==RC_SWITCH_DOWN&&Switch_Right_Last==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_UP)
 			{

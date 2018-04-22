@@ -3,7 +3,7 @@
 
 void USART6_WIFIDEBUG_Init(uint32_t baud_rate)
 {
-
+//		#define USART6_WIFIDEBUG
     GPIO_InitTypeDef gpio;
 	  USART_InitTypeDef usart;
 	  NVIC_InitTypeDef nvic;
@@ -73,8 +73,8 @@ void USART6_WIFIDEBUG_Init(uint32_t baud_rate)
 }
 
 
-/*	//目前暂未用到收数
 
+#ifdef USART6_WIFIDEBUG
 u8 USART6_Res=0;
 void USART6_IRQHandler(void)
 {
@@ -94,6 +94,4 @@ void USART6_IRQHandler(void)
 	}
 
 }
-
-*/
-
+#endif

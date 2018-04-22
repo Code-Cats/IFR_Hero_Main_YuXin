@@ -43,8 +43,8 @@ typedef enum
 {
     CORRECT_CHASSIS_STATE,  		//矫正底盘
     CALI_SELF_STATE,			//校准自身目标位置	//未进入登下岛模式时，不断校准自身位置
-}AttitudeCorrectState_e;
+}IslandAttitudeCorrectState_e;
 
-void Set_Attitude_Correct_State(AttitudeCorrectState_e state);	//设置矫正状态的函数
+void Set_Attitude_Correct_State(IslandAttitudeCorrectState_e state);	//设置矫正状态的函数
 
 #endif

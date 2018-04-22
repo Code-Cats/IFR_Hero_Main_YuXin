@@ -17,6 +17,7 @@ extern GYRO_DATA Gyro_Data;
 extern YUN_MOTOR_DATA 	yunMotorData;
 extern tPowerHeatData 	testPowerHeatData;      //实时功率热量数据
 extern u32 time_1ms_count;
+extern IslandAttitudeCorrectState_e IslandAttitude_Correct_State;	//登岛姿态自校正
 
 #define WAIST_RANGE 750
 #define K_SPEED 10
@@ -26,6 +27,8 @@ float yaw_follow_error=0;	//弧度制必须浮点
 float t_Vy_k=0;
 float t_Vx_k=0;
 u8 Chassis_Control_RCorPC=RC_CONTROL;
+bool Chassis_Follow_Statu=1;	//底盘跟随标志位，设立此标志位原因是方便的在传感器失效时切换底盘独立状态
+
 void Remote_Task(void)
 {
 	
@@ -86,9 +89,6 @@ void Remote_Task(void)
 		YAW_INIT=YAW_INIT_DEFINE;
 		PID_Chassis_Follow.k_p=CHASSIS_FOLLOW_PID_P;
 	}
-		
-	
-	
 	
 	
 	
@@ -108,7 +108,23 @@ void Remote_Task(void)
 	
 	
 	
-	if(GetWorkState()==NORMAL_STATE||GetWorkState()==ASCEND_STATE||GetWorkState()==WAIST_STATE)	//仅在正常情况下遥控器可驱动电机，(自动)登岛模式下交由程序自动控制
+	
+	if(GetWorkState()==NORMAL_STATE||GetWorkState()==WAIST_STATE)	//底盘跟随标志位定义块
+	{
+		Chassis_Follow_Statu=1;
+	}
+	else if(GetWorkState()==ASCEND_STATE&&IslandAttitude_Correct_State==CORRECT_CHASSIS_STATE)	//登岛模式下
+	{
+		Chassis_Follow_Statu=1;
+	}
+	else
+	{
+		Chassis_Follow_Statu=0;
+	}
+	
+	
+	
+	if(Chassis_Follow_Statu==1)	//底盘跟随部分
 	{
 //////		Chassis_Vx=RC_Ctl.rc.ch1-1024;
 		
@@ -170,7 +186,7 @@ void Remote_Task(void)
 	}
 	
 	
-	if(GetWorkState()==WAIST_STATE)	//扭腰前进	//无效待查找
+	if(GetWorkState()==WAIST_STATE)	//扭腰前进	
 	{
 		float yaw_follow_real_error=0;
 		s16 Vx_record=Chassis_Vx;
@@ -197,7 +213,7 @@ void Remote_Task(void)
 	
 	
 	
-	if(RC_Ctl.rc.switch_left==RC_SWITCH_DOWN)	//云台中心转向
+	if(RC_Ctl.rc.switch_left==RC_SWITCH_DOWN&&GetWorkState()!=ASCEND_STATE)	//云台中心转向
 	{
 		float chassis_vw_record=Chassis_Vw;
 		Chassis_Vy-=(s16)(chassis_vw_record/1.7);	//2

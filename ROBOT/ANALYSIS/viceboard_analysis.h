@@ -5,7 +5,7 @@
 
 
 void MainBoard_SendData(void);
-void Data_Receive(u8 data);	//从主板传过来的数据解析（主副板通用）
+void ViceData_Receive(u8 data);	//从主板传过来的数据解析（主副板通用）
 void SensorData_Deal(u8 *pData);
 
 typedef struct

@@ -518,7 +518,7 @@ u8 Descend_FullRise_Down1(void)
 
 extern GYRO_DATA Gyro_Data;
 extern float Chassis_GYRO[3];	//融合后的底盘数据
-AttitudeCorrectState_e Attitude_Correct_State=CALI_SELF_STATE;
+IslandAttitudeCorrectState_e IslandAttitude_Correct_State=CALI_SELF_STATE;
 float tar_attitude=0;
 float Attitude_error=0;
 s16 t_Vw_correct=0;
@@ -530,7 +530,7 @@ s16 Chassis_Attitude_Correct(float fdbP,int16_t fdbV)	//将状态检测集成在了内部
 	
 	Attitude_error=Attitude_error>180.0f?(Attitude_error-360.0f):(Attitude_error<-180.0f?(Attitude_error+360.0f):Attitude_error);
 	
-	switch (Attitude_Correct_State)
+	switch (IslandAttitude_Correct_State)
 	{
 		case CALI_SELF_STATE:	//校准目标位置(自己)
 		{
@@ -548,12 +548,13 @@ s16 Chassis_Attitude_Correct(float fdbP,int16_t fdbV)	//将状态检测集成在了内部
 	Vw_Correct=Vw_Correct>100?100:Vw_Correct;
 	Vw_Correct=Vw_Correct<-100?-100:Vw_Correct;
 	t_Vw_correct=Vw_Correct;
+	Vw_Correct=0;	//暂时屏蔽该函数
 	return Vw_Correct;
 }
 
-void Set_Attitude_Correct_State(AttitudeCorrectState_e state)
+void Set_Attitude_Correct_State(IslandAttitudeCorrectState_e state)
 {
-	Attitude_Correct_State=state;
+	IslandAttitude_Correct_State=state;
 }
 
 
