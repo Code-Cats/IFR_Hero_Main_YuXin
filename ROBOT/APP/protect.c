@@ -45,6 +45,7 @@ void Check_Task(void)
 	if(Error_Check.statu[LOST_IMU]==1)
 	{
 		test_error_Satrt=1;
+		t_error_record=LOST_IMU;
 		SetWorkState(ERROR_STATE);
 	}
 	

@@ -144,21 +144,21 @@ void PC_Control_Yun(s32 * yaw_tarp,s32 * pitch_tarp)	//1000Hz
 		yaw_tarp_float=(float)*yaw_tarp;
 		start_state=1;
 	}
-	u8 keyQ_last,keyE_last=0;
-	if(keyQ_last==0&&KeyBoardData[KEY_Q].value==1)
-	{
-		yaw_tarp_float+=900;
-		yaw_tarp_float=yaw_tarp_float>1800?yaw_tarp_float-3600:yaw_tarp_float;	//过零点
-		yaw_tarp_float=yaw_tarp_float<-1800?yaw_tarp_float+3600:yaw_tarp_float;	//过零点
-		keyQ_last=KeyBoardData[KEY_Q].value;
-	}
-	if(keyE_last==0&&KeyBoardData[KEY_E].value==1)
-	{
-		yaw_tarp_float-=900;
-		yaw_tarp_float=yaw_tarp_float>1800?yaw_tarp_float-3600:yaw_tarp_float;	//过零点
-		yaw_tarp_float=yaw_tarp_float<-1800?yaw_tarp_float+3600:yaw_tarp_float;	//过零点
-		keyE_last=KeyBoardData[KEY_E].value;
-	}
+//	static u8 keyQ_last,keyE_last=0;	//暂时屏蔽
+//	if(keyQ_last==0&&KeyBoardData[KEY_Q].value==1)
+//	{
+//		yaw_tarp_float+=900;
+//		yaw_tarp_float=yaw_tarp_float>1800?yaw_tarp_float-3600:yaw_tarp_float;	//过零点
+//		yaw_tarp_float=yaw_tarp_float<-1800?yaw_tarp_float+3600:yaw_tarp_float;	//过零点
+//		keyQ_last=KeyBoardData[KEY_Q].value;
+//	}
+//	if(keyE_last==0&&KeyBoardData[KEY_E].value==1)
+//	{
+//		yaw_tarp_float-=900;
+//		yaw_tarp_float=yaw_tarp_float>1800?yaw_tarp_float-3600:yaw_tarp_float;	//过零点
+//		yaw_tarp_float=yaw_tarp_float<-1800?yaw_tarp_float+3600:yaw_tarp_float;	//过零点
+//		keyE_last=KeyBoardData[KEY_E].value;
+//	}
 	
 	
 	

@@ -131,7 +131,7 @@ void Remote_Task(void)
 //		Chassis_Vw=RC_Ctl.rc.ch2-1024;
 		if(abs(RC_Ctl.rc.ch2-1024)<40&&abs(YAW_INIT-yunMotorData.yaw_fdbP)<180)//¥À¥¶Õ”¬›“«‘⁄º”ÀŸ∂»π˝¥Û ±∑¥¿°ª·”–Ωœ¥ÛŒÛ≤Ó£¨“Ú¥À≤…”√µÕ◊™œÚ∆’Õ®∏˙ÀÊ£¨∏ﬂ◊™œÚ÷«ƒ‹∏˙ÀÊƒ£ Ω	//¥À¥¶”¶∞—fdb∏ƒŒ™tarP
 		{
-			if(YAW_INIT-yunMotorData.yaw_fdbP>8192/2)	//÷«ƒ‹∏˙ÀÊøÈ	
+			if(YAW_INIT-yunMotorData.yaw_fdbP>8192/2)	//∆’Õ®∏˙ÀÊøÈ	
 			{
 				Chassis_Vw=PID_General(YAW_INIT,yunMotorData.yaw_fdbP+8192,&PID_Chassis_Follow);	//∏∫π˝ΩÁ◊¥øˆœ¬
 				yaw_follow_error=YAW_INIT-(yunMotorData.yaw_fdbP+8192);
@@ -176,7 +176,7 @@ void Remote_Task(void)
 	}
 	
 
-	if(GetWorkState()==NORMAL_STATE)	//π˝Õ‰∆Ø“∆
+	if(GetWorkState()==NORMAL_STATE&&abs(YAW_INIT-yunMotorData.yaw_fdbP)>200)	//π˝Õ‰∆Ø“∆	//∑¢œ÷π˝Õ‰∆Æ“∆ª·”∞œÏ◊™œÚ£¨Ω‚æˆ∑Ω∑®1£¨◊™œÚ«˝∂Ø¡¶¥ÔµΩº´œﬁ¥•∂•µº÷¬ µº ÀŸ∂»±»¿˝∆´≤Ó‘§∆⁄£¨…Ë÷√“ª∫Ø ˝ºÏ≤‚»Œ“‚ ‰≥ˆ÷µ¥Û”⁄8000 ±œﬁ÷∆’˚ÃÂ π±»¿˝‘§∆⁄£¨∑Ω∑®∂˛£¨ºı»ıVy
 	{	//÷«ƒ‹◊™œÚøÈ
 		s16 Vx_record=Chassis_Vx;
 		Chassis_Vx=0;
@@ -225,7 +225,8 @@ void Remote_Task(void)
 	chassis_Data.lb_wheel_tarV=(Chassis_Vx-Chassis_Vy+Chassis_Vw)*K_SPEED;
 	chassis_Data.rb_wheel_tarV=(-Chassis_Vx-Chassis_Vy+Chassis_Vw)*K_SPEED;
 	
-
+	
+	Overall_Motion_Ratio_Protect(&chassis_Data);	//’˚ÃÂÀŸ∂»±£ª§
 	
 ///////////////////////////////////////////////////////////////// 
 //	chassis_Data.lf_wheel_tarV=remote_tem;
@@ -238,10 +239,12 @@ void Remote_Task(void)
 	chassis_Data.lb_wheel_output=PID_General(chassis_Data.lb_wheel_tarV,chassis_Data.lb_wheel_fdbV,&PID_Chassis_Speed[LB]);
 	chassis_Data.rb_wheel_output=PID_General(chassis_Data.rb_wheel_tarV,chassis_Data.rb_wheel_fdbV,&PID_Chassis_Speed[RB]);
 
+	
 	if((GetWorkState()==NORMAL_STATE||GetWorkState()==ASCEND_STATE)&&RC_Ctl.rc.switch_left==RC_SWITCH_UP)	//¿©’π–‘’˚ÃÂ±»¿˝PID≤π≥•øÈ
 	{
 		Extended_Integral_PID(&chassis_Data);
 	}
+	
 	
 	{	//π¶¬ œﬁ÷∆øÈ
 		float limit_k=Limit_Power(testPowerHeatData.chassisPower,testPowerHeatData.chassisPowerBuffer);	//testPowerHeatData.chassisPowerBuffer
@@ -399,6 +402,29 @@ float Limit_Power(float power,float powerbuffer)	//”¢–€120J»»¡øœﬁ÷∆£¨÷±Ω”œﬁ÷∆◊‹ 
 }
 
 
+#define CHASSIS_SPEEDMAX 8500.0f
+void Overall_Motion_Ratio_Protect(CHASSIS_DATA* chassis_data)	//’˚ÃÂ¬÷ÀŸ±»¿˝±£ª§,“ª∂®“™∑≈‘⁄’˚ÃÂ¬÷ÀŸΩ‚À„≥ˆ¿¥∫Û
+{
+	s32 chassis_tarV_max=0;
+	float chassis_protect_k=1;
+	
+	chassis_tarV_max=chassis_data->lf_wheel_tarV>chassis_data->rf_wheel_tarV?chassis_data->lf_wheel_tarV:chassis_data->rf_wheel_tarV;
+	chassis_tarV_max=chassis_tarV_max>chassis_data->lb_wheel_tarV?chassis_tarV_max:chassis_data->lb_wheel_tarV;
+	chassis_tarV_max=chassis_tarV_max>chassis_data->rb_wheel_tarV?chassis_tarV_max:chassis_data->rb_wheel_tarV;
+	
+	if(chassis_tarV_max>CHASSIS_SPEEDMAX)	//º∆À„≥ˆ±£ª§œµ ˝Œ™¡Àºı…Ÿº∆À„¡øΩ´Àı–°º∆À„∑≈‘⁄IFƒ⁄
+	{
+		chassis_protect_k=CHASSIS_SPEEDMAX/chassis_tarV_max;
+		
+		chassis_data->lf_wheel_tarV*=chassis_protect_k;
+		chassis_data->rf_wheel_tarV*=chassis_protect_k;
+		chassis_data->lb_wheel_tarV*=chassis_protect_k;
+		chassis_data->rb_wheel_tarV*=chassis_protect_k;
+	}
+	
+}
+
+
 
 #define CHASSIS_INTEGRAL_PID_KP 3
 #define CHASSIS_INTEGRAL_PID_KI 0.01
@@ -410,10 +436,23 @@ void Extended_Integral_PID(CHASSIS_DATA* chassis_data)	//¿©’π–Õ’˚ÃÂPID£¨  ”√”⁄»Œ
 	float expect[4]={0};
 	float error[4]={0};
 	static float inte[4];
-	expect[LF]=fdbv_sum*chassis_data->lf_wheel_tarV/tarv_sum;
-	expect[RF]=fdbv_sum*chassis_data->rf_wheel_tarV/tarv_sum;
-	expect[LB]=fdbv_sum*chassis_data->lb_wheel_tarV/tarv_sum;
-	expect[RB]=fdbv_sum*chassis_data->rb_wheel_tarV/tarv_sum;
+	s32 output_compensation[4];
+	
+	if(abs(tarv_sum)<0.1)	//œ‡µ±”⁄±ª≥˝ ˝Œ™0
+	{
+		expect[LF]=0;
+		expect[RF]=0;
+		expect[LB]=0;
+		expect[RB]=0;
+	}
+	else
+	{
+		expect[LF]=fdbv_sum*chassis_data->lf_wheel_tarV/tarv_sum;
+		expect[RF]=fdbv_sum*chassis_data->rf_wheel_tarV/tarv_sum;
+		expect[LB]=fdbv_sum*chassis_data->lb_wheel_tarV/tarv_sum;
+		expect[RB]=fdbv_sum*chassis_data->rb_wheel_tarV/tarv_sum;
+	}
+	
 	error[LF]=expect[LF]-chassis_data->lf_wheel_fdbV;
 	error[RF]=expect[RF]-chassis_data->rf_wheel_fdbV;
 	error[LB]=expect[LB]-chassis_data->lb_wheel_fdbV;
@@ -430,9 +469,20 @@ void Extended_Integral_PID(CHASSIS_DATA* chassis_data)	//¿©’π–Õ’˚ÃÂPID£¨  ”√”⁄»Œ
 		inte[id]=inte[id]<-CHASSIS_INTEGRAL_PID_I_SUM_LIM?-CHASSIS_INTEGRAL_PID_I_SUM_LIM:inte[id];
 	}
 	
-	chassis_data->lf_wheel_output+=(s32)(error[LF]*CHASSIS_INTEGRAL_PID_KP+inte[LF]);
-	chassis_data->rf_wheel_output+=(s32)(error[RF]*CHASSIS_INTEGRAL_PID_KP+inte[RF]);
-	chassis_data->lb_wheel_output+=(s32)(error[LB]*CHASSIS_INTEGRAL_PID_KP+inte[LB]);
-	chassis_data->rb_wheel_output+=(s32)(error[RB]*CHASSIS_INTEGRAL_PID_KP+inte[RB]);
+	output_compensation[LF]=(s32)(error[LF]*CHASSIS_INTEGRAL_PID_KP+inte[LF]);
+	output_compensation[RF]=(s32)(error[RF]*CHASSIS_INTEGRAL_PID_KP+inte[RF]);
+	output_compensation[LB]=(s32)(error[LB]*CHASSIS_INTEGRAL_PID_KP+inte[LB]);
+	output_compensation[RB]=(s32)(error[RB]*CHASSIS_INTEGRAL_PID_KP+inte[RB]);
+	
+	for(int id=0;id<4;id++)
+	{
+		output_compensation[id]=output_compensation[id]>4000?4000:output_compensation[id];
+		output_compensation[id]=output_compensation[id]<-4000?-4000:output_compensation[id];
+	}
+	
+	chassis_data->lf_wheel_output+=output_compensation[LF];
+	chassis_data->rf_wheel_output+=output_compensation[RF];
+	chassis_data->lb_wheel_output+=output_compensation[LB];
+	chassis_data->rb_wheel_output+=output_compensation[RB];
 }
 
