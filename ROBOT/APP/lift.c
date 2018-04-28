@@ -49,7 +49,7 @@ void AutoChassisAttitude_Lift(float chassis_pitch_raw)	//×Ô¶¯µ÷Õû×ËÌ¬	//pitchÕý·
 				}    
 			}
 				
-			if(abs(lift_Data.lf_lift_fdbP+lift_Data.rf_lift_fdbP-2*FALL)>18&&abs(lift_Data.lb_lift_fdbP+lift_Data.rb_lift_fdbP-2*FALL)>18)
+			if(abs(lift_Data.lf_lift_fdbP+lift_Data.rf_lift_fdbP-2*LIFT_DISTANCE_FALL)>18&&abs(lift_Data.lb_lift_fdbP+lift_Data.rb_lift_fdbP-2*LIFT_DISTANCE_FALL)>18)
 			{
 				if(time_1ms_count%40==0)	//1ms¼ÓµÄÌ«¿ì10MS
 				{
@@ -75,10 +75,10 @@ void AutoChassisAttitude_Lift(float chassis_pitch_raw)	//×Ô¶¯µ÷Õû×ËÌ¬	//pitchÕý·
 		
 		if(steady_flat_count>800)
 		{
-			lift_Data.lf_lift_tarP=FALL;
-			lift_Data.rf_lift_tarP=FALL;
-			lift_Data.lb_lift_tarP=FALL;
-			lift_Data.rb_lift_tarP=FALL;
+			lift_Data.lf_lift_tarP=LIFT_DISTANCE_FALL;
+			lift_Data.rf_lift_tarP=LIFT_DISTANCE_FALL;
+			lift_Data.lb_lift_tarP=LIFT_DISTANCE_FALL;
+			lift_Data.rb_lift_tarP=LIFT_DISTANCE_FALL;
 		}
 //		if(lift_Data.lf_lift_fdbP!=lift_Data.rf_lift_fdbP)
 //		{
@@ -93,19 +93,27 @@ void AutoChassisAttitude_Lift(float chassis_pitch_raw)	//×Ô¶¯µ÷Õû×ËÌ¬	//pitchÕý·
 //		}
 		
 		
-		lift_Data.lf_lift_tarP=lift_Data.lf_lift_tarP<FALL?FALL:lift_Data.lf_lift_tarP;	//ÏÞÖÆÐÐ³Ì
-		lift_Data.lf_lift_tarP=lift_Data.lf_lift_tarP>ISLAND?ISLAND:lift_Data.lf_lift_tarP;
+		lift_Data.lf_lift_tarP=lift_Data.lf_lift_tarP<LIFT_DISTANCE_FALL?LIFT_DISTANCE_FALL:lift_Data.lf_lift_tarP;	//ÏÞÖÆÐÐ³Ì
+		lift_Data.lf_lift_tarP=lift_Data.lf_lift_tarP>LIFT_DISTANCE_ISLAND?LIFT_DISTANCE_ISLAND:lift_Data.lf_lift_tarP;
 		
-		lift_Data.rf_lift_tarP=lift_Data.rf_lift_tarP<FALL?FALL:lift_Data.rf_lift_tarP;	//ÏÞÖÆÐÐ³Ì
-		lift_Data.rf_lift_tarP=lift_Data.rf_lift_tarP>ISLAND?ISLAND:lift_Data.rf_lift_tarP;
+		lift_Data.rf_lift_tarP=lift_Data.rf_lift_tarP<LIFT_DISTANCE_FALL?LIFT_DISTANCE_FALL:lift_Data.rf_lift_tarP;	//ÏÞÖÆÐÐ³Ì
+		lift_Data.rf_lift_tarP=lift_Data.rf_lift_tarP>LIFT_DISTANCE_ISLAND?LIFT_DISTANCE_ISLAND:lift_Data.rf_lift_tarP;
 		
-		lift_Data.lb_lift_tarP=lift_Data.lb_lift_tarP<FALL?FALL:lift_Data.lb_lift_tarP;	//ÏÞÖÆÐÐ³Ì
-		lift_Data.lb_lift_tarP=lift_Data.lb_lift_tarP>ISLAND?ISLAND:lift_Data.lb_lift_tarP;
+		lift_Data.lb_lift_tarP=lift_Data.lb_lift_tarP<LIFT_DISTANCE_FALL?LIFT_DISTANCE_FALL:lift_Data.lb_lift_tarP;	//ÏÞÖÆÐÐ³Ì
+		lift_Data.lb_lift_tarP=lift_Data.lb_lift_tarP>LIFT_DISTANCE_ISLAND?LIFT_DISTANCE_ISLAND:lift_Data.lb_lift_tarP;
 		
-		lift_Data.rb_lift_tarP=lift_Data.rb_lift_tarP<FALL?FALL:lift_Data.rb_lift_tarP;	//ÏÞÖÆÐÐ³Ì
-		lift_Data.rb_lift_tarP=lift_Data.rb_lift_tarP>ISLAND?ISLAND:lift_Data.rb_lift_tarP;
+		lift_Data.rb_lift_tarP=lift_Data.rb_lift_tarP<LIFT_DISTANCE_FALL?LIFT_DISTANCE_FALL:lift_Data.rb_lift_tarP;	//ÏÞÖÆÐÐ³Ì
+		lift_Data.rb_lift_tarP=lift_Data.rb_lift_tarP>LIFT_DISTANCE_ISLAND?LIFT_DISTANCE_ISLAND:lift_Data.rb_lift_tarP;
 	}
 }
+
+
+
+extern GYRO_DATA Gyro_Data;
+	//¾­ÊµÑé²âµÃ¶ÔÓÚ³µÉí×ó±ßÏµÀ´ËµÔÚÏòÇ°¼ÓËÙÊ±ºóÍÈµÇÆð£¬ËµÃ÷ÏòÇ°¼ÓËÙÊ±×ËÌ¬Îó²îÎªÇ°Ñöºó¸½£¬¼´ÕýÏòÎó²î
+	//														ÏòÇ°¼õËÙÊ±Ç°ÍÈµÇÆð£¬ËµÃ÷ÏòÇ°¼õËÙ£¨¼ÓËÙ¶È¸ºÏò£©Ê±Îó²îÎª¸º
+	//¾­ÊµÑé²âµÃIMU_UranusÔÚÐ¾Æ¬ÏòÇ°°²·ÅÊ±ÏòÇ°¼ÓËÙ¶ÈÕý·½ÏòÎªÇ°£¬ÎªaccµÚ0Î»	//°´ÕÕ200¼ÓËÙ¶È4¡ãÎó²îÀ´¼ÆËã£¬²¹³¥ÏµÊýÎª4/200
+#define ATTITUDE_ACC_COMPENSATE (5.0f/200)	//¼ÓËÙ¶È¶ÔÓÚ×ËÌ¬²¹³¥ÏµÊý
 
 #define TILT 1	//ÇãÐ±×´Ì¬
 #define STAEDY_REAL 0	//Æ½ÎÈ×´Ì¬
@@ -116,6 +124,8 @@ void AutoChassisAttitude_Lift_V2(float chassis_pitch_raw)	//×Ô¶¯µ÷Õû×ËÌ¬	//pitch
 	static float chassis_pitch=0;
 	static float ka=0.05f;
 	
+//	chassis_pitch_raw-=Gyro_Data.acc[0]*ATTITUDE_ACC_COMPENSATE;	//¶ÔIMU_UranusÄÚÖÃËã·¨È±ÏÝ½øÐÐ²¹³¥
+	
 	chassis_pitch=chassis_pitch*(1-ka)+chassis_pitch_raw*ka;
 	
 	if(GetWorkState()==NORMAL_STATE)
@@ -125,11 +135,15 @@ void AutoChassisAttitude_Lift_V2(float chassis_pitch_raw)	//×Ô¶¯µ÷Õû×ËÌ¬	//pitch
 			case STAEDY_REAL:
 			{
 				static u16 tilt_change_count=0;	//ÈôãÐÖµ¼ì²âÐ§¹û²»ºÃ£¬ÔòÊ¹ÓÃÏû¶¶¼ì²â
-				lift_Data.lf_lift_tarP=FALL;
-				lift_Data.rf_lift_tarP=FALL;
-				lift_Data.lb_lift_tarP=FALL;
-				lift_Data.rb_lift_tarP=FALL;
-				if(abs(chassis_pitch)>8&&tilt_change_count<0xFFFE)	//´¥·¢ãÐÖµ	Îª7Ê±ÓÐÒâÍâ´¥·¢ÏÖÏó
+				lift_Data.lf_lift_tarP=LIFT_DISTANCE_FALL;
+				lift_Data.rf_lift_tarP=LIFT_DISTANCE_FALL;
+				lift_Data.lb_lift_tarP=LIFT_DISTANCE_FALL;
+				lift_Data.rb_lift_tarP=LIFT_DISTANCE_FALL;
+				if(chassis_pitch>(8+Gyro_Data.acc[0]*4.0f/200)&&tilt_change_count<0xFFFE)	//´¥·¢ãÐÖµ	Îª7Ê±ÓÐÒâÍâ´¥·¢ÏÖÏó
+				{
+					tilt_change_count++;
+				}
+				else if((chassis_pitch<(-8+Gyro_Data.acc[0]*4.0f/200)&&tilt_change_count<0xFFFE))
 				{
 					tilt_change_count++;
 				}
@@ -150,7 +164,7 @@ void AutoChassisAttitude_Lift_V2(float chassis_pitch_raw)	//×Ô¶¯µ÷Õû×ËÌ¬	//pitch
 				static u16 staedy_adjust_count=0;
 				if(chassis_pitch>0)	//Ç°Ñö£¬¿ÉÒÔÍ¨¹ýÏÂÇ°½â¾ö£¬µ±ÏÂÇ°ÎÞ·¨½â¾ö£¬²ÉÓÃÉÏºó
 				{
-					if(lift_Data.lf_lift_tarP<=FALL)	//ÈôÏÂÇ°ÖÁ¼«ÏÞ
+					if(lift_Data.lf_lift_tarP<=LIFT_DISTANCE_FALL)	//ÈôÏÂÇ°ÖÁ¼«ÏÞ
 					{
 						lift_Data.lb_lift_tarP=chassis_pitch*AUTOCHASSIS_LIFT+lift_Data.lb_lift_fdbP;
 						lift_Data.rb_lift_tarP=lift_Data.lb_lift_tarP;
@@ -165,7 +179,7 @@ void AutoChassisAttitude_Lift_V2(float chassis_pitch_raw)	//×Ô¶¯µ÷Õû×ËÌ¬	//pitch
 				}
 				else	//Ç°¸©£¬¿ÉÒÔÍ¨¹ýÏÂºó½â¾ö£¬ÈôÏÂºóÎÞ·¨½â¾ö£¬²ÉÓÃÉÏÇ°
 				{
-					if(lift_Data.lb_lift_tarP<=FALL)	//ÏÂºó
+					if(lift_Data.lb_lift_tarP<=LIFT_DISTANCE_FALL)	//ÏÂºó
 					{
 						lift_Data.lf_lift_tarP=-chassis_pitch*AUTOCHASSIS_LIFT+lift_Data.lf_lift_fdbP;
 						lift_Data.rf_lift_tarP=lift_Data.lf_lift_tarP;	//ÒÔ×óÇ°µç»úÎª»ù×¼
@@ -246,17 +260,17 @@ void AutoChassisAttitude_Lift_V2(float chassis_pitch_raw)	//×Ô¶¯µ÷Õû×ËÌ¬	//pitch
 	}
 	
 	
-	lift_Data.lf_lift_tarP=lift_Data.lf_lift_tarP<FALL?FALL:lift_Data.lf_lift_tarP;	//ÏÞÖÆÐÐ³Ì
-	lift_Data.lf_lift_tarP=lift_Data.lf_lift_tarP>ISLAND?ISLAND:lift_Data.lf_lift_tarP;
+	lift_Data.lf_lift_tarP=lift_Data.lf_lift_tarP<LIFT_DISTANCE_FALL?LIFT_DISTANCE_FALL:lift_Data.lf_lift_tarP;	//ÏÞÖÆÐÐ³Ì
+	lift_Data.lf_lift_tarP=lift_Data.lf_lift_tarP>LIFT_DISTANCE_ISLAND?LIFT_DISTANCE_ISLAND:lift_Data.lf_lift_tarP;
 	
-	lift_Data.rf_lift_tarP=lift_Data.rf_lift_tarP<FALL?FALL:lift_Data.rf_lift_tarP;	//ÏÞÖÆÐÐ³Ì
-	lift_Data.rf_lift_tarP=lift_Data.rf_lift_tarP>ISLAND?ISLAND:lift_Data.rf_lift_tarP;
+	lift_Data.rf_lift_tarP=lift_Data.rf_lift_tarP<LIFT_DISTANCE_FALL?LIFT_DISTANCE_FALL:lift_Data.rf_lift_tarP;	//ÏÞÖÆÐÐ³Ì
+	lift_Data.rf_lift_tarP=lift_Data.rf_lift_tarP>LIFT_DISTANCE_ISLAND?LIFT_DISTANCE_ISLAND:lift_Data.rf_lift_tarP;
 	
-	lift_Data.lb_lift_tarP=lift_Data.lb_lift_tarP<FALL?FALL:lift_Data.lb_lift_tarP;	//ÏÞÖÆÐÐ³Ì
-	lift_Data.lb_lift_tarP=lift_Data.lb_lift_tarP>ISLAND?ISLAND:lift_Data.lb_lift_tarP;
+	lift_Data.lb_lift_tarP=lift_Data.lb_lift_tarP<LIFT_DISTANCE_FALL?LIFT_DISTANCE_FALL:lift_Data.lb_lift_tarP;	//ÏÞÖÆÐÐ³Ì
+	lift_Data.lb_lift_tarP=lift_Data.lb_lift_tarP>LIFT_DISTANCE_ISLAND?LIFT_DISTANCE_ISLAND:lift_Data.lb_lift_tarP;
 	
-	lift_Data.rb_lift_tarP=lift_Data.rb_lift_tarP<FALL?FALL:lift_Data.rb_lift_tarP;	//ÏÞÖÆÐÐ³Ì
-	lift_Data.rb_lift_tarP=lift_Data.rb_lift_tarP>ISLAND?ISLAND:lift_Data.rb_lift_tarP;
+	lift_Data.rb_lift_tarP=lift_Data.rb_lift_tarP<LIFT_DISTANCE_FALL?LIFT_DISTANCE_FALL:lift_Data.rb_lift_tarP;	//ÏÞÖÆÐÐ³Ì
+	lift_Data.rb_lift_tarP=lift_Data.rb_lift_tarP>LIFT_DISTANCE_ISLAND?LIFT_DISTANCE_ISLAND:lift_Data.rb_lift_tarP;
 }
 
 

@@ -15,14 +15,10 @@ PID_GENERAL   PID_Shoot_Up_Speed=PID_SHOOT_SPEED_DEFAULT;
 
 extern u32 time_1ms_count;
 
-s16 tem=0;
-u16 fri_t=800;
-u16 pwm_l=660;
-u16 pwm_r=2400;
-u16 pwm_lc=2300;
-u16 pwm_rc=800;
-float pwm_l_t=660;
-float pwm_r_t=2400;
+
+
+u8 Friction_State=0;	//初始化不开启
+u16 Friction_Send=800;
 void Shoot_Task(void)	//定时频率：1ms
 { 
 	
@@ -32,65 +28,11 @@ void Shoot_Task(void)	//定时频率：1ms
 	
 	shoot_Motor_Data_Down.tarV=PID_General(shoot_Motor_Data_Down.tarP,shoot_Motor_Data_Down.fdbP,&PID_Shoot_Down_Position);
 	shoot_Motor_Data_Up.tarV=PID_General(shoot_Motor_Data_Up.tarP,shoot_Motor_Data_Up.fdbP,&PID_Shoot_Up_Position);
-	
-	static u8 swicth_Last_state=0;	//右拨杆
 
-////////	if(RC_Ctl.rc.switch_right==RC_SWITCH_UP)	//shoot_Motor_Data.tarP-shoot_Motor_Data.fdbP	//待加入
-////////	{
-////////		if(pwm_l_t-pwm_l>0.01)
-////////		{
-////////			pwm_l_t-=0.8;
-////////		}
-////////		else
-////////		{
-////////			pwm_l_t=pwm_l;
-////////		}
-////////		
-////////		if(pwm_r-pwm_r_t>0.01)
-////////		{
-////////			pwm_r_t+=0.8;
-////////		}
-////////		else
-////////		{
-////////			pwm_r_t=pwm_r;
-////////		}
-////////	}	
-////////	else if(RC_Ctl.rc.switch_right==RC_SWITCH_DOWN)
-////////	{
-////////		if(pwm_lc-pwm_l_t>0.01)
-////////		{
-////////			pwm_l_t+=0.8;
-////////		}
-////////		else
-////////		{
-////////			pwm_l_t=pwm_lc;
-////////		}
-////////		
-////////		if(pwm_r_t-pwm_rc>0.01)
-////////		{
-////////			pwm_r_t-=0.8;
-////////		}
-////////		else
-////////		{
-////////			pwm_r_t=pwm_rc;
-////////		}
-////////	}
-////////	PWM3_3=(u16)pwm_l_t;
-////////  PWM3_4=(u16)pwm_r_t;
-	if(swicth_Last_state==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_UP)
-	{
-		static u8 frc_state=0;
-		frc_state=!frc_state;
-		if(frc_state==0)
-		{
-			LASER_OFF();
-		}
-		else
-		{
-			LASER_ON();
-		}
-		fri_t=800-(800-1888)*frc_state;	//2000对应射速20
-	}
+
+
+		Friction_Send=800-(800-1888)*Friction_State;	//2000对应射速20
+	
 ////////////////	if(swicth_Last_state==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_UP)
 /////临时///////	{
 /////测试///////		static u8 frc_state=0;
@@ -108,8 +50,8 @@ void Shoot_Task(void)	//定时频率：1ms
 ////////////////swicth_Last_state=RC_Ctl.rc.switch_right;
 	shoot_Motor_Data_Down.output=PID_General(shoot_Motor_Data_Down.tarV,shoot_Motor_Data_Down.fdbV,&PID_Shoot_Down_Speed);//down
 	shoot_Motor_Data_Up.output=PID_General(shoot_Motor_Data_Up.tarV,shoot_Motor_Data_Up.fdbV,&PID_Shoot_Up_Speed);//Up
-	SetFrictionWheelSpeed(fri_t);
-	swicth_Last_state=RC_Ctl.rc.switch_right;
+	SetFrictionWheelSpeed(Friction_Send);	//摩擦轮数值发送
+
 //	CAN_Shoot_SendMsg(shoot_Motor_Data.output);
 //	CAN_Shoot_SendMsg(tem);
 }
@@ -148,28 +90,72 @@ u16 shoot_time_measure(const s16 tarP,const s16 fbdP,const u8 last_mouse_press_l
 //或者将发弹逻辑改为基于增量式方法的频率控制
 void Shoot_Instruction(void)	//发弹指令模块
 {
+	
+	PC_Control_Shoot(&Friction_State);
+	RC_Control_Shoot(&Friction_State);
+
+	
+//	shoot_time_record=shoot_time_measure(shoot_Data_Down.count,shoot_Data_Down.count_fdb,last_mouse_press_l);////////////////////////////////
+	
+	shoot_Data_Down.motor_tarP=shoot_Data_Down.count*SINGLE_INCREMENT;
+	shoot_Data_Up.motor_tarP=shoot_Data_Up.count*SINGLE_INCREMENT_NEW_2006;	//新2006
+	Prevent_Jam(&shoot_Data_Down,&shoot_Motor_Data_Down);
+}
+
+
+void RC_Control_Shoot(u8* fri_state)
+{
 	static u8 swicth_Last_state=0;	//右拨杆
+	
+	if(RC_Ctl.rc.switch_left==RC_SWITCH_UP&&swicth_Last_state==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_DOWN)
+	{
+		shoot_Data_Down.count+=3;
+		shoot_Data_Up.count+=3;
+	}
+	
+	if(RC_Ctl.rc.switch_left==RC_SWITCH_UP&&swicth_Last_state==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_UP)
+	{
+		*fri_state=!*fri_state;
+	}
+	swicth_Last_state=RC_Ctl.rc.switch_right;
+}
+
+
+extern KeyBoardTypeDef KeyBoardData[KEY_NUMS];
+void PC_Control_Shoot(u8* fri_state)
+{
 	static u8 last_mouse_press_l=0;
+	static u8 last_keyX_state=0;
 	if(RC_Ctl.mouse.press_l==1&&last_mouse_press_l==0)	//shoot_Motor_Data.tarP-shoot_Motor_Data.fdbP	//待加入
 	{
 		shoot_Data_Down.count++;
 		shoot_Data_Up.count++;
 	}
 	
-	if(swicth_Last_state==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_DOWN)
+	if(last_keyX_state==0&&KeyBoardData[KEY_X].value==1)
 	{
-		shoot_Data_Down.count+=3;
-		shoot_Data_Up.count+=3;
+		*fri_state=1;
 	}
 	
-	shoot_time_record=shoot_time_measure(shoot_Data_Down.count,shoot_Data_Down.count_fdb,last_mouse_press_l);////////////////////////////////
-	last_mouse_press_l=RC_Ctl.mouse.press_l;
-	swicth_Last_state=RC_Ctl.rc.switch_right;
+	else if(KeyBoardData[KEY_X].statu==2)
+	{
+		*fri_state=0;
+	}
 	
-	shoot_Data_Down.motor_tarP=shoot_Data_Down.count*SINGLE_INCREMENT;
-	shoot_Data_Up.motor_tarP=shoot_Data_Up.count*SINGLE_INCREMENT_NEW_2006;	//新2006
-	Prevent_Jam(&shoot_Data_Down,&shoot_Motor_Data_Down);
+	if(*fri_state==0)
+	{
+		LASER_OFF();
+	}
+	else
+	{
+		LASER_ON();
+	}
+		
+	last_mouse_press_l=RC_Ctl.mouse.press_l;
+	last_keyX_state=KeyBoardData[KEY_X].value;
 }
+
+
 
 #define G 9.80151f
 /**********************************

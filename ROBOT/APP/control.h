@@ -13,8 +13,8 @@
 ////////////////////////////////////
 
 /************行程限制**************/
-#define FALL 30
-#define ISLAND 1171
+#define LIFT_DISTANCE_FALL 30
+#define LIFT_DISTANCE_ISLAND 1171
 
 
 

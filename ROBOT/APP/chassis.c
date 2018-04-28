@@ -23,6 +23,7 @@ extern IslandAttitudeCorrectState_e IslandAttitude_Correct_State;	//登岛姿态自校
 #define K_SPEED 10
 s32 t_Vw_PID=0;
 s32 yaw_follow_tarP=YAW_INIT_DEFINE;
+volatile float yaw_follow_real_error=0;	//用于扭腰及普通状态下的90度
 float yaw_follow_error=0;	//弧度制必须浮点
 float t_Vy_k=0;
 float t_Vx_k=0;
@@ -65,7 +66,7 @@ void Remote_Task(void)
 			case 0:
 			{
 				YAW_INIT=yaw_init_def-WAIST_RANGE;
-				if(abs(YAW_INIT-yunMotorData.yaw_fdbP)<0)
+				if(abs(YAW_INIT-yunMotorData.yaw_fdbP)<22)
 				{
 					turn_flag=1;
 				}
@@ -74,7 +75,7 @@ void Remote_Task(void)
 			case 1:
 			{
 				YAW_INIT=yaw_init_def+WAIST_RANGE;
-				if(abs(YAW_INIT-yunMotorData.yaw_fdbP)<15)
+				if(abs(YAW_INIT-yunMotorData.yaw_fdbP)<22)
 				{
 					turn_flag=0;
 				}
@@ -82,7 +83,7 @@ void Remote_Task(void)
 			}
 		}
 		
-		PID_Chassis_Follow.k_p=CHASSIS_FOLLOW_PID_P/1.2f;
+		PID_Chassis_Follow.k_p=CHASSIS_FOLLOW_PID_P/1.1f;
 	}
 	else
 	{
@@ -175,12 +176,13 @@ void Remote_Task(void)
 //		Chassis_Vw=(s16)((YAW_INIT-yunMotorData.yaw_fdbP)*0.6f);	//YUN_INIT为目标位置，故为YAW_INIT-
 	}
 	
-
+	if(GetWorkState()==NORMAL_STATE)
+	yaw_follow_error=yaw_follow_error/8192.0f*2*PI;	//每次都运算方便yun.c调用
 	if(GetWorkState()==NORMAL_STATE&&abs(YAW_INIT-yunMotorData.yaw_fdbP)>200)	//过弯漂移	//发现过弯飘移会影响转向，解决方法1，转向驱动力达到极限触顶导致实际速度比例偏差预期，设置一函数检测任意输出值大于8000时限制整体使比例预期，方法二，减弱Vy
 	{	//智能转向块
 		s16 Vx_record=Chassis_Vx;
 		Chassis_Vx=0;
-		yaw_follow_error=yaw_follow_error/8192.0f*2*PI;
+//		yaw_follow_error=yaw_follow_error/8192.0f*2*PI;
 		Chassis_Vx+=(s16)(Vx_record*(cos(yaw_follow_error)));
 		Chassis_Vy+=(s16)(Vx_record*(sin(yaw_follow_error))*1);
 	}
@@ -188,7 +190,6 @@ void Remote_Task(void)
 	
 	if(GetWorkState()==WAIST_STATE)	//扭腰前进	
 	{
-		float yaw_follow_real_error=0;
 		s16 Vx_record=Chassis_Vx;
 		if(YAW_INIT_DEFINE-yaw_follow_tarP>8192/2)	//防止过界
 		{
@@ -267,21 +268,21 @@ void RC_Control_Chassis(void)
 	if(GetWorkState()==NORMAL_STATE||GetWorkState()==WAIST_STATE)
 	{
 		
-//////		if(time_1ms_count%1==0)
-//////		{
-//////			if(RC_Ctl.rc.ch1-1024-Chassis_Vx_last>1&&RC_Ctl.rc.ch1-1024>10)	//只在前进加速时生效，
-//////			{
-//////				Chassis_Vx+=1;
-//////			}
-//////			else if(RC_Ctl.rc.ch1-1024-Chassis_Vx_last<-1&&RC_Ctl.rc.ch1-1024<-10)	//只在后退加速时生效
-//////			{
-//////				Chassis_Vx-=1;
-//////			}
-//////			else
-//////			{
+		if(time_1ms_count%1==0)
+		{
+			if(RC_Ctl.rc.ch1-1024-Chassis_Vx_last>1&&RC_Ctl.rc.ch1-1024>10)	//只在前进加速时生效，
+			{
+				Chassis_Vx+=1;
+			}
+			else if(RC_Ctl.rc.ch1-1024-Chassis_Vx_last<-1&&RC_Ctl.rc.ch1-1024<-10)	//只在后退加速时生效
+			{
+				Chassis_Vx-=1;
+			}
+			else
+			{
 				Chassis_Vx=RC_Ctl.rc.ch1-1024;
-//////			}
-//////		}
+			}
+		}
 //		Chassis_Vx=RC_Ctl.rc.ch1-1024;	//代替为斜坡函数
 		Chassis_Vx_last=Chassis_Vx;
 	}

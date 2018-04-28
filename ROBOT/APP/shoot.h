@@ -1,5 +1,6 @@
 #ifndef __SHOOT_H_
 #define __SHOOT_H_
+#include "stm32f4xx.h"
 #include "main.h"
 
 ////				P  I D MAXIN MAXOUT MAX_I
@@ -114,6 +115,9 @@ typedef struct
 
   float output;
 }SHOOT_MOTOR_DATA;
+
+void PC_Control_Shoot(u8* fri_state);
+void RC_Control_Shoot(u8* fri_state);
 
 void Shoot_Instruction(void);	//·¢µ¯Ö¸ÁîÄ£¿é
 void Shoot_Task(void); 

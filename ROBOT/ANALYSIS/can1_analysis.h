@@ -18,6 +18,7 @@ typedef struct
 void CAN1_Feedback_Analysis(CanRxMsg *rx_message);
 void CAN1_Lift_SendMsg(int motor_201,int motor_202,int motor_203,int motor_204);
 void CAN1_Yun_SendMsg(int16_t motor_205,int16_t motor_206);	//yaw  pitch
+void CAN_Motor6623_calibration(void);
 
 void Position_Data_deal(s32 * value,LIFT_POSITION_ENCODER *Receive,CanRxMsg * msg);
 void Position_To_Turns(LIFT_POSITION_ENCODER *Receive);	//按照6倍采样来计算，机械角度共8192个挡位，则过界表现差值为6826

@@ -1,7 +1,7 @@
 #include "auto_lift.h"
 #include "common_definition.h"
 
-
+extern ViceControlDataTypeDef ViceControlData;
 AscendState_e AscendState=FULLRISE_GO1;	//登岛状态位
 
 extern PID_GENERAL PID_Chassis_Speed[4];
@@ -572,17 +572,17 @@ extern LIFT_DATA lift_Data;
 
 u8 SetCheck_FrontLift(u8 rise_state)	//前升降轮升起/落下并检查	//0表示FALL，1表示ISLAND
 {
-	lift_Data.lf_lift_tarP=FALL-(rise_state!=0)*(FALL-ISLAND);
-	lift_Data.rf_lift_tarP=FALL-(rise_state!=0)*(FALL-ISLAND);
+	lift_Data.lf_lift_tarP=LIFT_DISTANCE_FALL-(rise_state!=0)*(LIFT_DISTANCE_FALL-LIFT_DISTANCE_ISLAND);
+	lift_Data.rf_lift_tarP=LIFT_DISTANCE_FALL-(rise_state!=0)*(LIFT_DISTANCE_FALL-LIFT_DISTANCE_ISLAND);
 	
-	return (abs(lift_Data.lf_lift_fdbP+lift_Data.rf_lift_fdbP-2*(FALL-(rise_state!=0)*(FALL-ISLAND)))<30);	//20
+	return (abs(lift_Data.lf_lift_fdbP+lift_Data.rf_lift_fdbP-2*(LIFT_DISTANCE_FALL-(rise_state!=0)*(LIFT_DISTANCE_FALL-LIFT_DISTANCE_ISLAND)))<30);	//20
 }
 
 u8 SetCheck_BackLift(u8 rise_state)
 {
-	lift_Data.lb_lift_tarP=FALL-(rise_state!=0)*(FALL-ISLAND);
-	lift_Data.rb_lift_tarP=FALL-(rise_state!=0)*(FALL-ISLAND);
+	lift_Data.lb_lift_tarP=LIFT_DISTANCE_FALL-(rise_state!=0)*(LIFT_DISTANCE_FALL-LIFT_DISTANCE_ISLAND);
+	lift_Data.rb_lift_tarP=LIFT_DISTANCE_FALL-(rise_state!=0)*(LIFT_DISTANCE_FALL-LIFT_DISTANCE_ISLAND);
 	
-	return (abs(lift_Data.lb_lift_fdbP+lift_Data.rb_lift_fdbP-2*(FALL-(rise_state!=0)*(FALL-ISLAND)))<30);	//20
+	return (abs(lift_Data.lb_lift_fdbP+lift_Data.rb_lift_fdbP-2*(LIFT_DISTANCE_FALL-(rise_state!=0)*(LIFT_DISTANCE_FALL-LIFT_DISTANCE_ISLAND)))<30);	//20
 }
 

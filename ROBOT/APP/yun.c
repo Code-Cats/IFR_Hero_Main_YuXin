@@ -1,4 +1,5 @@
 #include "yun.h"
+#include "remote_analysis.h"
 s32 YAW_INIT=YAW_INIT_DEFINE;
 /*
 整体结构：yaw轴暂定单独速度环//后期计划增加外接陀螺仪位置环进行选择
@@ -25,6 +26,8 @@ extern	RC_Ctl_t RC_Ctl;
 extern GYRO_DATA Gyro_Data;
 extern IslandAttitudeCorrectState_e IslandAttitude_Correct_State;	//登岛姿态自校正
 extern bool Chassis_Follow_Statu;	//底盘跟随标志位
+extern volatile float yaw_follow_real_error;	//扭腰时的底盘跟随偏差
+extern float yaw_follow_error;	//普通时的底盘跟随误差
 
 extern u32 time_1ms_count;
 s32 t_pitch____=0;
@@ -126,7 +129,7 @@ void RC_Control_Yun(s32 * yaw_tarp,s32 * pitch_tarp)	//1000Hz
 		yunMotorData.yaw_tarP=yunMotorData.yaw_tarP<-1800?yunMotorData.yaw_tarP+3600:yunMotorData.yaw_tarP;	//过零点
 	}
 	
-	yunMotorData.pitch_tarP=(int32_t)(-(RC_Ctl.rc.ch3-1024)*430.0/660.0)+PITCH_INIT;	//-50是因为陀螺仪水平时云台上扬
+	yunMotorData.pitch_tarP=(int32_t)(-(RC_Ctl.rc.ch3-1024)*460.0/660.0)+PITCH_INIT;	//-50是因为陀螺仪水平时云台上扬
 }
 
 
@@ -144,34 +147,33 @@ void PC_Control_Yun(s32 * yaw_tarp,s32 * pitch_tarp)	//1000Hz
 		yaw_tarp_float=(float)*yaw_tarp;
 		start_state=1;
 	}
-//	static u8 keyQ_last,keyE_last=0;	//暂时屏蔽
-//	if(keyQ_last==0&&KeyBoardData[KEY_Q].value==1)
-//	{
-//		yaw_tarp_float+=900;
-//		yaw_tarp_float=yaw_tarp_float>1800?yaw_tarp_float-3600:yaw_tarp_float;	//过零点
-//		yaw_tarp_float=yaw_tarp_float<-1800?yaw_tarp_float+3600:yaw_tarp_float;	//过零点
-//		keyQ_last=KeyBoardData[KEY_Q].value;
-//	}
-//	if(keyE_last==0&&KeyBoardData[KEY_E].value==1)
-//	{
-//		yaw_tarp_float-=900;
-//		yaw_tarp_float=yaw_tarp_float>1800?yaw_tarp_float-3600:yaw_tarp_float;	//过零点
-//		yaw_tarp_float=yaw_tarp_float<-1800?yaw_tarp_float+3600:yaw_tarp_float;	//过零点
-//		keyE_last=KeyBoardData[KEY_E].value;
-//	}
+	static u8 keyQ_last,keyE_last=0;	//暂时屏蔽
+	if(keyQ_last==0&&KeyBoardData[KEY_Q].value==1&&abs(yaw_follow_error)<PI/10)
+	{
+		yaw_tarp_float+=900;
+		yaw_tarp_float=yaw_tarp_float>1800?yaw_tarp_float-3600:yaw_tarp_float;	//过零点
+		yaw_tarp_float=yaw_tarp_float<-1800?yaw_tarp_float+3600:yaw_tarp_float;	//过零点
+	}
+	keyQ_last=KeyBoardData[KEY_Q].value;
 	
-	
+	if(keyE_last==0&&KeyBoardData[KEY_E].value==1&&abs(yaw_follow_error)<PI/10)
+	{
+		yaw_tarp_float-=900;
+		yaw_tarp_float=yaw_tarp_float>1800?yaw_tarp_float-3600:yaw_tarp_float;	//过零点
+		yaw_tarp_float=yaw_tarp_float<-1800?yaw_tarp_float+3600:yaw_tarp_float;	//过零点
+	}
+	keyE_last=KeyBoardData[KEY_E].value;
 	
 	if(time_1ms_count%10==0)
 	{
 		yaw_tarp_float-=RC_Ctl.mouse.x*15.0f/40.0f;
-		pitch_tarp_float+=RC_Ctl.mouse.y*2.0f/3.2f;	//2/4
+		pitch_tarp_float+=RC_Ctl.mouse.y*2.0f/3.0f;	//2/4
 		
 		yaw_tarp_float=yaw_tarp_float>1800?yaw_tarp_float-3600:yaw_tarp_float;	//过零点
 		yaw_tarp_float=yaw_tarp_float<-1800?yaw_tarp_float+3600:yaw_tarp_float;	//过零点
 		
-		pitch_tarp_float=pitch_tarp_float>(PITCH_INIT+450)?(PITCH_INIT+450):pitch_tarp_float;	//限制行程
-		pitch_tarp_float=pitch_tarp_float<(PITCH_INIT-450)?(PITCH_INIT-450):pitch_tarp_float;	//限制行程
+		pitch_tarp_float=pitch_tarp_float>(PITCH_INIT+500)?(PITCH_INIT+500):pitch_tarp_float;	//限制行程
+		pitch_tarp_float=pitch_tarp_float<(PITCH_INIT-650)?(PITCH_INIT-650):pitch_tarp_float;	//限制行程
 		
 		*yaw_tarp=(s32)yaw_tarp_float;
 		*pitch_tarp=(s32)pitch_tarp_float;

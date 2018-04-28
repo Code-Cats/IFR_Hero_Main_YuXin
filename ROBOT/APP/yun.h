@@ -7,8 +7,8 @@
 #define  YAW_INIT_DEFINE 4950//4900
 //s32 YAW_INIT=YAW_INIT_DEFINE;
 extern s32 YAW_INIT;
-#define PITCH_INIT           2360//5900//6000	//2018.3.3	余鑫6000
-#define PITCH_GYRO_INIT 2360	//云台陀螺仪零点对应电机位置，陀螺仪更改位置需要重调
+#define PITCH_INIT           2900//5900//6000	//2018.3.3	余鑫6000
+#define PITCH_GYRO_INIT 2900	//云台陀螺仪零点对应电机位置，陀螺仪更改位置需要重调
 
 #define 		Yaw_MAX 			   YAW_INIT+1000
 #define 		Yaw_MIN				   YAW_INIT-1000
@@ -38,12 +38,12 @@ extern s32 YAW_INIT;
 
 
 /*PID参数-外接陀螺仪*/
-#define PITCH_POSITION_PID_P 0.80//0.9	//0.81
+#define PITCH_POSITION_PID_P 0.83//0.9	//0.81
 #define PITCH_POSITION_PID_I 0.005
 #define PITCH_POSITION_PID_D 1	//1.2
-#define PITCH_POSITION_PID_MER 260	//最大偏差输入
+#define PITCH_POSITION_PID_MER 400	//最大偏差输入
 #define PITCH_POSITION_PID_MAXINPUT 8190	//最大期望输入
-#define PITCH_POSITION_PID_MAXOUTPUT 260	//最大输出
+#define PITCH_POSITION_PID_MAXOUTPUT 320	//最大输出
 #define PITCH_POSITION_PID_I_MAX 3000	//I累加限制
 #define PITCH_POSITION_PID_DEAD 0	//计算死区3
 //参数记录：
@@ -51,8 +51,8 @@ extern s32 YAW_INIT;
 #define PITCH_SPEED_PID_I 0.014	//0.026
 #define PITCH_SPEED_PID_D 8	//0.08
 #define PITCH_SPEED_PID_MER 260	//最大偏差输入240
-#define PITCH_SPEED_PID_MAXINPUT 260	//最大期望输入
-#define PITCH_SPEED_PID_MAXOUTPUT 7000	//最大输出5500
+#define PITCH_SPEED_PID_MAXINPUT 320	//最大期望输入
+#define PITCH_SPEED_PID_MAXOUTPUT 6000	//超过7000电机反转
 #define PITCH_SPEED_PID_I_MAX 550/PITCH_SPEED_PID_I	//I累加限制1200
 #define PITCH_SPEED_PID_DEAD 0	//计算死区3
 
@@ -76,16 +76,16 @@ extern s32 YAW_INIT;
 //#define PITCH_SPEED_PID_DEAD 1	//计算死区3
 
 
-#define YAW_SPEED_PID_P 45	//30  
+#define YAW_SPEED_PID_P 44//45	//30  
 #define YAW_SPEED_PID_I 0.03	//0.02
 #define YAW_SPEED_PID_D 1
 #define YAW_SPEED_PID_MER 260	//最大偏差输入
-#define YAW_SPEED_PID_MAXINPUT 300	//最大期望输入
+#define YAW_SPEED_PID_MAXINPUT 320	//最大期望输入
 #define YAW_SPEED_PID_MAXOUTPUT 7000	//最大输出
 #define YAW_SPEED_PID_I_MAX 1500/YAW_SPEED_PID_I	//I累加限制
 #define YAW_SPEED_PID_DEAD 0	//计算死区
 
-#define YAW_POSITION_PID_P 1.2  
+#define YAW_POSITION_PID_P 1.4//1.2  
 #define YAW_POSITION_PID_I 0
 #define YAW_POSITION_PID_D 1	//经过实验观察数据发现D过大引起tarV波动过大，但D对于减弱波形超调猜测有效用，采用非线性D	//原值6
 #define YAW_POSITION_PID_MER 280	//最大偏差输入

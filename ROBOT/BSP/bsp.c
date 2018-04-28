@@ -14,7 +14,7 @@ void BSP_Init(void)
 	 PWM_Config();
 	 Laser_Config();
 	 USART1_DMA_Config(100000);  
-   USART6_ViceBoard_Init(14400);
+   USART6_ViceBoard_Init(115200);
 	 USART3_Configuration(115200);
 //	 USART5_WIFIDEBUG_Init(115200);
 //	USART6_WIFIDEBUG_Init(115200);

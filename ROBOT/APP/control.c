@@ -111,6 +111,7 @@ if(time_1ms_count%1000==0)
 			Yun_Task();	//开启云台处理
 			Lift_Task();	//开启升降
 			Shoot_Task();	//临时调试
+			TakeBullet_Control_Center();	//调试
 			break;
 		}
 		case NORMAL_STATE:	//正常操作模式
@@ -118,10 +119,10 @@ if(time_1ms_count%1000==0)
 			Teleconltroller_Data_protect();	//遥控器数据保护
 			Yun_Task();	//开启云台处理
 			Remote_Task();	//执行移动
-			AutoChassisAttitude_Lift_V2(Chassis_GYRO[PITCH]);
+//			AutoChassisAttitude_Lift_V2(Chassis_GYRO[PITCH]);
 			Lift_Task();	//开启升降
 			Shoot_Task();
-			
+			TakeBullet_Control_Center();
 			break;
 		}
 		case WAIST_STATE:
@@ -174,6 +175,12 @@ if(time_1ms_count%1000==0)
 	Chassis_Attitude_Angle_Convert();
 	
 	Motor_Send();
+	if(time_1ms_count%2==0)
+	{
+		ViceBoard_SendDataRefresh();
+		ViceBoard_SendDataRun();
+	}
+	
 }
 
 
@@ -216,7 +223,7 @@ void Work_State_Change(void)
 			
 			if(RC_Ctl.rc.switch_left==RC_SWITCH_DOWN&&Switch_Right_Last==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_DOWN)
 			{
-				SetWorkState(ASCEND_STATE);
+//				SetWorkState(ASCEND_STATE);
 			}
 			else if(RC_Ctl.rc.switch_left==RC_SWITCH_DOWN&&Switch_Right_Last==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_UP)
 			{
@@ -281,6 +288,7 @@ void Work_State_Change(void)
 		{
 			if(Error_Check.statu[LOST_DBUS]==0||abs(RC_Ctl.rc.ch0+RC_Ctl.rc.ch1+RC_Ctl.rc.ch2+RC_Ctl.rc.ch3-1024*4)>8)
 			{
+				yunMotorData.yaw_tarP=(s32)(Gyro_Data.angle[2]*10+(YAW_INIT-yunMotorData.yaw_fdbP)*3600/8192);	//重置云台目标位置
 				SetWorkState(NORMAL_STATE);
 			}
 			break;
@@ -357,7 +365,6 @@ void LED_Indicate(void)
 				{
 					LED_Blink_Set(6,10);
 				}
-				
 				break;
 			}
 			case LOST_STATE:	//错误模式
@@ -437,17 +444,17 @@ void Lift_Task(void)
 	
 	if(GetWorkState()!=CALI_STATE)	//标定状态下不限制行程
 	{
-		lift_Data.lf_lift_tarP=lift_Data.lf_lift_tarP<FALL?FALL:lift_Data.lf_lift_tarP;	//限制行程
-		lift_Data.lf_lift_tarP=lift_Data.lf_lift_tarP>ISLAND?ISLAND:lift_Data.lf_lift_tarP;
+		lift_Data.lf_lift_tarP=lift_Data.lf_lift_tarP<LIFT_DISTANCE_FALL?LIFT_DISTANCE_FALL:lift_Data.lf_lift_tarP;	//限制行程
+		lift_Data.lf_lift_tarP=lift_Data.lf_lift_tarP>LIFT_DISTANCE_ISLAND?LIFT_DISTANCE_ISLAND:lift_Data.lf_lift_tarP;
 		
-		lift_Data.rf_lift_tarP=lift_Data.rf_lift_tarP<FALL?FALL:lift_Data.rf_lift_tarP;	//限制行程
-		lift_Data.rf_lift_tarP=lift_Data.rf_lift_tarP>ISLAND?ISLAND:lift_Data.rf_lift_tarP;
+		lift_Data.rf_lift_tarP=lift_Data.rf_lift_tarP<LIFT_DISTANCE_FALL?LIFT_DISTANCE_FALL:lift_Data.rf_lift_tarP;	//限制行程
+		lift_Data.rf_lift_tarP=lift_Data.rf_lift_tarP>LIFT_DISTANCE_ISLAND?LIFT_DISTANCE_ISLAND:lift_Data.rf_lift_tarP;
 		
-		lift_Data.lb_lift_tarP=lift_Data.lb_lift_tarP<FALL?FALL:lift_Data.lb_lift_tarP;	//限制行程
-		lift_Data.lb_lift_tarP=lift_Data.lb_lift_tarP>ISLAND?ISLAND:lift_Data.lb_lift_tarP;
+		lift_Data.lb_lift_tarP=lift_Data.lb_lift_tarP<LIFT_DISTANCE_FALL?LIFT_DISTANCE_FALL:lift_Data.lb_lift_tarP;	//限制行程
+		lift_Data.lb_lift_tarP=lift_Data.lb_lift_tarP>LIFT_DISTANCE_ISLAND?LIFT_DISTANCE_ISLAND:lift_Data.lb_lift_tarP;
 		
-		lift_Data.rb_lift_tarP=lift_Data.rb_lift_tarP<FALL?FALL:lift_Data.rb_lift_tarP;	//限制行程
-		lift_Data.rb_lift_tarP=lift_Data.rb_lift_tarP>ISLAND?ISLAND:lift_Data.rb_lift_tarP;
+		lift_Data.rb_lift_tarP=lift_Data.rb_lift_tarP<LIFT_DISTANCE_FALL?LIFT_DISTANCE_FALL:lift_Data.rb_lift_tarP;	//限制行程
+		lift_Data.rb_lift_tarP=lift_Data.rb_lift_tarP>LIFT_DISTANCE_ISLAND?LIFT_DISTANCE_ISLAND:lift_Data.rb_lift_tarP;
 	}
 	
 	lift_Data.lf_lift_tarV=(int32_t)PID_General(lift_Data.lf_lift_tarP,lift_Data.lf_lift_fdbP,&PID_Lift_Position[LF]);	//位置环PID计算
@@ -615,13 +622,15 @@ void Lift_Calibration(void)	//升降电机上电标定
 		Calibration_Time_Count=0;
 	}
 }
+
+
+s32 t_yaw_send=0;
+s32 t_pitch_send=0;
+s16 t_yaw_16t=0;
+s16 t_pitch_16t=0;
+
 float cali_send[4]={0};
 //extern YUN_MOTOR_DATA 			yunMotorData;
-extern s16 __t_yaw_offset;
-s16 t_yaw_send=0;
-s16 t_pitch_Send=0;
-s16 t_pitch_offset=0;
-int16_t t_pitch_outsend=0;
 
 u32 t_send_count=0;
 void Motor_Send(void)
@@ -633,13 +642,16 @@ void Motor_Send(void)
 			CAN1_Yun_SendMsg(0,0);	//CAN2	//yaw,pitch
 			CAN2_Chassis_SendMsg(0,0,0,0);
 			CAN1_Lift_SendMsg(0,0,0,0);
-			//CAN2_Shoot_SendMsg(0,0);//下拨弹、上拨弹
-			CAN2_Shoot_SendMsg((s16)shoot_Motor_Data_Down.output,0);	//下拨弹、上拨弹
+			CAN2_Shoot_SendMsg(0,0);//下拨弹、上拨弹
+//			CAN2_Shoot_SendMsg((s16)shoot_Motor_Data_Down.output,0);	//下拨弹、上拨弹
 			break;
 		}
 		case PREPARE_STATE:	//预备模式
 		{	//等待车身状态稳定，并设置初值
-			CAN1_Yun_SendMsg(yunMotorData.yaw_output+Yaw_output_offset(yunMotorData.yaw_fdbP),yunMotorData.pitch_output+Pitch_output_offset(yunMotorData.pitch_tarP));	//CAN2-1000
+			CAN1_Yun_SendMsg(yunMotorData.yaw_output,yunMotorData.pitch_output);	//CAN2-1000	//取消反馈补偿
+	//		CAN1_Yun_SendMsg(t_yaw_16t,t_pitch_16t);	//调试用模式
+//			CAN_Motor6623_calibration();
+			//CAN1_Yun_SendMsg(yunMotorData.yaw_output+Yaw_output_offset(yunMotorData.yaw_fdbP),yunMotorData.pitch_output+Pitch_output_offset(yunMotorData.pitch_tarP));	//CAN2-1000
 			CAN2_Chassis_SendMsg(0,0,0,0);
 			CAN1_Lift_SendMsg(0,0,0,0);
 			//CAN2_Shoot_SendMsg(0,0);//下拨弹、上拨弹
@@ -670,8 +682,9 @@ void Motor_Send(void)
 		}
 		case NORMAL_STATE:	//正常操作模式
 		{
-			CAN1_Yun_SendMsg(yunMotorData.yaw_output,yunMotorData.pitch_output);	//CAN2-1000	//取消反馈补偿
+			CAN1_Yun_SendMsg((s16)yunMotorData.yaw_output,(s16)yunMotorData.pitch_output);	//CAN2-1000	//取消反馈补偿	正常程序模式
 //		CAN_Yun_SendMsg(0,0);
+//			CAN1_Yun_SendMsg(t_yaw_16t,t_pitch_16t);	//调试用模式
 //		CAN_Chassis_SendMsg((s16)remote_tem,(s16)remote_tem,(s16)remote_tem,(s16)remote_tem);
 			CAN2_Chassis_SendMsg(chassis_Data.lf_wheel_output,chassis_Data.rf_wheel_output,chassis_Data.lb_wheel_output,chassis_Data.rb_wheel_output);
 //			CAN_Chassis_SendMsg(0,0,0,0);
@@ -853,16 +866,17 @@ float Chassis_GYRO[3]={0};	//pitch roll yaw
 /*************************************************
 功能：经数据融合给出底盘姿态供其他模块调用
 数据单位：度 Gyro_Data.angle
-云台陀螺仪数据正方向：pitch:下 roll:  左高右低 yaw：逆时针
+云台陀螺仪数据正方向：pitch:下 	roll:左高右低	 yaw：逆时针
 电机位置正方向：pitch：下  yaw:逆时针
 电机中值：YAW_INIT PITCH_INIT
+融合后chassis方向:pitch:上		roll左高右低		yaw:逆时针
 **************************************************/
 void Chassis_Attitude_Angle_Convert(void)	//综合得出底盘姿态
 {
 	float deviation_pitch=PITCH_GYRO_INIT-yunMotorData.pitch_fdbP;	//对于底盘来说，云台中值即是底盘在云台坐标系上的位置
 	float deviation_yaw=YAW_INIT-yunMotorData.yaw_fdbP;
 	//对yaw轴进行限制，标准过零（-180——+180）
-	Chassis_GYRO[PITCH]=-Gyro_Data.angle[PITCH]-deviation_pitch*360.0f/8192;	//因为云台电机位置反馈正方向与陀螺仪正方向相反pitch？-2
+	Chassis_GYRO[PITCH]=-Gyro_Data.angle[PITCH]-deviation_pitch*360.0f/8192+1;	//因为云台电机位置反馈正方向与陀螺仪正方向相反pitch？-2
 	Chassis_GYRO[ROLL]=Gyro_Data.angle[ROLL]-3;	//roll	-3为静止时补偿
 	Chassis_GYRO[YAW]=Gyro_Data.angle[YAW]+deviation_yaw*360.0f/8192;	//因为云台电机位置反馈正方向与陀螺仪正方向相同
  

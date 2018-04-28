@@ -523,6 +523,11 @@
               <FileType>1</FileType>
               <FilePath>..\ROBOT\APP\lift.c</FilePath>
             </File>
+            <File>
+              <FileName>auto_takebullet.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\APP\auto_takebullet.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

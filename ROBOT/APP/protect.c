@@ -49,7 +49,7 @@ void Check_Task(void)
 		SetWorkState(ERROR_STATE);
 	}
 	
-	for(int i=4;i<LOST_TYPE_NUM;i++)	//电机比控更重要
+	for(int i=4;i<LOST_TYPE_NUM-2;i++)	//电机比控更重要
 	{
 		if(Error_Check.statu[i]==1)
 		{
