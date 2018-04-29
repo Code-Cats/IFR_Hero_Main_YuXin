@@ -53,7 +53,7 @@ void Yun_Control_External_Solution(void)	//外置反馈方案
 		}
 	}
 	
-	if(GetWorkState()==NORMAL_STATE||GetWorkState()==WAIST_STATE)	//仅在正常模式下受控
+	if(GetWorkState()==NORMAL_STATE||GetWorkState()==WAIST_STATE||GetWorkState()==TAKEBULLET_STATE)	//仅在正常模式下受控	//取弹受控为暂时加入，之后以传感器自动进行
 	{
 		if(Yun_Control_RCorPC==PC_CONTROL)
 		{	//PC控制数据

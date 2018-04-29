@@ -110,7 +110,7 @@ void Remote_Task(void)
 	
 	
 	
-	if(GetWorkState()==NORMAL_STATE||GetWorkState()==WAIST_STATE)	//底盘跟随标志位定义块
+	if(GetWorkState()==NORMAL_STATE||GetWorkState()==WAIST_STATE||GetWorkState()==TAKEBULLET_STATE)	//底盘跟随标志位定义块	//取弹受控为暂时加入
 	{
 		Chassis_Follow_Statu=1;
 	}
@@ -176,7 +176,7 @@ void Remote_Task(void)
 //		Chassis_Vw=(s16)((YAW_INIT-yunMotorData.yaw_fdbP)*0.6f);	//YUN_INIT为目标位置，故为YAW_INIT-
 	}
 	
-	if(GetWorkState()==NORMAL_STATE)
+	if(GetWorkState()==NORMAL_STATE||GetWorkState()==TAKEBULLET_STATE)	//取弹为暂时加入
 	yaw_follow_error=yaw_follow_error/8192.0f*2*PI;	//每次都运算方便yun.c调用
 	if(GetWorkState()==NORMAL_STATE&&abs(YAW_INIT-yunMotorData.yaw_fdbP)>200)	//过弯漂移	//发现过弯飘移会影响转向，解决方法1，转向驱动力达到极限触顶导致实际速度比例偏差预期，设置一函数检测任意输出值大于8000时限制整体使比例预期，方法二，减弱Vy
 	{	//智能转向块
@@ -214,7 +214,7 @@ void Remote_Task(void)
 	
 	
 	
-	if(RC_Ctl.rc.switch_left==RC_SWITCH_DOWN&&GetWorkState()!=ASCEND_STATE)	//云台中心转向
+	if(RC_Ctl.rc.switch_left==RC_SWITCH_DOWN&&GetWorkState()!=ASCEND_STATE&&GetWorkState()!=TAKEBULLET_STATE)	//云台中心转向	//在自动取弹时不生效
 	{
 		float chassis_vw_record=Chassis_Vw;
 		Chassis_Vy-=(s16)(chassis_vw_record/1.7);	//2
@@ -265,7 +265,7 @@ void RC_Control_Chassis(void)
 {
 	static s16 Chassis_Vx_last=0;
 	static s16 Chassis_Vy_last=0;
-	if(GetWorkState()==NORMAL_STATE||GetWorkState()==WAIST_STATE)
+	if(GetWorkState()==NORMAL_STATE||GetWorkState()==WAIST_STATE||GetWorkState()==TAKEBULLET_STATE)	//暂时加入取弹受控
 	{
 		
 		if(time_1ms_count%1==0)

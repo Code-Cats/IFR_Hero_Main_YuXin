@@ -122,7 +122,7 @@ if(time_1ms_count%1000==0)
 //			AutoChassisAttitude_Lift_V2(Chassis_GYRO[PITCH]);
 			Lift_Task();	//开启升降
 			Shoot_Task();
-			TakeBullet_Control_Center();
+			TakeBullet_Control_Center();	//取弹控制中心
 			break;
 		}
 		case WAIST_STATE:
@@ -149,6 +149,16 @@ if(time_1ms_count%1000==0)
 			Yun_Task();	//开启云台处理
 			Remote_Task();	//执行移动
 			Lift_Task();	//开启升降
+			break;
+		}
+		case TAKEBULLET_STATE:
+		{
+			Teleconltroller_Data_protect();	//遥控器数据保护
+			TakeBullet_Control_Center();	//取弹控制中心
+			Yun_Task();	//开启云台处理
+			Remote_Task();	//执行移动
+			Lift_Task();	//开启升降
+			Shoot_Task();
 			break;
 		}
 		case ERROR_STATE:	//错误模式
@@ -228,6 +238,7 @@ void Work_State_Change(void)
 			else if(RC_Ctl.rc.switch_left==RC_SWITCH_DOWN&&Switch_Right_Last==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_UP)
 			{
 //				SetWorkState(DESCEND_STATE);
+				SetWorkState(TAKEBULLET_STATE);	//临时测试，取弹状态
 			}
 			
 			if(RC_Ctl.mouse.press_r==1&&RC_Ctl.rc.switch_left!=RC_SWITCH_MIDDLE)
@@ -262,6 +273,14 @@ void Work_State_Change(void)
 			if(RC_Ctl.rc.switch_left==RC_SWITCH_MIDDLE)	
 			{
 				DescendState=FULLFALL_DOWN1;	//重置防止下一次异常
+				SetWorkState(STOP_STATE);
+			}
+			break;
+		}
+		case TAKEBULLET_STATE:	//取弹模式
+		{
+			if(RC_Ctl.rc.switch_left==RC_SWITCH_MIDDLE)	//左中
+			{
 				SetWorkState(STOP_STATE);
 			}
 			break;
@@ -335,6 +354,11 @@ void LED_Indicate(void)
 				break;
 			}
 			case DESCEND_STATE:	//自动下岛模式	绿闪
+			{
+				LED_Blink_Set(1,0);
+				break;
+			}
+			case TAKEBULLET_STATE:
 			{
 				LED_Blink_Set(1,0);
 				break;
@@ -740,6 +764,14 @@ void Motor_Send(void)
 		case DESCEND_STATE:	//自动下岛模式
 		{
 			CAN1_Yun_SendMsg(yunMotorData.yaw_output+Yaw_output_offset(yunMotorData.yaw_fdbP),yunMotorData.pitch_output+Pitch_output_offset(yunMotorData.pitch_tarP));	//CAN2-1000
+			CAN2_Chassis_SendMsg(chassis_Data.lf_wheel_output,chassis_Data.rf_wheel_output,chassis_Data.lb_wheel_output,chassis_Data.rb_wheel_output);
+			CAN1_Lift_SendMsg((s16)lift_Data.lf_lift_output,(s16)lift_Data.rf_lift_output,(s16)lift_Data.lb_lift_output,(s16)lift_Data.rb_lift_output);
+			CAN2_Shoot_SendMsg(0,0);//下拨弹、上拨弹
+			break;
+		}
+		case TAKEBULLET_STATE:
+		{
+			CAN1_Yun_SendMsg(yunMotorData.yaw_output,yunMotorData.pitch_output);	//CAN2-1000	//取消反馈补偿
 			CAN2_Chassis_SendMsg(chassis_Data.lf_wheel_output,chassis_Data.rf_wheel_output,chassis_Data.lb_wheel_output,chassis_Data.rb_wheel_output);
 			CAN1_Lift_SendMsg((s16)lift_Data.lf_lift_output,(s16)lift_Data.rf_lift_output,(s16)lift_Data.lb_lift_output,(s16)lift_Data.rb_lift_output);
 			CAN2_Shoot_SendMsg(0,0);//下拨弹、上拨弹

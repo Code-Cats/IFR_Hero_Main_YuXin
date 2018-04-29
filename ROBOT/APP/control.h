@@ -14,7 +14,7 @@
 
 /************行程限制**************/
 #define LIFT_DISTANCE_FALL 30
-#define LIFT_DISTANCE_ISLAND 1171
+#define LIFT_DISTANCE_ISLAND 1170
 
 
 
@@ -156,6 +156,7 @@ typedef enum
     STOP_STATE,       //停止运动状态(由遥控器控制的保护状态)
 		ASCEND_STATE,			//登岛状态
 		DESCEND_STATE,		//下岛状态
+		TAKEBULLET_STATE,	//取弹状态
 		PROTECT_STATE,		//保护状态，在程序循环时执行，当检测到程序发生异常或者传感器异常时进入该模式
 		ERROR_STATE,			//硬件错误状态，包括但不限于检测出传感器失效，数据失常等重启无法解决的问题
 }WorkState_e;
