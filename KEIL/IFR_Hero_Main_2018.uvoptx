@@ -748,8 +748,8 @@
       <Focus>0</Focus>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\ROBOT\APP\gpioctrl.c</PathWithFileName>
-      <FilenameWithoutPath>gpioctrl.c</FilenameWithoutPath>
+      <PathWithFileName>..\ROBOT\APP\protect.c</PathWithFileName>
+      <FilenameWithoutPath>protect.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>
@@ -761,8 +761,8 @@
       <Focus>0</Focus>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\ROBOT\APP\protect.c</PathWithFileName>
-      <FilenameWithoutPath>protect.c</FilenameWithoutPath>
+      <PathWithFileName>..\ROBOT\APP\gpioctrl.c</PathWithFileName>
+      <FilenameWithoutPath>gpioctrl.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>

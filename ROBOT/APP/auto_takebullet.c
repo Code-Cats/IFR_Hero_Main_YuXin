@@ -25,7 +25,7 @@ u8 servo_fdbstate[2]={0};
 const u32 valve_GOODdelay[6]={300,1200,300,1000,1000,1000};	//待加入，延时参数
 const u32 valve_POORdelay[6]={300,1200,300,1000,1000,1000};	//待加入，延时参数
 const u32 servo_GOODdelay[2]={3000,1000};	//待加入，延时参数	//第一段为2000是将子弹落下的延时也加进去了，因为舵机翻转和子弹下落必须是连在一体的
-const u32 servo_POORdelay[2]={1000,1000};	//待加入，延时参数
+const u32 servo_POORdelay[2]={1500,1000};	//待加入，延时参数
 
 
 //#define VALVE_ISLAND 0		//电磁阀控制位定义
@@ -72,7 +72,7 @@ void TakeBullet_Control_Center(void)
 						ViceControlData.valve[VALVE_BULLET_PROTRACT]=1;	//前伸函数
 						if(valve_fdbstate[VALVE_BULLET_PROTRACT]==0)//如果前伸没到位 ，腿执行到取弹合适位置函数	//这条语句可以让多次取弹与第一次取弹兼容
 						{
-							SetCheck_GripLift(1);
+							SetCheck_GripLift(1);	//下降到抓取高度
 						}
 						
 						if(valve_fdbstate[VALVE_BULLET_PROTRACT]==1&&SetCheck_GripLift(1)==1)	//如果前伸到位且升降到位
@@ -81,7 +81,7 @@ void TakeBullet_Control_Center(void)
 						}
 						if(valve_fdbstate[VALVE_BULLET_CLAMP]==1)//如果前伸到位腿升起函数
 						{
-							if(SetCheck_GripLift(0)==1)
+							if(SetCheck_GripLift(0)==1)	//上升至可旋转高度
 							TakeBulletState=BULLET_POUROUT;//直接切换到下一状态
 						}
 						break;
@@ -99,11 +99,14 @@ void TakeBullet_Control_Center(void)
 					case BULLET_THROWOUT:	//舵机旋回、车身抬起、夹紧松开	称之为抛落过程
 					{
 						ViceControlData.servo[0]=0;
-						if(SetCheck_GripLift(0)==1&&servo_fdbstate[0]==0)//车身抬起函数
+						if(servo_fdbstate[0]==0)	//先让舵机归位的原因是以便让弹药箱能够顺利回位
 						{
-							ViceControlData.valve[VALVE_BULLET_CLAMP]=0;
-						//	ViceControlData.valve[VALVE_BULLET_PROTRACT]=0;	//注释以便平移取下一颗弹
-						}//如果车身抬起且舵机到位，则松开夹紧，至此一个完整取弹结束
+							if(SetCheck_GripLift(0)==1)//车身抬起函数	/
+							{
+								ViceControlData.valve[VALVE_BULLET_CLAMP]=0;
+							//	ViceControlData.valve[VALVE_BULLET_PROTRACT]=0;	//注释以便平移取下一颗弹
+							}//如果车身抬起且舵机到位，则松开夹紧，至此一个完整取弹结束
+						}
 						break;
 					}
 				}
@@ -211,18 +214,18 @@ void TakeBullet_Control_Center(void)
 		//舵机执行块	//电磁阀在副板执行
 		if(ViceControlData.servo[0]==0)
 		{
-			if(pwm_l_t-pwm_l>0.01)
+			if(pwm_l_t-pwm_l>0.01f)
 			{
-				pwm_l_t-=1.5;
+				pwm_l_t-=1.5f;
 			}
 			else
 			{
 				pwm_l_t=pwm_l;
 			}
 			
-			if(pwm_r-pwm_r_t>0.01)
+			if(pwm_r-pwm_r_t>0.01f)
 			{
-				pwm_r_t+=1.5;
+				pwm_r_t+=1.5f;
 			}
 			else
 			{
@@ -231,18 +234,18 @@ void TakeBullet_Control_Center(void)
 		}
 		else
 		{
-			if(pwm_lc-pwm_l_t>0.01)
+			if(pwm_lc-pwm_l_t>0.01f)
 			{
-				pwm_l_t+=1.5;
+				pwm_l_t+=1.5f;
 			}
 			else
 			{
 				pwm_l_t=pwm_lc;
 			}
 			
-			if(pwm_r_t-pwm_rc>0.01)
+			if(pwm_r_t-pwm_rc>0.01f)
 			{
-				pwm_r_t-=1.5;
+				pwm_r_t-=1.5f;
 			}
 			else
 			{
@@ -266,8 +269,9 @@ void TakeBullet_Control_Center(void)
 
 
 #define LIFT_DISTANCE_GRIPBULLET	630	//夹弹药箱时高度
-#define LIFT_DISTANCE_DISGRIPBULLET	1000	//拔起来后弹药箱高度
-#define LIFT_DISTANCE_SLOPEBACKBULLET	1170	//倾斜时前腿高度
+#define LIFT_DISTANCE_DISGRIPBULLET	1060	//拔起来后弹药箱高度
+#define LIFT_DISTANCE_SLOPEBACKBULLET	1170	//倾斜时后腿高度
+#define LIFT_DISTANCE_SLOPEFRONTBULLET	900	//倾斜时前腿高度
 extern LIFT_DATA lift_Data;
 
 u8 SetCheck_GripLift(u8 grip_state)	//是否与弹药箱平齐,grip抓住的意思	//0表示不抓住，即需要丢弹药箱或拔起弹药箱高度，1表示抓住，即需要夹紧弹药箱时的高度
@@ -285,7 +289,10 @@ u8 SetCheck_SlopeLift(u8 slope_state)	//暂时只升后腿	slope倾斜的意思	//0表示不倾
 	lift_Data.lb_lift_tarP=LIFT_DISTANCE_DISGRIPBULLET-(slope_state!=0)*(LIFT_DISTANCE_DISGRIPBULLET-LIFT_DISTANCE_SLOPEBACKBULLET);
 	lift_Data.rb_lift_tarP=LIFT_DISTANCE_DISGRIPBULLET-(slope_state!=0)*(LIFT_DISTANCE_DISGRIPBULLET-LIFT_DISTANCE_SLOPEBACKBULLET);
 	
-	return (abs(lift_Data.lb_lift_fdbP+lift_Data.rb_lift_fdbP-2*(LIFT_DISTANCE_DISGRIPBULLET-(slope_state!=0)*(LIFT_DISTANCE_DISGRIPBULLET-LIFT_DISTANCE_SLOPEBACKBULLET)))<30);	//这里是仅以前两腿为反馈传回的
+	lift_Data.lf_lift_tarP=LIFT_DISTANCE_DISGRIPBULLET-(slope_state!=0)*(LIFT_DISTANCE_DISGRIPBULLET-LIFT_DISTANCE_SLOPEFRONTBULLET);
+	lift_Data.rf_lift_tarP=LIFT_DISTANCE_DISGRIPBULLET-(slope_state!=0)*(LIFT_DISTANCE_DISGRIPBULLET-LIFT_DISTANCE_SLOPEFRONTBULLET);
+	
+	return (abs(lift_Data.lb_lift_fdbP+lift_Data.rb_lift_fdbP-2*(LIFT_DISTANCE_DISGRIPBULLET-(slope_state!=0)*(LIFT_DISTANCE_DISGRIPBULLET-LIFT_DISTANCE_SLOPEBACKBULLET)))<30);	//这里是仅以前两腿为反馈传回的,因为前两腿为升高且行程更大时间更长，若前腿已到位则后腿一定到位
 }
 
 

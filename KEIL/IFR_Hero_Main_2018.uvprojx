@@ -499,14 +499,14 @@
               <FilePath>..\ROBOT\APP\control.c</FilePath>
             </File>
             <File>
-              <FileName>gpioctrl.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\ROBOT\APP\gpioctrl.c</FilePath>
-            </File>
-            <File>
               <FileName>protect.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\ROBOT\APP\protect.c</FilePath>
+            </File>
+            <File>
+              <FileName>gpioctrl.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\APP\gpioctrl.c</FilePath>
             </File>
             <File>
               <FileName>shoot.c</FileName>
