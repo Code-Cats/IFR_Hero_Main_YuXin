@@ -24,8 +24,8 @@ u8 valve_fdbstate[6]={0};	//记录是否伸出的反馈标志
 u8 servo_fdbstate[2]={0};
 const u32 valve_GOODdelay[6]={300,1200,300,1000,1000,1000};	//待加入，延时参数
 const u32 valve_POORdelay[6]={300,1200,300,1000,1000,1000};	//待加入，延时参数
-const u32 servo_GOODdelay[2]={3000,1000};	//待加入，延时参数	//第一段为2000是将子弹落下的延时也加进去了，因为舵机翻转和子弹下落必须是连在一体的
-const u32 servo_POORdelay[2]={1500,1000};	//待加入，延时参数
+const u32 servo_GOODdelay[2]={3000,1000};	//延时参数	//第一段为2000是将子弹落下的延时也加进去了，因为舵机翻转和子弹下落必须是连在一体的
+const u32 servo_POORdelay[2]={900,900};	//延时参数
 
 
 //#define VALVE_ISLAND 0		//电磁阀控制位定义
@@ -69,10 +69,12 @@ void TakeBullet_Control_Center(void)
 				{
 					case BULLET_ACQUIRE:	//前伸、夹紧、抬起动作	称之为获得过程
 					{
-						ViceControlData.valve[VALVE_BULLET_PROTRACT]=1;	//前伸函数
 						if(valve_fdbstate[VALVE_BULLET_PROTRACT]==0)//如果前伸没到位 ，腿执行到取弹合适位置函数	//这条语句可以让多次取弹与第一次取弹兼容
 						{
-							SetCheck_GripLift(1);	//下降到抓取高度
+							if(SetCheck_GripLift(1)==1)	//下降到抓取高度
+							{
+								ViceControlData.valve[VALVE_BULLET_PROTRACT]=1;	//前伸函数
+							}
 						}
 						
 						if(valve_fdbstate[VALVE_BULLET_PROTRACT]==1&&SetCheck_GripLift(1)==1)	//如果前伸到位且升降到位
@@ -81,7 +83,7 @@ void TakeBullet_Control_Center(void)
 						}
 						if(valve_fdbstate[VALVE_BULLET_CLAMP]==1)//如果前伸到位腿升起函数
 						{
-							if(SetCheck_GripLift(0)==1)	//上升至可旋转高度
+							if(SetCheck_GripLift(0)==1)	//上升至可旋转高度,覆盖前面的SetCheck_GripLift(1)==1
 							TakeBulletState=BULLET_POUROUT;//直接切换到下一状态
 						}
 						break;
