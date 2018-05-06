@@ -233,7 +233,7 @@ void Work_State_Change(void)
 			
 			if(RC_Ctl.rc.switch_left==RC_SWITCH_DOWN&&Switch_Right_Last==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_DOWN)
 			{
-//				SetWorkState(ASCEND_STATE);
+				SetWorkState(ASCEND_STATE);
 			}
 			else if(RC_Ctl.rc.switch_left==RC_SWITCH_DOWN&&Switch_Right_Last==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_UP)
 			{
@@ -419,7 +419,7 @@ LED_Blink_Run();
 	}
 }
 
-
+u8 lift_control_all_state=0;
 s16 lift_k_tem=0;
 #define LIFT_K 0.8
 void Lift_Task(void)
@@ -461,7 +461,8 @@ void Lift_Task(void)
 					}
 				}
 			}
-			
+			SetCheck_FrontLift(lift_control_all_state);
+			SetCheck_BackLift(lift_control_all_state);
 		}
 	}
 	

@@ -10,22 +10,22 @@ extern u32 time_1ms_count;
 extern KeyBoardTypeDef KeyBoardData[KEY_NUMS];
 extern RC_Ctl_t RC_Ctl;
 extern ViceControlDataTypeDef ViceControlData;
+extern PID_GENERAL PID_Chassis_Speed[4];
 
-
-const u16 pwm_l=660;
-const u16 pwm_r=1350;
-const u16 pwm_lc=1650;
-const u16 pwm_rc=650;
-float pwm_l_t=660;
-float pwm_r_t=1350;
+const u16 pwm_l=500;
+const u16 pwm_r=2500;
+const u16 pwm_lc=1700;
+const u16 pwm_rc=1300;
+float pwm_l_t=500;
+float pwm_r_t=2500;
 
 
 u8 valve_fdbstate[6]={0};	//记录是否伸出的反馈标志
 u8 servo_fdbstate[2]={0};
 const u32 valve_GOODdelay[6]={300,1200,300,1000,1000,1000};	//待加入，延时参数
 const u32 valve_POORdelay[6]={300,1200,300,1000,1000,1000};	//待加入，延时参数
-const u32 servo_GOODdelay[2]={3000,1000};	//延时参数	//第一段为2000是将子弹落下的延时也加进去了，因为舵机翻转和子弹下落必须是连在一体的
-const u32 servo_POORdelay[2]={900,900};	//延时参数
+const u32 servo_GOODdelay[2]={2700,1000};	//延时参数	//第一段为2000是将子弹落下的延时也加进去了，因为舵机翻转和子弹下落必须是连在一体的
+const u32 servo_POORdelay[2]={600,600};	//延时参数
 
 
 //#define VALVE_ISLAND 0		//电磁阀控制位定义
@@ -52,6 +52,11 @@ void TakeBullet_Control_Center(void)
 
 	if(GetWorkState()==TAKEBULLET_STATE&&RC_Ctl.rc.switch_left==RC_SWITCH_DOWN)
 	{
+		for(int i=0;i<4;i++)
+		{
+		PID_Chassis_Speed[i].k_i=CHASSIS_SPEED_PID_I*3;
+		PID_Chassis_Speed[i].i_sum_max=CHASSIS_SPEED_I_MAX*1.5f;
+		}
 		if(swicth_Last_state==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_DOWN)	//shoot_Motor_Data.tarP-shoot_Motor_Data.fdbP	//待加入
 		{
 			auto_takebullet_statu=!auto_takebullet_statu;
@@ -100,10 +105,12 @@ void TakeBullet_Control_Center(void)
 					}
 					case BULLET_THROWOUT:	//舵机旋回、车身抬起、夹紧松开	称之为抛落过程
 					{
-						ViceControlData.servo[0]=0;
-						if(servo_fdbstate[0]==0)	//先让舵机归位的原因是以便让弹药箱能够顺利回位
+						SetCheck_GripLift(0);
+						
+						if(SetCheck_GripLift(0)==1)	//先让舵机归位的原因是以便让弹药箱能够顺利回位
 						{
-							if(SetCheck_GripLift(0)==1)//车身抬起函数	/
+							ViceControlData.servo[0]=0;
+							if(servo_fdbstate[0]==0)//车身抬起函数	/
 							{
 								ViceControlData.valve[VALVE_BULLET_CLAMP]=0;
 							//	ViceControlData.valve[VALVE_BULLET_PROTRACT]=0;	//注释以便平移取下一颗弹
@@ -218,7 +225,7 @@ void TakeBullet_Control_Center(void)
 		{
 			if(pwm_l_t-pwm_l>0.01f)
 			{
-				pwm_l_t-=1.5f;
+				pwm_l_t-=5;
 			}
 			else
 			{
@@ -227,7 +234,7 @@ void TakeBullet_Control_Center(void)
 			
 			if(pwm_r-pwm_r_t>0.01f)
 			{
-				pwm_r_t+=1.5f;
+				pwm_r_t+=5;
 			}
 			else
 			{
@@ -238,7 +245,7 @@ void TakeBullet_Control_Center(void)
 		{
 			if(pwm_lc-pwm_l_t>0.01f)
 			{
-				pwm_l_t+=1.5f;
+				pwm_l_t+=5;
 			}
 			else
 			{
@@ -247,7 +254,7 @@ void TakeBullet_Control_Center(void)
 			
 			if(pwm_r_t-pwm_rc>0.01f)
 			{
-				pwm_r_t-=1.5f;
+				pwm_r_t-=5;
 			}
 			else
 			{
@@ -271,9 +278,9 @@ void TakeBullet_Control_Center(void)
 
 
 #define LIFT_DISTANCE_GRIPBULLET	630	//夹弹药箱时高度
-#define LIFT_DISTANCE_DISGRIPBULLET	1060	//拔起来后弹药箱高度
+#define LIFT_DISTANCE_DISGRIPBULLET	1150	//拔起来后弹药箱高度
 #define LIFT_DISTANCE_SLOPEBACKBULLET	1170	//倾斜时后腿高度
-#define LIFT_DISTANCE_SLOPEFRONTBULLET	900	//倾斜时前腿高度
+#define LIFT_DISTANCE_SLOPEFRONTBULLET	950	//倾斜时前腿高度
 extern LIFT_DATA lift_Data;
 
 u8 SetCheck_GripLift(u8 grip_state)	//是否与弹药箱平齐,grip抓住的意思	//0表示不抓住，即需要丢弹药箱或拔起弹药箱高度，1表示抓住，即需要夹紧弹药箱时的高度

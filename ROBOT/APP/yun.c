@@ -66,7 +66,7 @@ void Yun_Control_External_Solution(void)	//外置反馈方案
 	}
 	
 	
-	if(GetWorkState()==ASCEND_STATE)	//登岛姿态调整 当自校正状态时利用底盘跟随，其他主动矫正状态进行云台归位
+	if(GetWorkState()==ASCEND_STATE||GetWorkState()==DESCEND_STATE)	//登岛姿态调整 当自校正状态时利用底盘跟随，其他主动矫正状态进行云台归位
 	{
 		switch(IslandAttitude_Correct_State)
 		{
@@ -82,9 +82,13 @@ void Yun_Control_External_Solution(void)	//外置反馈方案
 			}
 		}
 	}
+	else if(GetWorkState()==TAKEBULLET_STATE)	//取弹模式一直校准
+	{
+		yunMotorData.yaw_tarP=(s32)(Gyro_Data.angle[2]*10+(YAW_INIT-yunMotorData.yaw_fdbP)*3600/8192);	//反馈放大10倍并将目标位置置为中点
+	}
 
 	
-	yunMotorData.pitch_tarV=-PID_General(yunMotorData.pitch_tarP,(Gyro_Data.angle[0]*8192/360.0+PITCH_INIT),&PID_PITCH_POSITION);
+	yunMotorData.pitch_tarV=-PID_General(yunMotorData.pitch_tarP,(Gyro_Data.angle[0]*8192/360.0f+PITCH_INIT),&PID_PITCH_POSITION);
 		
 	if(yunMotorData.yaw_tarP-Gyro_Data.angle[2]*10>1800)	//过零点
 	{

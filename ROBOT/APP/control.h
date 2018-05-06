@@ -14,14 +14,14 @@
 
 /************行程限制**************/
 #define LIFT_DISTANCE_FALL 30
-#define LIFT_DISTANCE_ISLAND 1170
+#define LIFT_DISTANCE_ISLAND 1200//1170//1200是取弹的
 
 
 
-#define LIFT_POSITION_PID_P	50	//405升降电机PID
+#define LIFT_POSITION_PID_P	55	//405升降电机PID
 #define LIFT_POSITION_PID_I 0.0
 #define LIFT_POSITION_PID_D	0.015f //	0.15f
-#define LIFT_POSITION_MAXOUT 8500	//位置环输出的最大速度
+#define LIFT_POSITION_MAXOUT 9000	//位置环输出的最大速度
 #define LIFT_POSITION_MAXINPUT 99999999
 #define LIFT_POSITION_PID_MER	180 //	20
 #define LIFT_POSITION_PID_DEAD	0	// 0
@@ -30,7 +30,7 @@
 #define LIFT_SPEED_PID_P	 5
 #define LIFT_SPEED_PID_I	 0.05f
 #define LIFT_SPEED_PID_D	 0.06f
-#define LIFT_SPEED_MAXOUT 8500	//速度环输出的最大电流
+#define LIFT_SPEED_MAXOUT 9000	//速度环输出的最大电流
 #define LIFT_SPEED_MAXINPUT 8400
 #define LIFT_SPEED_PID_MER 	6000
 #define LIFT_SPEED_PID_DEAD	 4

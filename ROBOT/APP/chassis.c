@@ -12,26 +12,51 @@ s16 Chassis_Vx=0;
 s16 Chassis_Vy=0;
 s16 Chassis_Vw=0;
 
-extern RC_Ctl_t RC_Ctl;
+
+/************************外部数据引用**************************/
+extern RC_Ctl_t RC_Ctl;	//遥控数据
 extern GYRO_DATA Gyro_Data;
 extern YUN_MOTOR_DATA 	yunMotorData;
 extern tPowerHeatData 	testPowerHeatData;      //实时功率热量数据
 extern u32 time_1ms_count;
 extern IslandAttitudeCorrectState_e IslandAttitude_Correct_State;	//登岛姿态自校正
+extern ViceControlDataTypeDef ViceControlData;
+/*************************************************************/
+
+
+/***************底盘相关控制位（其他函数会引用）*****************/
+bool Chassis_Follow_Statu=1;	//底盘跟随标志位，设立此标志位原因是方便的在传感器失效时切换底盘独立状态
+float yaw_follow_error=0;	//弧度制必须浮点	//这里在云台那里扭腰部分会用到
+/*************************************************************/
+
 
 #define WAIST_RANGE 750
 #define K_SPEED 10
 s32 t_Vw_PID=0;
 s32 yaw_follow_tarP=YAW_INIT_DEFINE;
 volatile float yaw_follow_real_error=0;	//用于扭腰及普通状态下的90度
-float yaw_follow_error=0;	//弧度制必须浮点
+
 float t_Vy_k=0;
 float t_Vx_k=0;
 u8 Chassis_Control_RCorPC=RC_CONTROL;
-bool Chassis_Follow_Statu=1;	//底盘跟随标志位，设立此标志位原因是方便的在传感器失效时切换底盘独立状态
+
 
 void Remote_Task(void)
 {
+	
+	if(GetWorkState()!=ASCEND_STATE&&GetWorkState()!=DESCEND_STATE)	//其他状态下均收起导轮
+	{
+		ViceControlData.valve[VALVE_ISLAND]=0;
+	}
+	
+	if(GetWorkState()==NORMAL_STATE)	//底盘PID复位
+	{
+		for(int i=0;i<4;i++)
+		{
+			PID_Chassis_Speed[i].k_i=CHASSIS_SPEED_PID_I;
+			PID_Chassis_Speed[i].i_sum_max=CHASSIS_SPEED_I_MAX;
+		}
+	}
 	
 	if(GetWorkState()!=PREPARE_STATE&&GetWorkState()!=CALI_STATE)	//模式切换
 	{
@@ -110,11 +135,11 @@ void Remote_Task(void)
 	
 	
 	
-	if(GetWorkState()==NORMAL_STATE||GetWorkState()==WAIST_STATE||GetWorkState()==TAKEBULLET_STATE)	//底盘跟随标志位定义块	//取弹受控为暂时加入
+	if(GetWorkState()==NORMAL_STATE||GetWorkState()==WAIST_STATE)	//底盘跟随标志位定义块	//取弹不受云台控
 	{
 		Chassis_Follow_Statu=1;
 	}
-	else if(GetWorkState()==ASCEND_STATE&&IslandAttitude_Correct_State==CORRECT_CHASSIS_STATE)	//登岛模式下
+	else if((GetWorkState()==ASCEND_STATE||GetWorkState()==DESCEND_STATE)&&IslandAttitude_Correct_State==CORRECT_CHASSIS_STATE)	//上下岛模式
 	{
 		Chassis_Follow_Statu=1;
 	}
@@ -125,7 +150,7 @@ void Remote_Task(void)
 	
 	
 	
-	if(Chassis_Follow_Statu==1)	//底盘跟随部分
+	if(Chassis_Follow_Statu==1)	//底盘跟随部分解算
 	{
 //////		Chassis_Vx=RC_Ctl.rc.ch1-1024;
 		
@@ -134,17 +159,17 @@ void Remote_Task(void)
 		{
 			if(YAW_INIT-yunMotorData.yaw_fdbP>8192/2)	//普通跟随块	
 			{
-				Chassis_Vw=PID_General(YAW_INIT,yunMotorData.yaw_fdbP+8192,&PID_Chassis_Follow);	//负过界状况下
+				Chassis_Vw=PID_ChassisFollow(YAW_INIT,yunMotorData.yaw_fdbP+8192,&PID_Chassis_Follow);	//负过界状况下
 				yaw_follow_error=YAW_INIT-(yunMotorData.yaw_fdbP+8192);
 			}
 			else if(YAW_INIT-yunMotorData.yaw_fdbP<-8192/2)
 			{
-				Chassis_Vw=PID_General(YAW_INIT,yunMotorData.yaw_fdbP-8192,&PID_Chassis_Follow);	//正过界状况下
+				Chassis_Vw=PID_ChassisFollow(YAW_INIT,yunMotorData.yaw_fdbP-8192,&PID_Chassis_Follow);	//正过界状况下
 				yaw_follow_error=YAW_INIT-(yaw_follow_tarP-8192);
 			}
 			else
 			{
-				Chassis_Vw=PID_General(YAW_INIT,yunMotorData.yaw_fdbP,&PID_Chassis_Follow);	//正常状况下
+				Chassis_Vw=PID_ChassisFollow(YAW_INIT,yunMotorData.yaw_fdbP,&PID_Chassis_Follow);	//正常状况下
 				yaw_follow_error=YAW_INIT-yaw_follow_tarP;
 			}
 		}
@@ -152,17 +177,17 @@ void Remote_Task(void)
 		{
 			if(YAW_INIT-yaw_follow_tarP>8192/2)	//智能跟随块	
 			{
-				Chassis_Vw=PID_General(YAW_INIT,yaw_follow_tarP+8192,&PID_Chassis_Follow);	//负过界状况下
+				Chassis_Vw=PID_ChassisFollow(YAW_INIT,yaw_follow_tarP+8192,&PID_Chassis_Follow);	//负过界状况下
 				yaw_follow_error=YAW_INIT-(yaw_follow_tarP+8192);
 			}
 			else if(YAW_INIT-yaw_follow_tarP<-8192/2)
 			{
-				Chassis_Vw=PID_General(YAW_INIT,yaw_follow_tarP-8192,&PID_Chassis_Follow);	//正过界状况下
+				Chassis_Vw=PID_ChassisFollow(YAW_INIT,yaw_follow_tarP-8192,&PID_Chassis_Follow);	//正过界状况下
 				yaw_follow_error=YAW_INIT-(yaw_follow_tarP-8192);
 			}
 			else
 			{
-				Chassis_Vw=PID_General(YAW_INIT,yaw_follow_tarP,&PID_Chassis_Follow);	//正常状况下
+				Chassis_Vw=PID_ChassisFollow(YAW_INIT,yaw_follow_tarP,&PID_Chassis_Follow);	//正常状况下
 				yaw_follow_error=YAW_INIT-yaw_follow_tarP;
 			}
 		}
@@ -217,7 +242,7 @@ void Remote_Task(void)
 	if(RC_Ctl.rc.switch_left==RC_SWITCH_DOWN&&GetWorkState()!=ASCEND_STATE&&GetWorkState()!=TAKEBULLET_STATE)	//云台中心转向	//在自动取弹时不生效
 	{
 		float chassis_vw_record=Chassis_Vw;
-		Chassis_Vy-=(s16)(chassis_vw_record/1.7);	//2
+		Chassis_Vy-=(s16)(chassis_vw_record/1.7f);	//2
 	}
 
 				
@@ -303,6 +328,11 @@ void RC_Control_Chassis(void)
 		}
 	}
 	Chassis_Vy_last=Chassis_Vy;
+	
+	if(GetWorkState()==TAKEBULLET_STATE)	//取弹模式
+	{
+		Chassis_Vw=RC_Ctl.rc.ch2-1024;
+	}
 //	Chassis_Vy=RC_Ctl.rc.ch0-1024;
 }
 
@@ -428,7 +458,7 @@ void Overall_Motion_Ratio_Protect(CHASSIS_DATA* chassis_data)	//整体轮速比例保护
 
 
 #define CHASSIS_INTEGRAL_PID_KP 3
-#define CHASSIS_INTEGRAL_PID_KI 0.01
+#define CHASSIS_INTEGRAL_PID_KI 0.01f
 #define CHASSIS_INTEGRAL_PID_I_SUM_LIM 1000
 void Extended_Integral_PID(CHASSIS_DATA* chassis_data)	//扩展型整体PID，适用于任意动作场景	2018.4.19
 {
@@ -439,7 +469,7 @@ void Extended_Integral_PID(CHASSIS_DATA* chassis_data)	//扩展型整体PID，适用于任
 	static float inte[4];
 	s32 output_compensation[4];
 	
-	if(abs(tarv_sum)<0.1)	//相当于被除数为0
+	if(abs(tarv_sum)<0.1f)	//相当于被除数为0
 	{
 		expect[LF]=0;
 		expect[RF]=0;

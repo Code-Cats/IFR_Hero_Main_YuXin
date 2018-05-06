@@ -25,8 +25,9 @@ typedef __packed struct
 }PID_GENERAL;
 
 
-
+float PID_ChassisFollow_Variable_kp(float error);	//底盘电机8192为360度，15为341，
 float PID_General(float target,float current,PID_GENERAL *pid);
+float PID_ChassisFollow(float target,float current,PID_GENERAL *pid);
 float PID_Robust(float target,float current,float differential,PID_GENERAL *pid);
 
 #endif

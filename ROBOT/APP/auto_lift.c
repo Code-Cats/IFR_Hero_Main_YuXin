@@ -15,7 +15,7 @@ void Ascend_Control_Center(void)	//»´◊‘∂Øµ«µ∫øÿ÷∆÷––ƒ
 		PID_Chassis_Speed[i].k_i=CHASSIS_SPEED_PID_I*3;
 		PID_Chassis_Speed[i].i_sum_max=CHASSIS_SPEED_I_MAX*1.5f;
 	}
-	
+	ViceControlData.valve[VALVE_ISLAND]=1;	//∫Û√Ê∏ﬂ”≈œ»º∂ª·∏≤∏«
 	switch(AscendState)
 	{
 		case FULLRISE_GO1:
@@ -54,6 +54,7 @@ void Ascend_Control_Center(void)	//»´◊‘∂Øµ«µ∫øÿ÷∆÷––ƒ
 			{
 			SetWorkState(NORMAL_STATE);
 			AscendState=FULLRISE_GO1;	//÷ÿ÷√∑¿÷πœ¬“ª¥Œ“Ï≥£
+				ViceControlData.valve[VALVE_ISLAND]=0;
 			for(int i=0;i<4;i++)
 			{
 				PID_Chassis_Speed[i].k_i=CHASSIS_SPEED_PID_I;
@@ -249,13 +250,13 @@ u8 Ascend_FullFall_GO(void)	//∂ºÃß∆µΩ∂ºÃß∆∫Û	//Õ®π˝π€≤Ï ”∆µµ√÷™‘⁄≈ˆ◊≤“ªÀ≤º‰µØ∫
 				}
 				else if(SensorData.Infrare[0]==1&&SensorData.Infrare[1]==0)	// ˝◊÷–°µƒ‘⁄”“±ﬂ£¨1¥˙±ÌŒ¥¥•∑¢
 				{
-		//			Set_Attitude_Correct_State(CALI_SELF_STATE);	//◊ÀÃ¨Ω√’˝∫Ø ˝Ω¯––◊‘–£◊º
+					Set_Attitude_Correct_State(CALI_SELF_STATE);	//◊ÀÃ¨Ω√’˝∫Ø ˝Ω¯––◊‘–£◊º
 					Chassis_Vx=-VX_PRESS_V0;
 					Chassis_Vw=-VW_REDRESS;	//Ω√’˝ ƒÊ ±’Î◊™∂Ø
 				}
 				else if(SensorData.Infrare[0]==0&&SensorData.Infrare[1]==1)
 				{
-		//			Set_Attitude_Correct_State(CALI_SELF_STATE);	//◊ÀÃ¨Ω√’˝∫Ø ˝Ω¯––◊‘–£◊º
+					Set_Attitude_Correct_State(CALI_SELF_STATE);	//◊ÀÃ¨Ω√’˝∫Ø ˝Ω¯––◊‘–£◊º
 					Chassis_Vx=-VX_PRESS_V0;
 					Chassis_Vw=VW_REDRESS;	//Ω√’˝ À≥ ±’Î◊™∂Ø
 				}
@@ -339,14 +340,14 @@ DescendState_e DescendState=FULLFALL_DOWN1;	//œ¬µ∫◊¥Ã¨º«¬ºŒª
 
 void Descend_Control_Center(void)
 {
-	
+	Set_Attitude_Correct_State(CALI_SELF_STATE);	//◊ÀÃ¨Ω√’˝∫Ø ˝Ω¯––◊‘–£◊º
 	for(int i=0;i<4;i++)
 	{
 		PID_Chassis_Speed[i].k_i=CHASSIS_SPEED_PID_I*3;
 		PID_Chassis_Speed[i].i_sum_max=CHASSIS_SPEED_I_MAX*1.5f;
 	}
 	
-	
+	ViceControlData.valve[VALVE_ISLAND]=1;	//∫Û√Ê∏ﬂ”≈œ»º∂ª·∏≤∏«
 		switch(DescendState)
 		{
 			case FULLFALL_DOWN1:
@@ -383,6 +384,7 @@ void Descend_Control_Center(void)
 			{
 				if(Descend_FullRise_Down1()==1)
 				{
+					ViceControlData.valve[VALVE_ISLAND]=0;
 					DescendState=FULLFALL_DOWN1;	//÷ÿ÷√∑¿÷πœ¬“ª¥Œ“Ï≥£
 					for(int i=0;i<4;i++)
 					{
@@ -390,6 +392,7 @@ void Descend_Control_Center(void)
 						PID_Chassis_Speed[i].i_sum_max=CHASSIS_SPEED_I_MAX;
 					}
 					SetWorkState(NORMAL_STATE);
+					Set_Attitude_Correct_State(CORRECT_CHASSIS_STATE);
 				}
 				break;
 			}
