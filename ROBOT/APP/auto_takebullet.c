@@ -12,12 +12,13 @@ extern RC_Ctl_t RC_Ctl;
 extern ViceControlDataTypeDef ViceControlData;
 extern PID_GENERAL PID_Chassis_Speed[4];
 
-const u16 pwm_l=500;
-const u16 pwm_r=2500;
-const u16 pwm_lc=1700;
-const u16 pwm_rc=1300;
-float pwm_l_t=500;
-float pwm_r_t=2500;
+
+#define STEER_UP_L_INIT 500//
+#define STEER_UP_R_INIT 2500//1950	//
+#define STEER_UP_L_REVERSAL 1700//
+#define STEER_UP_R_REVERSAL 1300//
+float pwm_l_t=STEER_UP_L_INIT;
+float pwm_r_t=STEER_UP_R_INIT;
 
 
 u8 valve_fdbstate[6]={0};	//记录是否伸出的反馈标志
@@ -106,8 +107,8 @@ void TakeBullet_Control_Center(void)
 					case BULLET_THROWOUT:	//舵机旋回、车身抬起、夹紧松开	称之为抛落过程
 					{
 						SetCheck_GripLift(0);
-						
-						if(SetCheck_GripLift(0)==1)	//先让舵机归位的原因是以便让弹药箱能够顺利回位
+						ViceControlData.servo[0]=0;
+						if(SetCheck_GripLift(0)==1)	//先让舵机归位的原因是以便让弹药箱能够顺利回位，后来发现同时进行
 						{
 							ViceControlData.servo[0]=0;
 							if(servo_fdbstate[0]==0)//车身抬起函数	/
@@ -223,42 +224,42 @@ void TakeBullet_Control_Center(void)
 		//舵机执行块	//电磁阀在副板执行
 		if(ViceControlData.servo[0]==0)
 		{
-			if(pwm_l_t-pwm_l>0.01f)
+			if(pwm_l_t-STEER_UP_L_INIT>0.01f)
 			{
 				pwm_l_t-=5;
 			}
 			else
 			{
-				pwm_l_t=pwm_l;
+				pwm_l_t=STEER_UP_L_INIT;
 			}
 			
-			if(pwm_r-pwm_r_t>0.01f)
+			if(STEER_UP_R_INIT-pwm_r_t>0.01f)
 			{
 				pwm_r_t+=5;
 			}
 			else
 			{
-				pwm_r_t=pwm_r;
+				pwm_r_t=STEER_UP_R_INIT;
 			}
 		}
 		else
 		{
-			if(pwm_lc-pwm_l_t>0.01f)
+			if(STEER_UP_L_REVERSAL-pwm_l_t>0.01f)
 			{
 				pwm_l_t+=5;
 			}
 			else
 			{
-				pwm_l_t=pwm_lc;
+				pwm_l_t=STEER_UP_L_REVERSAL;
 			}
 			
-			if(pwm_r_t-pwm_rc>0.01f)
+			if(pwm_r_t-STEER_UP_R_REVERSAL>0.01f)
 			{
 				pwm_r_t-=5;
 			}
 			else
 			{
-				pwm_r_t=pwm_rc;
+				pwm_r_t=STEER_UP_R_REVERSAL;
 			}
 		}
 		
@@ -278,9 +279,9 @@ void TakeBullet_Control_Center(void)
 
 
 #define LIFT_DISTANCE_GRIPBULLET	630	//夹弹药箱时高度
-#define LIFT_DISTANCE_DISGRIPBULLET	1150	//拔起来后弹药箱高度
-#define LIFT_DISTANCE_SLOPEBACKBULLET	1170	//倾斜时后腿高度
-#define LIFT_DISTANCE_SLOPEFRONTBULLET	950	//倾斜时前腿高度
+#define LIFT_DISTANCE_DISGRIPBULLET	1270	//拔起来后弹药箱高度
+#define LIFT_DISTANCE_SLOPEBACKBULLET	1270	//倾斜时后腿高度
+#define LIFT_DISTANCE_SLOPEFRONTBULLET	1270	//倾斜时前腿高度
 extern LIFT_DATA lift_Data;
 
 u8 SetCheck_GripLift(u8 grip_state)	//是否与弹药箱平齐,grip抓住的意思	//0表示不抓住，即需要丢弹药箱或拔起弹药箱高度，1表示抓住，即需要夹紧弹药箱时的高度

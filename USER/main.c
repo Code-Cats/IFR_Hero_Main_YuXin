@@ -11,7 +11,8 @@ int main(void)
 	delay_ms(100);
 	while(1)
 	 {
-		 
+		 Screen_Start();	//屏幕启动切换到AV信道
+		 Image_Cut_Task();	//摄像头切换、舵机
 	 }
 }
 

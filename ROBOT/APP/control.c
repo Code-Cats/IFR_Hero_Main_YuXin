@@ -35,7 +35,6 @@ extern s16 Chassis_Vy;
 extern s16 Chassis_Vw;
 extern u8 cali_state_Entirety_PID;
 
-s16 remote_tem=0;
 s16 lift_tem=0;
 s16 LIFT_tarP=0;
 
@@ -470,16 +469,16 @@ void Lift_Task(void)
 	if(GetWorkState()!=CALI_STATE)	//±ê¶¨×´Ì¬ÏÂ²»ÏÞÖÆÐÐ³Ì
 	{
 		lift_Data.lf_lift_tarP=lift_Data.lf_lift_tarP<LIFT_DISTANCE_FALL?LIFT_DISTANCE_FALL:lift_Data.lf_lift_tarP;	//ÏÞÖÆÐÐ³Ì
-		lift_Data.lf_lift_tarP=lift_Data.lf_lift_tarP>LIFT_DISTANCE_ISLAND?LIFT_DISTANCE_ISLAND:lift_Data.lf_lift_tarP;
+		lift_Data.lf_lift_tarP=lift_Data.lf_lift_tarP>LIFT_DISTANCE_LIMIT?LIFT_DISTANCE_LIMIT:lift_Data.lf_lift_tarP;
 		
 		lift_Data.rf_lift_tarP=lift_Data.rf_lift_tarP<LIFT_DISTANCE_FALL?LIFT_DISTANCE_FALL:lift_Data.rf_lift_tarP;	//ÏÞÖÆÐÐ³Ì
-		lift_Data.rf_lift_tarP=lift_Data.rf_lift_tarP>LIFT_DISTANCE_ISLAND?LIFT_DISTANCE_ISLAND:lift_Data.rf_lift_tarP;
+		lift_Data.rf_lift_tarP=lift_Data.rf_lift_tarP>LIFT_DISTANCE_LIMIT?LIFT_DISTANCE_LIMIT:lift_Data.rf_lift_tarP;
 		
 		lift_Data.lb_lift_tarP=lift_Data.lb_lift_tarP<LIFT_DISTANCE_FALL?LIFT_DISTANCE_FALL:lift_Data.lb_lift_tarP;	//ÏÞÖÆÐÐ³Ì
-		lift_Data.lb_lift_tarP=lift_Data.lb_lift_tarP>LIFT_DISTANCE_ISLAND?LIFT_DISTANCE_ISLAND:lift_Data.lb_lift_tarP;
+		lift_Data.lb_lift_tarP=lift_Data.lb_lift_tarP>LIFT_DISTANCE_LIMIT?LIFT_DISTANCE_LIMIT:lift_Data.lb_lift_tarP;
 		
 		lift_Data.rb_lift_tarP=lift_Data.rb_lift_tarP<LIFT_DISTANCE_FALL?LIFT_DISTANCE_FALL:lift_Data.rb_lift_tarP;	//ÏÞÖÆÐÐ³Ì
-		lift_Data.rb_lift_tarP=lift_Data.rb_lift_tarP>LIFT_DISTANCE_ISLAND?LIFT_DISTANCE_ISLAND:lift_Data.rb_lift_tarP;
+		lift_Data.rb_lift_tarP=lift_Data.rb_lift_tarP>LIFT_DISTANCE_LIMIT?LIFT_DISTANCE_LIMIT:lift_Data.rb_lift_tarP;
 	}
 	
 	lift_Data.lf_lift_tarV=(int32_t)PID_General(lift_Data.lf_lift_tarP,lift_Data.lf_lift_fdbP,&PID_Lift_Position[LF]);	//Î»ÖÃ»·PID¼ÆËã
@@ -972,6 +971,7 @@ void Lift_Cali_GYRO_Compensate(float cali_send[4])	//»ùÓÚÍÓÂÝÒÇµÄµ×ÅÌ±ê¶¨Êä³ö²¹³
 	}
 	  
 }
+
 
 
 u16 lift_time_gauge_count=0;

@@ -83,8 +83,8 @@ u16 shoot_time_measure(const s16 tarP,const s16 fbdP,const u8 last_mouse_press_l
 
 
 #define SINGLE_INCREMENT_OLD_2006 196.608f	//8192*96/4/1000	一圈的累加值8192*96除上一圈7个子弹除以编码器转换倍数=发射一颗子弹的位置增量
-#define SINGLE_INCREMENT_NEW_2006 65.536f		//8192*32/7/1000
-#define SINGLE_INCREMENT SINGLE_INCREMENT_OLD_2006
+#define SINGLE_INCREMENT_NEW_2006 73//65.536f		//8192*32/4/1000
+#define SINGLE_INCREMENT SINGLE_INCREMENT_NEW_2006	//5.11少
 //输出为发弹量，单位颗
 //注：应当在本函数或者另一指令解析函数中设置逻辑：切换状态就重置发弹指令（以免突发情况使程序具有滞后性）
 //或者将发弹逻辑改为基于增量式方法的频率控制
@@ -97,8 +97,8 @@ void Shoot_Instruction(void)	//发弹指令模块
 	
 //	shoot_time_record=shoot_time_measure(shoot_Data_Down.count,shoot_Data_Down.count_fdb,last_mouse_press_l);////////////////////////////////
 	
-	shoot_Data_Down.motor_tarP=shoot_Data_Down.count*SINGLE_INCREMENT;
-	shoot_Data_Up.motor_tarP=shoot_Data_Up.count*SINGLE_INCREMENT_NEW_2006;	//新2006
+	shoot_Data_Down.motor_tarP=((float)shoot_Data_Down.count*SINGLE_INCREMENT);	//新2006
+	shoot_Data_Up.motor_tarP=((float)shoot_Data_Up.count*SINGLE_INCREMENT);	//新2006
 	Prevent_Jam(&shoot_Data_Down,&shoot_Motor_Data_Down);
 }
 
@@ -322,7 +322,7 @@ void Shoot_Feedback_Deal(SHOOT_DATA *shoot_data,SHOOT_MOTOR_DATA *shoot_motor_da
 		shoot_motor_data->fdbP_raw_sum-=8192;
 	}
 	
-	shoot_motor_data->fdbP=(s32)((shoot_motor_data->fdbP_raw_sum+shoot_motor_data->fdbP_raw)/1000);	//因为2006减速比过大 不便精确
+	shoot_motor_data->fdbP=(s32)((shoot_motor_data->fdbP_raw_sum+shoot_motor_data->fdbP_raw)/1000.0f);	//因为2006减速比过大 不便精确
 	
 	shoot_motor_data->fdbP_raw_last=shoot_motor_data->fdbP_raw;	//数据迭代
 	

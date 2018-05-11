@@ -44,7 +44,7 @@ typedef struct
 }KeyBoardTypeDef;
 
 enum KEYBOARDID	//¼üÎ»±êÊ¶
-{
+{   
 	KEY_W,
 	KEY_S,
 	KEY_A,

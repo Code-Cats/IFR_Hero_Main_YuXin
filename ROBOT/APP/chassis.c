@@ -25,7 +25,7 @@ extern ViceControlDataTypeDef ViceControlData;
 
 
 /***************底盘相关控制位（其他函数会引用）*****************/
-bool Chassis_Follow_Statu=1;	//底盘跟随标志位，设立此标志位原因是方便的在传感器失效时切换底盘独立状态
+u8 Chassis_Follow_Statu=1;	//底盘跟随标志位，设立此标志位原因是方便的在传感器失效时切换底盘独立状态
 float yaw_follow_error=0;	//弧度制必须浮点	//这里在云台那里扭腰部分会用到
 /*************************************************************/
 
@@ -44,7 +44,7 @@ u8 Chassis_Control_RCorPC=RC_CONTROL;
 void Remote_Task(void)
 {
 	
-	if(GetWorkState()!=ASCEND_STATE&&GetWorkState()!=DESCEND_STATE)	//其他状态下均收起导轮
+	if(GetWorkState()!=ASCEND_STATE&&GetWorkState()!=DESCEND_STATE)	//其他状态下均收起导轮	//需要改进，在切换到手动模式时不收导轮
 	{
 		ViceControlData.valve[VALVE_ISLAND]=0;
 	}
@@ -254,11 +254,7 @@ void Remote_Task(void)
 	
 	Overall_Motion_Ratio_Protect(&chassis_Data);	//整体速度保护
 	
-///////////////////////////////////////////////////////////////// 
-//	chassis_Data.lf_wheel_tarV=remote_tem;
-//	chassis_Data.rf_wheel_tarV=remote_tem;
-//	chassis_Data.lb_wheel_tarV=remote_tem;
-//	chassis_Data.rb_wheel_tarV=remote_tem;
+
 	
 	chassis_Data.lf_wheel_output=PID_General(chassis_Data.lf_wheel_tarV,chassis_Data.lf_wheel_fdbV,&PID_Chassis_Speed[LF]);
 	chassis_Data.rf_wheel_output=PID_General(chassis_Data.rf_wheel_tarV,chassis_Data.rf_wheel_fdbV,&PID_Chassis_Speed[RF]);

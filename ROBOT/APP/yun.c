@@ -25,7 +25,7 @@ extern  MPU6050_REAL_DATA    MPU6050_Real_Data;
 extern	RC_Ctl_t RC_Ctl;
 extern GYRO_DATA Gyro_Data;
 extern IslandAttitudeCorrectState_e IslandAttitude_Correct_State;	//登岛姿态自校正
-extern bool Chassis_Follow_Statu;	//底盘跟随标志位
+extern u8 Chassis_Follow_Statu;	//底盘跟随标志位
 extern volatile float yaw_follow_real_error;	//扭腰时的底盘跟随偏差
 extern float yaw_follow_error;	//普通时的底盘跟随误差
 
@@ -53,7 +53,7 @@ void Yun_Control_External_Solution(void)	//外置反馈方案
 		}
 	}
 	
-	if(GetWorkState()==NORMAL_STATE||GetWorkState()==WAIST_STATE||GetWorkState()==TAKEBULLET_STATE)	//仅在正常模式下受控	//取弹受控为暂时加入，之后以传感器自动进行
+	if(GetWorkState()==NORMAL_STATE||GetWorkState()==WAIST_STATE)	//仅在正常模式下受控	//取弹受控为暂时加入，之后以传感器自动进行	//取弹受控已取消，云台跟随底盘
 	{
 		if(Yun_Control_RCorPC==PC_CONTROL)
 		{	//PC控制数据

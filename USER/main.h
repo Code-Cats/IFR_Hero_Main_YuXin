@@ -24,6 +24,7 @@
 #include "shoot.h"
 #include "lift.h"
 #include "auto_takebullet.h"
+#include "image_control.h"
 
 #include "mpu6050IIC.h"
 #include "mpu6050_it.h"

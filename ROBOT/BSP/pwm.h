@@ -14,7 +14,26 @@
         PWM3_4 = x;
 				
 				
+#define PWM5_1 TIM5->CCR1
+#define PWM5_2 TIM5->CCR2
+#define PWM5_3 TIM5->CCR3
+#define PWM5_4 TIM5->CCR4
+
+
+#define STEER_UP_L PWM3_1
+#define STEER_UP_R PWM3_2
+#define STEER_DOWN_L PWM3_3	//保持与工程兼容
+#define STEER_DOWN_R PWM3_4
+
+#define STEER_IMAGE PWM5_4
+#define IMAGE_START	PWM5_3
+#define STEER_RFID	PWM5_2
+#define t_AV_CUT PWM5_2	//临时的，给切换图传用的
+				
 #define FRICTION_INIT      800
+
+#define PWM_IO_ON	20000
+#define PWM_IO_OFF	0
 
 void PWM_Config(void);
 

@@ -82,7 +82,10 @@ extern u32 time_1ms_count;
 #define VW_REDRESS 30
 #define VX_SPEED_UP 110
 #define VX_SPEED_NEAR 10
-#define VX_PRESS_V0 50
+#define VX_PRESS_V0 40
+#define VX_SPEED_RUSH 160	//³åÌ¨½×
+#define VX_SPEED_WAITUP 70	//Ã»ÓĞÍêÈ«ÉıÆğÀ´Ê±ËÙ¶È
+#define VX_SPEED_WAIT_FRONTFALL	90	//ºóÍÈÒÑ¾­´îÉÏºó£¬Ç°½ø×²Ç°ÍÈµÄ¹ı³Ì
 
 //ºìÍâ¿ª¹ØÁÁÎªµÍ£¨¼´½ü£©£¬¼´0
 //ÏŞÎ»
@@ -96,7 +99,7 @@ u8 Ascend_FullRise_GO1(void)	//Ç°½ø¡¢µ÷Õû¡¢´¥·¢µÅÍÈº¯Êı
 	Chassis_Vw=0;
 		if(SetCheck_FrontLift(1)!=1||SetCheck_BackLift(1)!=1)
 		{
-			Chassis_Vx=-70;	//Ã»ÓĞÍêÈ«ÉıÆğÀ´Ê±
+			Chassis_Vx=-VX_SPEED_WAITUP;	//Ã»ÓĞÍêÈ«ÉıÆğÀ´Ê±ËÙ¶È
 			Chassis_Vw=0;
 		}
 		else
@@ -117,7 +120,7 @@ u8 Ascend_FullRise_GO1(void)	//Ç°½ø¡¢µ÷Õû¡¢´¥·¢µÅÍÈº¯Êı
 			Chassis_Vx=-VX_SPEED_NEAR;
 			Chassis_Vw=-VW_REDRESS;	//½ÃÕı ÄæÊ±Õë×ª¶¯
 		}
-		else if(SetCheck_FrontLift(1)==1&&SensorData.Infrare[2]==0&&SensorData.Infrare[3]==1)
+		else if(SetCheck_FrontLift(1)==1&&SensorData.Infrare[2]==0&&SensorData.Infrare[3]==1)	//½ü¾àÀëÎª0
 		{
 			Set_Attitude_Correct_State(CALI_SELF_STATE);
 			Chassis_Vx=-VX_SPEED_NEAR;
@@ -132,7 +135,7 @@ u8 Ascend_FullRise_GO1(void)	//Ç°½ø¡¢µ÷Õû¡¢´¥·¢µÅÍÈº¯Êı
 				///////////////////////ÉèÖÃµ½ÏÂÒ»¸ö×´Ì¬
 			return 1;
 		}
-		else if(SensorData.Limit[2]==0&&SensorData.Limit[3]==1)	//0´ú±íÎ´´¥·¢
+		else if(SensorData.Limit[2]==0&&SensorData.Limit[3]==1)	//0´ú±íÎ´´¥·¢,
 		{
 			Set_Attitude_Correct_State(CALI_SELF_STATE);
 			Chassis_Vx=-VX_PRESS_V0;
@@ -152,14 +155,30 @@ u8 Ascend_FullRise_GO1(void)	//Ç°½ø¡¢µ÷Õû¡¢´¥·¢µÅÍÈº¯Êı
 
 u8 Ascend_BackFall_GO(void)	//3£¬4ºÅÉı½µÌ§ÆğÇ°½øµÄ½ø³Ì
 {
+	static u32 time_record=0;
 	Set_Attitude_Correct_State(CORRECT_CHASSIS_STATE);	//ÉèÖÃÄ¬ÈÏµ×ÅÌ½ÃÕı¿ªÆô£¬ºóĞøIFÓï¾äÖ´ĞĞ½«»á¸²¸Ç
 	SetCheck_FrontLift(1);
 	SetCheck_BackLift(0);
 	Chassis_Vw=0;
 	if(SetCheck_FrontLift(1)==1&&SetCheck_BackLift(0)==1)	//Íê³ÉÌ§ÍÈ¶¯×÷ºó
 	{
-		Chassis_Vx=-VX_SPEED_UP;	//Õâ¸öÖµÔÚ¼ì²âµ½ºó»á±»ifÖĞµÄÖµ¸²¸Ç	//ÕâÀï¼Ó¿ìÁËËÙ¶È-²¹³¥
-		Chassis_Vw=0;
+		if(time_record==0)
+		{
+			time_record=time_1ms_count;
+		}
+		
+		if(time_1ms_count-time_record<400)	//ÕâÀïÊÇÏòÇ°³åÒÔ±ãÓÚºóÍÈ³åÉÏÌ¨½×
+		{
+			Chassis_Vx=-VX_SPEED_RUSH;
+			Chassis_Vw=0;
+		}
+		else if(time_1ms_count-time_record>400&&time_record!=0)
+		{
+			Chassis_Vx=-VX_SPEED_WAIT_FRONTFALL;	//Õâ¸öÖµÔÚ¼ì²âµ½ºó»á±»ifÖĞµÄÖµ¸²¸Ç	//ÕâÀïÊÇ×²Ç°ÍÈ£¨µÇµºµÄºóÍÈ£©µÄËÙ¶È
+			Chassis_Vw=0;
+		}
+		
+
 		if(SensorData.Infrare[0]==0&&SensorData.Infrare[1]==0)
 		{
 			Chassis_Vx=-VX_SPEED_NEAR;
@@ -183,8 +202,10 @@ u8 Ascend_BackFall_GO(void)	//3£¬4ºÅÉı½µÌ§ÆğÇ°½øµÄ½ø³Ì
 		{
 			Chassis_Vx=-VX_PRESS_V0;
 			Chassis_Vw=0;
-			////////////////////////////////ÇĞ»»µ½ÏÂÒ»¸ö×´Ì¬
+			time_record=0;	//ÖØÖÃ¼ÆÊ±
 			return 1;
+			////////////////////////////////ÇĞ»»µ½ÏÂÒ»¸ö×´Ì¬
+			
 		}
 		else if(SensorData.Limit[0]==0&&SensorData.Limit[1]==1)
 		{
@@ -226,11 +247,11 @@ u8 Ascend_FullFall_GO(void)	//¶¼Ì§Æğµ½¶¼Ì§Æğºó	//Í¨¹ı¹Û²ìÊÓÆµµÃÖªÔÚÅö×²Ò»Ë²¼äµ¯º
 				if(time_record==0)	//time_record=0ÒâË¼¼´ÎªµÚÒ»´ÎÖ´ĞĞ
 				{
 					time_record=time_1ms_count;
-					Chassis_Vx=-160;
+					Chassis_Vx=-VX_SPEED_RUSH;
 					Chassis_Vw=0;
 				}
 				
-				if(time_1ms_count-time_record>650)	//0.6s
+				if(time_1ms_count-time_record>630)	//0.6s
 				{
 					Chassis_Vx=-VX_PRESS_V0;
 					Chassis_Vw=0;
@@ -250,13 +271,13 @@ u8 Ascend_FullFall_GO(void)	//¶¼Ì§Æğµ½¶¼Ì§Æğºó	//Í¨¹ı¹Û²ìÊÓÆµµÃÖªÔÚÅö×²Ò»Ë²¼äµ¯º
 				}
 				else if(SensorData.Infrare[0]==1&&SensorData.Infrare[1]==0)	//Êı×ÖĞ¡µÄÔÚÓÒ±ß£¬1´ú±íÎ´´¥·¢
 				{
-					Set_Attitude_Correct_State(CALI_SELF_STATE);	//×ËÌ¬½ÃÕıº¯Êı½øĞĞ×ÔĞ£×¼
+		//			Set_Attitude_Correct_State(CALI_SELF_STATE);	//×ËÌ¬½ÃÕıº¯Êı½øĞĞ×ÔĞ£×¼
 					Chassis_Vx=-VX_PRESS_V0;
 					Chassis_Vw=-VW_REDRESS;	//½ÃÕı ÄæÊ±Õë×ª¶¯
 				}
 				else if(SensorData.Infrare[0]==0&&SensorData.Infrare[1]==1)
 				{
-					Set_Attitude_Correct_State(CALI_SELF_STATE);	//×ËÌ¬½ÃÕıº¯Êı½øĞĞ×ÔĞ£×¼
+		//			Set_Attitude_Correct_State(CALI_SELF_STATE);	//×ËÌ¬½ÃÕıº¯Êı½øĞĞ×ÔĞ£×¼
 					Chassis_Vx=-VX_PRESS_V0;
 					Chassis_Vw=VW_REDRESS;	//½ÃÕı Ë³Ê±Õë×ª¶¯
 				}
@@ -273,7 +294,7 @@ u8 Ascend_FullRise_GO2(void)	//Ç°½ø¡¢µ÷Õû¡¢´¥·¢µÅÍÈº¯Êı
 	Chassis_Vw=0;
 	if(SetCheck_FrontLift(1)!=1||SetCheck_BackLift(1)!=1)
 		{
-			Chassis_Vx=-60;	//Ã»ÓĞÍêÈ«ÉıÆğÀ´Ê±
+			Chassis_Vx=-VX_SPEED_WAITUP;	//Ã»ÓĞÍêÈ«ÉıÆğÀ´Ê±
 			Chassis_Vw=0;
 		}
 		else
@@ -340,7 +361,6 @@ DescendState_e DescendState=FULLFALL_DOWN1;	//ÏÂµº×´Ì¬¼ÇÂ¼Î»
 
 void Descend_Control_Center(void)
 {
-	Set_Attitude_Correct_State(CALI_SELF_STATE);	//×ËÌ¬½ÃÕıº¯Êı½øĞĞ×ÔĞ£×¼
 	for(int i=0;i<4;i++)
 	{
 		PID_Chassis_Speed[i].k_i=CHASSIS_SPEED_PID_I*3;
@@ -400,10 +420,19 @@ void Descend_Control_Center(void)
 }
 
 
-
+/*
+#define VX_WAIT_BACKRISE	-72	//µÈ´ı²»Ì«Î£ÏÕµÄºóÍÈÇ°½øºìÍâ´¥·¢£¬¿ÉÒÔ¿ìÒ»µã
+#define VX_NEAR_DOWN -40
+#define VX_WAITALLFALL -70		//-90
+#define VW_DESCEND 30
+*/
+#define VX_WAIT_BACKRISE	72	//µÈ´ı²»Ì«Î£ÏÕµÄºóÍÈÇ°½øºìÍâ´¥·¢£¬¿ÉÒÔ¿ìÒ»µã
 #define VX_NEAR_DOWN 40
-u8 Descend_FullFall_Down(void)
+#define VX_WAITALLFALL 70		//-90
+#define VW_DESCEND 30
+u8 Descend_FullFall_Down(void)	//È«²¿ÂäÏÂ×¼±¸Ç°ÍÈÂäµ½ÏÂÒ»¼¶¶¯×÷
 {
+	Set_Attitude_Correct_State(CORRECT_CHASSIS_STATE);	//ÉèÖÃÄ¬ÈÏµ×ÅÌ½ÃÕı¿ªÆô£¬ºóĞøIFÓï¾äÖ´ĞĞ½«»á¸²¸Ç
   Chassis_Vx=0;
 	Chassis_Vw=0;
 	
@@ -423,12 +452,14 @@ u8 Descend_FullFall_Down(void)
 		else if(SensorData.Infrare[0]==0&&SensorData.Infrare[1]==1)	//0´ú±íÎ´´¥·¢(»¹ÔÚµºÉÏ)
 		{
 			Chassis_Vx=0;
-			Chassis_Vw=30;	//½ÃÕı Ë³Ê±Õë×ª¶¯
+			Chassis_Vw=VW_DESCEND;	//½ÃÕı Ë³Ê±Õë×ª¶¯
+			Set_Attitude_Correct_State(CALI_SELF_STATE);	//×ËÌ¬½ÃÕıº¯Êı½øĞĞ×ÔĞ£×¼
 		}
 		else if(SensorData.Infrare[0]==1&&SensorData.Infrare[1]==0)
 		{
 			Chassis_Vx=0;
-			Chassis_Vw=-30;	//½ÃÕı ÄæÊ±Õë×ª¶¯
+			Chassis_Vw=-VW_DESCEND;	//½ÃÕı ÄæÊ±Õë×ª¶¯
+			Set_Attitude_Correct_State(CALI_SELF_STATE);	//×ËÌ¬½ÃÕıº¯Êı½øĞĞ×ÔĞ£×¼
 		}
 		
 	}
@@ -437,17 +468,18 @@ u8 Descend_FullFall_Down(void)
 }
  
 
-u8 Descend_FrontRise_Down(void)
+u8 Descend_FrontRise_Down(void)	//Íê³ÉÇ°ÂÖÏÂÈ¥ºó£¬×îÈİÒ×·­³µµÄÂ·¶ÎÒÑ¾­¹ıÈ¥£¬¿ÉÒÔ¼Ó¿ìËÙ¶È
 {
+	Set_Attitude_Correct_State(CORRECT_CHASSIS_STATE);	//ÉèÖÃÄ¬ÈÏµ×ÅÌ½ÃÕı¿ªÆô£¬ºóĞøIFÓï¾äÖ´ĞĞ½«»á¸²¸Ç
 	Chassis_Vx=0;
 	Chassis_Vw=0;
 	
 	SetCheck_FrontLift(1);
 	SetCheck_BackLift(0);
 	
-	if(SetCheck_FrontLift(1)==1&&SetCheck_BackLift(0)==1)	//Íê³ÉÇ°ÂÖÉìÍÈºó
+	if(SetCheck_FrontLift(1)==1&&SetCheck_BackLift(0)==1)	//Íê³ÉÇ°ÂÖÉìÍÈºó,¼ÓËÙ
 	{
-			Chassis_Vx=VX_NEAR_DOWN-5;
+			Chassis_Vx=VX_WAIT_BACKRISE;
 			Chassis_Vw=0;
 		if(SensorData.Infrare[2]==1&&SensorData.Infrare[3]==1)
 		{
@@ -456,15 +488,17 @@ u8 Descend_FrontRise_Down(void)
 				///////////////////////ÉèÖÃµ½ÏÂÒ»¸ö×´Ì¬
 			return 1;
 		}
-		else if(SensorData.Infrare[2]==0&&SensorData.Infrare[3]==1)	//0´ú±íÎ´´¥·¢(»¹ÔÚµºÉÏ)
+		else if(SensorData.Infrare[2]==0&&SensorData.Infrare[3]==1)	//0´ú±íÎ´´¥·¢(»¹ÔÚµºÉÏ)£¨½ü¾àÀë£©
 		{
 			Chassis_Vx=0;
-			Chassis_Vw=30;	//½ÃÕı Ë³Ê±Õë×ª¶¯
+			Chassis_Vw=VW_DESCEND;	//½ÃÕı Ë³Ê±Õë×ª¶¯
+			Set_Attitude_Correct_State(CALI_SELF_STATE);	//×ËÌ¬½ÃÕıº¯Êı½øĞĞ×ÔĞ£×¼
 		}
 		else if(SensorData.Infrare[2]==1&&SensorData.Infrare[3]==0)
 		{
 			Chassis_Vx=0;
-			Chassis_Vw=-30;	//½ÃÕı ÄæÊ±Õë×ª¶¯
+			Chassis_Vw=-VW_DESCEND;	//½ÃÕı ÄæÊ±Õë×ª¶¯
+			Set_Attitude_Correct_State(CALI_SELF_STATE);	//×ËÌ¬½ÃÕıº¯Êı½øĞĞ×ÔĞ£×¼
 		}
 		
 	}
@@ -472,37 +506,44 @@ u8 Descend_FrontRise_Down(void)
 }
 
 
-u8 Descend_FullRise_Down1(void)
+u8 Descend_FullRise_Down1(void)	//5.10¸üĞÂ
 {
 	static u32 time_record=0;
-		
+	static u8 full_fall_statu=0;
+	
+	Set_Attitude_Correct_State(CORRECT_CHASSIS_STATE);	//ÉèÖÃÄ¬ÈÏµ×ÅÌ½ÃÕı¿ªÆô£¬ºóĞøIFÓï¾äÖ´ĞĞ½«»á¸²¸Ç
+	
 	Chassis_Vx=0;
 	Chassis_Vw=0;
 	
-	SetCheck_FrontLift(1);
-	SetCheck_BackLift(1);
 	
-	if(SetCheck_FrontLift(1)==1&&SetCheck_BackLift(1)==1)	//Íê³ÉºóÂÖÉìÍÈºó
+	if(SetCheck_FrontLift(1)==1&&SetCheck_BackLift(1)==1&&full_fall_statu==0)	//Íê³ÉºóÂÖÉìÍÈºófull_fall_statu==1ºó²»Ö´ĞĞ
+	{
+		full_fall_statu=1;
+	}
+	
+	if(full_fall_statu==1)	//Íê³ÉºóÂÖÉìÍÈºó
 	{
 		if(time_record==0)	//time_record=0ÒâË¼¼´ÎªµÚÒ»´ÎÖ´ĞĞ
 		{
 			time_record=time_1ms_count;
 		}
 		
-		Chassis_Vx=VX_NEAR_DOWN+50;	//40
+		Chassis_Vx=VX_WAITALLFALL;	//70	//Õâ¸öËÙ¶ÈÊÇÔÚÖĞ¼ä²ãÌ¨½×ÉÏ¿ìËÙÍ¨¹ı
 		Chassis_Vw=0;
 		
-		if(time_1ms_count-time_record>100)
+		if(time_1ms_count-time_record>200&&time_record!=0)	//Õâ¸öÑÓÊ±ÊÇÈÃÇ°µ¼ÂÖÀë¿ªÉÏÒ»¼¶Ì¨½×
 		{
 			SetCheck_FrontLift(0);	//ÍêÈ«½µÂä
 			SetCheck_BackLift(0);
 		}
 		
-		if(time_1ms_count-time_record>1200)
+		if(time_1ms_count-time_record>1200&&time_record!=0)	//Õâ¸öÑÓÊ±×÷ÓÃÊÇÖ±½Ó³åµ½±ßÔµÒÔ±ã¼Ó¿ìËÙ¶È
 		{
 			Chassis_Vx=0;
 			Chassis_Vw=0;
 			time_record=0;
+			full_fall_statu=0;
 			return 1;
 		}
 		
@@ -561,17 +602,47 @@ void Set_Attitude_Correct_State(IslandAttitudeCorrectState_e state)
 }
 
 
-
-
-
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-
-
 extern LIFT_DATA lift_Data;
+
+
+u8 Check_FrontLift(void)	//ÓÃÓÚ×Ô¶¯µÇµº×´Ì¬Ê¶±ğ	//·µ»Ø1ÊÇÉı£¬0ÊÇ½µ
+{
+	u8 rise_state=1;
+	return (abs(lift_Data.lf_lift_fdbP+lift_Data.rf_lift_fdbP-2*(LIFT_DISTANCE_FALL-(rise_state!=0)*(LIFT_DISTANCE_FALL-LIFT_DISTANCE_ISLAND)))<50);	//Ç°£¨Í¬Ó¢ĞÛ£©Éı½µÎ»ÖÃ¼ì²é£¬1ÎªÉıÆğ×´Ì¬£»0Îªµ×²¿×´Ì¬
+}
+
+u8 Check_BackLift(void)	//ÓÃÓÚ×Ô¶¯µÇµº×´Ì¬Ê¶±ğ
+{
+	u8 rise_state=1;
+	return (abs(lift_Data.lb_lift_fdbP+lift_Data.rb_lift_fdbP-2*(LIFT_DISTANCE_FALL-(rise_state!=0)*(LIFT_DISTANCE_FALL-LIFT_DISTANCE_ISLAND)))<50);	//ºó£¨Í¬Ó¢ĞÛ£©Éı½µÎ»ÖÃ¼ì²é£¬1ÎªÉıÆğ×´Ì¬£»0Îªµ×²¿×´Ì¬
+}
+
+
+AscendState_e Island_State_Recognize(void)	//±æÊ¶µ±Ç°µÇµº×´Ì¬
+{
+	AscendState_e islandstate;
+	if(Check_FrontLift()==0&&Check_BackLift()==0)	//È«²¿¶¼ÊÇÂäÏÂµÄ£¬½«×´Ì¬ÖÃµ½³õÊ¼µÇµº£¬ÒÔÈ«²¿ÉıÆğ
+	{
+		islandstate=FULLRISE_GO1;	//È«²¿ÉıÆğ
+	}
+	else if(Check_FrontLift()==1&&Check_BackLift()==0)	//ºóÍÈ0ÊÕÆğÀ´£¬Ç°ÍÈ1Éì³ö£¬ËµÃ÷ÔÚµÚ2×´Ì¬
+	{
+		islandstate=BACKFALL_GO1;
+	}
+	else	//Ò»°ãÇé¿ö²»¿ÉÄÜ³öÏÖÕâÖÖÇé¿ö£¬ÔİÊ±ÖÃÎªÈ«²¿ÉıÆğ
+	{
+		islandstate=FULLRISE_GO1;	//È«²¿ÉıÆğ
+	}
+	return islandstate;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+
+
 
 u8 SetCheck_FrontLift(u8 rise_state)	//Ç°Éı½µÂÖÉıÆğ/ÂäÏÂ²¢¼ì²é	//0±íÊ¾FALL£¬1±íÊ¾ISLAND
 {

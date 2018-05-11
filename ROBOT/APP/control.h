@@ -14,8 +14,8 @@
 
 /************行程限制**************/
 #define LIFT_DISTANCE_FALL 30
-#define LIFT_DISTANCE_ISLAND 1200//1170//1200是取弹的
-
+#define LIFT_DISTANCE_ISLAND 1170//1170//1200是取弹的
+#define LIFT_DISTANCE_LIMIT 1350
 
 
 #define LIFT_POSITION_PID_P	55	//405升降电机PID
