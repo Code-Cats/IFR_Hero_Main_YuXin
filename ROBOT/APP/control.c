@@ -129,7 +129,7 @@ if(time_1ms_count%1000==0)
 			Teleconltroller_Data_protect();	//遥控器数据保护
 			Yun_Task();	//开启云台处理
 			Remote_Task();	//执行移动
-			AutoChassisAttitude_Lift_V2(Chassis_GYRO[PITCH]);
+//			AutoChassisAttitude_Lift_V2(Chassis_GYRO[PITCH]);
 			Lift_Task();	//开启升降
 			Shoot_Task();
 			break;
@@ -225,22 +225,27 @@ void Work_State_Change(void)
 		}
 		case NORMAL_STATE:	//正常操作模式
 		{
-			if(RC_Ctl.rc.switch_left==RC_SWITCH_MIDDLE)	//左中
+			if(RC_Ctl.rc.switch_left==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_MIDDLE)	//左中右中
 			{
 				SetWorkState(STOP_STATE);
 			}
 			
-			if(RC_Ctl.rc.switch_left==RC_SWITCH_DOWN&&Switch_Right_Last==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_DOWN)
+			if(RC_Ctl.rc.switch_left==RC_SWITCH_MIDDLE&&Switch_Right_Last==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_UP)
 			{
 				SetWorkState(ASCEND_STATE);
 			}
-			else if(RC_Ctl.rc.switch_left==RC_SWITCH_DOWN&&Switch_Right_Last==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_UP)
+			else if(RC_Ctl.rc.switch_left==RC_SWITCH_MIDDLE&&Switch_Right_Last==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_DOWN)
 			{
-//				SetWorkState(DESCEND_STATE);
-				SetWorkState(TAKEBULLET_STATE);	//临时测试，取弹状态
+				SetWorkState(DESCEND_STATE);
+//				SetWorkState(TAKEBULLET_STATE);	//增加新模式//临时测试，取弹状态
 			}
 			
-			if(RC_Ctl.mouse.press_r==1&&RC_Ctl.rc.switch_left!=RC_SWITCH_MIDDLE)
+			if(RC_Ctl.rc.switch_left==RC_SWITCH_DOWN)	//左下取弹
+			{
+				SetWorkState(TAKEBULLET_STATE);	//增加新模式//临时测试，取弹状态
+			}
+			
+			if(RC_Ctl.mouse.press_r==1&&RC_Ctl.rc.switch_left!=RC_SWITCH_MIDDLE)	//中间能不能扭腰？
 			{
 				SetWorkState(WAIST_STATE);
 			}
@@ -252,7 +257,7 @@ void Work_State_Change(void)
 			{
 				SetWorkState(NORMAL_STATE);
 			}
-			if(RC_Ctl.rc.switch_left==RC_SWITCH_MIDDLE)	//左中
+			if(RC_Ctl.rc.switch_left==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_MIDDLE)	//左中
 			{
 				SetWorkState(STOP_STATE);
 			}
@@ -460,8 +465,8 @@ void Lift_Task(void)
 					}
 				}
 			}
-			SetCheck_FrontLift(lift_control_all_state);
-			SetCheck_BackLift(lift_control_all_state);
+//////////			SetCheck_FrontLift(lift_control_all_state);//？？？？？？？？？？？忘了这是干什么的
+//////////			SetCheck_BackLift(lift_control_all_state);
 		}
 	}
 	
