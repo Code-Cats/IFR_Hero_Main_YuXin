@@ -31,7 +31,7 @@ void Shoot_Task(void)	//定时频率：1ms
 
 
 
-		Friction_Send=800-(800-1888)*Friction_State;	//2000对应射速20
+		Friction_Send=800-(800-1845)*Friction_State;	//1888对应射速20,1800-14	1830-14.7
 	
 ////////////////	if(swicth_Last_state==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_UP)
 /////临时///////	{

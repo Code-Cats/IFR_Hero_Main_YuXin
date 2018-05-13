@@ -37,7 +37,7 @@ void Yun_Task(void)	//云台控制任务
 	Yun_Control_External_Solution();
 }
 
-
+u8 Yun_WorkState_Turn180_statu=0;	//180旋转到位标志位，放在了上面
 u8 Yun_Control_RCorPC=RC_CONTROL;
 void Yun_Control_External_Solution(void)	//外置反馈方案
 {
@@ -52,6 +52,8 @@ void Yun_Control_External_Solution(void)	//外置反馈方案
 			Yun_Control_RCorPC=RC_CONTROL;
 		}
 	}
+	
+	Yun_WorkState_Turn_Task();
 	
 	if(GetWorkState()==NORMAL_STATE||GetWorkState()==WAIST_STATE)	//仅在正常模式下受控	//取弹受控为暂时加入，之后以传感器自动进行	//取弹受控已取消，云台跟随底盘
 	{
@@ -82,7 +84,7 @@ void Yun_Control_External_Solution(void)	//外置反馈方案
 			}
 		}
 	}
-	else if(GetWorkState()==TAKEBULLET_STATE)	//取弹模式一直校准
+	else if(GetWorkState()==TAKEBULLET_STATE&&Yun_WorkState_Turn180_statu==1)	//取弹模式且已经转了180°一直校准
 	{
 		yunMotorData.yaw_tarP=(s32)(Gyro_Data.angle[2]*10+(YAW_INIT-yunMotorData.yaw_fdbP)*3600/8192);	//反馈放大10倍并将目标位置置为中点
 	}
@@ -184,6 +186,29 @@ void PC_Control_Yun(s32 * yaw_tarp,s32 * pitch_tarp)	//1000Hz
 	}
 }
 
+//u8 Yun_WorkState_Turn180_statu=0;	//180旋转到位标志位，放在了上面
+void Yun_WorkState_Turn_Task(void)	//模式切换时云台转向任务	//当转向完成标志位为1时切换到云台跟随底盘
+{
+	static WorkState_e State_Record=CHECK_STATE;
+	if(State_Record!=TAKEBULLET_STATE&&GetWorkState()==TAKEBULLET_STATE)
+	{
+		Yun_WorkState_Turn180_statu=0;
+		yunMotorData.yaw_tarP-=1800;
+		yunMotorData.yaw_tarP=yunMotorData.yaw_tarP>1800?yunMotorData.yaw_tarP-3600:yunMotorData.yaw_tarP;	//过零点
+		yunMotorData.yaw_tarP=yunMotorData.yaw_tarP<-1800?yunMotorData.yaw_tarP+3600:yunMotorData.yaw_tarP;	//过零点
+	}
+	else if(State_Record==TAKEBULLET_STATE&&GetWorkState()!=TAKEBULLET_STATE)
+	{
+		Yun_WorkState_Turn180_statu=0;
+	}
+	
+	if(abs(yunMotorData.yaw_tarP-Gyro_Data.angle[2]*10)<1)	//5度范围认为到位
+	{
+		Yun_WorkState_Turn180_statu=1;	//置为1
+	}
+	
+	State_Record=GetWorkState();
+}
 
 float yaw_move_optimize_PC(s16 mouse_x)
 {

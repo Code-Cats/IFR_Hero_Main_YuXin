@@ -116,6 +116,7 @@ extern float Chassis_GYRO[3];
 
 void Control_Task(void);
 void Work_State_Change(void);	//RC,PC对机器状态的控制
+void Work_State_Change_BackProtect(void);	//当从某一状态退出时，确保该状态的一切遗留控制都归位
 void LED_Indicate(void);	//灯光指示
 
 void Lift_Task(void);

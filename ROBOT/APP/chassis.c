@@ -21,6 +21,8 @@ extern tPowerHeatData 	testPowerHeatData;      //实时功率热量数据
 extern u32 time_1ms_count;
 extern IslandAttitudeCorrectState_e IslandAttitude_Correct_State;	//登岛姿态自校正
 extern ViceControlDataTypeDef ViceControlData;
+
+extern u8 Yun_WorkState_Turn180_statu;	//180旋转到位标志位，放在了上面
 /*************************************************************/
 
 
@@ -143,10 +145,14 @@ void Remote_Task(void)
 	{
 		Chassis_Follow_Statu=1;
 	}
-	else
+	else if(GetWorkState()==TAKEBULLET_STATE&&Yun_WorkState_Turn180_statu==1)	//取弹转向后不受控
 	{
 		Chassis_Follow_Statu=0;
 	}
+//	else
+//	{
+//		Chassis_Follow_Statu=0;
+//	}
 	
 	
 	
@@ -155,7 +161,7 @@ void Remote_Task(void)
 //////		Chassis_Vx=RC_Ctl.rc.ch1-1024;
 		
 //		Chassis_Vw=RC_Ctl.rc.ch2-1024;
-		if(abs(RC_Ctl.rc.ch2-1024)<40&&abs(YAW_INIT-yunMotorData.yaw_fdbP)<180)//此处陀螺仪在加速度过大时反馈会有较大误差，因此采用低转向普通跟随，高转向智能跟随模式	//此处应把fdb改为tarP
+		if((abs(RC_Ctl.rc.ch2-1024)<40&&abs(YAW_INIT-yunMotorData.yaw_fdbP)<180)||GetWorkState()==TAKEBULLET_STATE)//此处陀螺仪在加速度过大时反馈会有较大误差，因此采用低转向普通跟随，高转向智能跟随模式	//此处应把fdb改为tarP
 		{
 			if(YAW_INIT-yunMotorData.yaw_fdbP>8192/2)	//普通跟随块	
 			{
@@ -286,9 +292,8 @@ void RC_Control_Chassis(void)
 {
 	static s16 Chassis_Vx_last=0;
 	static s16 Chassis_Vy_last=0;
-	if(GetWorkState()==NORMAL_STATE||GetWorkState()==WAIST_STATE||GetWorkState()==TAKEBULLET_STATE)	//暂时加入取弹受控
+	if(GetWorkState()==NORMAL_STATE||GetWorkState()==WAIST_STATE)
 	{
-		
 		if(time_1ms_count%1==0)
 		{
 			if(RC_Ctl.rc.ch1-1024-Chassis_Vx_last>1&&RC_Ctl.rc.ch1-1024>10)	//只在前进加速时生效，
@@ -307,27 +312,44 @@ void RC_Control_Chassis(void)
 //		Chassis_Vx=RC_Ctl.rc.ch1-1024;	//代替为斜坡函数
 		Chassis_Vx_last=Chassis_Vx;
 	}
+	else if(GetWorkState()==TAKEBULLET_STATE)	//取弹时反向
+	{
+		if(time_1ms_count%1==0)
+		{
+			Chassis_Vx=-(RC_Ctl.rc.ch1-1024);
+		}
+//		Chassis_Vx=RC_Ctl.rc.ch1-1024;	//代替为斜坡函数
+		Chassis_Vx_last=Chassis_Vx;
+	}
 	
 	if(time_1ms_count%1==0)
 	{
-		if(RC_Ctl.rc.ch0-1024-Chassis_Vy_last>1&&RC_Ctl.rc.ch0-1024>10)
+		if(GetWorkState()!=TAKEBULLET_STATE)	//取弹时反向
 		{
-			Chassis_Vy+=1;
+			if(RC_Ctl.rc.ch0-1024-Chassis_Vy_last>1&&RC_Ctl.rc.ch0-1024>10)
+			{
+				Chassis_Vy+=1;
+			}
+			else if(RC_Ctl.rc.ch0-1024-Chassis_Vy_last<-1&&RC_Ctl.rc.ch0-1024<-10)	//刹车按不缓冲
+			{
+				Chassis_Vy-=1;
+			}
+			else
+			{
+				Chassis_Vy=RC_Ctl.rc.ch0-1024;
+			}
 		}
-		else if(RC_Ctl.rc.ch0-1024-Chassis_Vy_last<-1&&RC_Ctl.rc.ch0-1024<-10)	//刹车按不缓冲
+		else	//取弹反向
 		{
-			Chassis_Vy-=1;
+			Chassis_Vy=-(RC_Ctl.rc.ch0-1024);
 		}
-		else
-		{
-			Chassis_Vy=RC_Ctl.rc.ch0-1024;
-		}
+
 	}
 	Chassis_Vy_last=Chassis_Vy;
 	
 	if(GetWorkState()==TAKEBULLET_STATE)	//取弹模式
 	{
-		Chassis_Vw=RC_Ctl.rc.ch2-1024;
+		Chassis_Vw=(RC_Ctl.rc.ch2-1024)*300/660;
 	}
 //	Chassis_Vy=RC_Ctl.rc.ch0-1024;
 }

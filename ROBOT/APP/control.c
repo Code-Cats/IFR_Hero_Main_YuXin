@@ -74,6 +74,11 @@ if(time_1ms_count%1000==0)
 	
 	
 	Work_State_Change();
+	
+	Work_State_Change_BackProtect();
+	
+	Image_Cut_Task();	//摄像头切换、舵机
+	
 	switch (GetWorkState())	//2018.3.15
 	{
 		case CHECK_STATE:	//自检模式
@@ -110,7 +115,7 @@ if(time_1ms_count%1000==0)
 			Yun_Task();	//开启云台处理
 			Lift_Task();	//开启升降
 			Shoot_Task();	//临时调试
-			TakeBullet_Control_Center();	//调试
+			TakeBullet_Control_Center();	//含有假设延时反馈和舵机执行，故加入
 			break;
 		}
 		case NORMAL_STATE:	//正常操作模式
@@ -132,6 +137,7 @@ if(time_1ms_count%1000==0)
 //			AutoChassisAttitude_Lift_V2(Chassis_GYRO[PITCH]);
 			Lift_Task();	//开启升降
 			Shoot_Task();
+			TakeBullet_Control_Center();	//含有假设延时反馈和舵机执行，故加入
 			break;
 		}
 		case ASCEND_STATE:	//自动上岛模式
@@ -140,6 +146,7 @@ if(time_1ms_count%1000==0)
 			Yun_Task();	//开启云台处理
 			Remote_Task();	//执行移动
 			Lift_Task();	//开启升降
+			TakeBullet_Control_Center();	//含有假设延时反馈和舵机执行，故加入
 			break;
 		}
 		case DESCEND_STATE:	//自动下岛模式
@@ -148,6 +155,7 @@ if(time_1ms_count%1000==0)
 			Yun_Task();	//开启云台处理
 			Remote_Task();	//执行移动
 			Lift_Task();	//开启升降
+			TakeBullet_Control_Center();	//含有假设延时反馈和舵机执行，故加入
 			break;
 		}
 		case TAKEBULLET_STATE:
@@ -171,6 +179,7 @@ if(time_1ms_count%1000==0)
 		}
 		case STOP_STATE:	//停止状态
 		{
+			TakeBullet_Control_Center();	//含有假设延时反馈和舵机执行，故加入
 			break;
 		}
 		case PROTECT_STATE:	//自我保护模式
@@ -265,7 +274,7 @@ void Work_State_Change(void)
 		}
 		case ASCEND_STATE:	//自动上岛模式
 		{
-			if(RC_Ctl.rc.switch_left==RC_SWITCH_MIDDLE)	//左中
+			if(RC_Ctl.rc.switch_left==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_MIDDLE)	//左中
 			{
 				AscendState=FULLRISE_GO1;	//重置防止下一次异常
 				SetWorkState(STOP_STATE);
@@ -274,7 +283,7 @@ void Work_State_Change(void)
 		}
 		case DESCEND_STATE:	//自动下岛模式
 		{
-			if(RC_Ctl.rc.switch_left==RC_SWITCH_MIDDLE)	
+			if(RC_Ctl.rc.switch_left==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_MIDDLE)	
 			{
 				DescendState=FULLFALL_DOWN1;	//重置防止下一次异常
 				SetWorkState(STOP_STATE);
@@ -283,7 +292,7 @@ void Work_State_Change(void)
 		}
 		case TAKEBULLET_STATE:	//取弹模式
 		{
-			if(RC_Ctl.rc.switch_left==RC_SWITCH_MIDDLE)	//左中
+			if(RC_Ctl.rc.switch_left==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_MIDDLE)	//左中
 			{
 				SetWorkState(STOP_STATE);
 			}
@@ -301,9 +310,23 @@ void Work_State_Change(void)
 		}
 		case STOP_STATE:	//停止状态
 		{
-			if(RC_Ctl.rc.switch_left==RC_SWITCH_UP||RC_Ctl.rc.switch_left==RC_SWITCH_DOWN)	
+			if(RC_Ctl.rc.switch_left==RC_SWITCH_UP)	
 			{
 				SetWorkState(NORMAL_STATE);
+			}
+			else if(RC_Ctl.rc.switch_left==RC_SWITCH_DOWN)
+			{
+				SetWorkState(TAKEBULLET_STATE);
+			}
+			
+			if(RC_Ctl.rc.switch_left==RC_SWITCH_MIDDLE&&Switch_Right_Last==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_UP)
+			{
+				SetWorkState(ASCEND_STATE);
+			}
+			else if(RC_Ctl.rc.switch_left==RC_SWITCH_MIDDLE&&Switch_Right_Last==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_DOWN)
+			{
+				SetWorkState(DESCEND_STATE);
+//				SetWorkState(TAKEBULLET_STATE);	//增加新模式//临时测试，取弹状态
 			}
 			break;
 		}
@@ -319,6 +342,27 @@ void Work_State_Change(void)
 	}
 	Switch_Right_Last=RC_Ctl.rc.switch_right;
 }
+
+extern u8 SetCheck_TakeBullet_TakeBack_statu;	//切出取弹保护执行标志位	//放在前面extern
+void Work_State_Change_BackProtect(void)	//当从某一状态退出时，确保该状态的一切遗留控制都归位
+{
+	static WorkState_e State_Record=CHECK_STATE;
+ 
+	
+	if(State_Record==TAKEBULLET_STATE&&GetWorkState()!=TAKEBULLET_STATE)	//退出取弹模式
+	{
+		SetCheck_TakeBullet_TakeBack_statu=1;	//刷新处
+	}
+	
+	if(State_Record!=TAKEBULLET_STATE&&GetWorkState()==TAKEBULLET_STATE)
+	{
+		SetCheck_GripLift(1);	//上升到取弹高度
+	}
+	SetCheck_TakeBullet_TakeBack();	//执行处
+	State_Record=GetWorkState();
+}
+
+
 
 extern s16 t_error_record;
 void LED_Indicate(void)

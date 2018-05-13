@@ -6,8 +6,8 @@ extern KeyBoardTypeDef KeyBoardData[KEY_NUMS];
 extern RC_Ctl_t RC_Ctl;
 extern ViceControlDataTypeDef ViceControlData;
 
-#define STEER_IMAGE_INIT	1700
-#define STEER_IMAGE_REVERSAL	1100
+#define STEER_IMAGE_INIT	1750
+#define STEER_IMAGE_REVERSAL	1000
 
 #define IMAGE_START_DELAY	(1000*10)	//10s后开始
 void Screen_Start(void)	//屏幕启动切换到AV信道
@@ -33,14 +33,29 @@ u16 steer_image=STEER_IMAGE_REVERSAL;
 void Image_Cut_Task(void)	//摄像头切换、舵机
 {
 	static u8 key_r_last=0;
+	static WorkState_e State_Record=CHECK_STATE;
+	t_AV_CUT=av_cut*20000;	//一直在上面
 	
-	t_AV_CUT=av_cut*20000;
-
+	if(State_Record!=TAKEBULLET_STATE&&GetWorkState()==TAKEBULLET_STATE)
+	{
+		Steer_Image_state=1;
+	}
+	else if(State_Record==TAKEBULLET_STATE&&GetWorkState()!=TAKEBULLET_STATE)
+	{
+		Steer_Image_state=0;
+	}
+	else if(GetWorkState()==NORMAL_STATE)
+	{
+		Steer_Image_state=0;
+	}
+	
 	if(key_r_last==0&&KeyBoardData[KEY_R].value==1)
 	{
 		Steer_Image_state=!Steer_Image_state;
 	}
 	STEER_IMAGE=STEER_IMAGE_INIT-Steer_Image_state*(STEER_IMAGE_INIT-STEER_IMAGE_REVERSAL);
+	
+	State_Record=GetWorkState();
 	
 	key_r_last=KeyBoardData[KEY_R].value;
 }

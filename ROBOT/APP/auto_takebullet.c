@@ -53,19 +53,31 @@ void TakeBullet_Control_Center(void)
 
 	if(GetWorkState()==TAKEBULLET_STATE&&RC_Ctl.rc.switch_left==RC_SWITCH_DOWN)
 	{
-		for(int i=0;i<4;i++)
+//		for(int i=0;i<4;i++)
+//		{
+//		PID_Chassis_Speed[i].k_i=CHASSIS_SPEED_PID_I*3;
+//		PID_Chassis_Speed[i].i_sum_max=CHASSIS_SPEED_I_MAX*1.5f;
+//		}
+////		if(swicth_Last_state==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_DOWN)	//shoot_Motor_Data.tarP-shoot_Motor_Data.fdbP	//待加入
+////		{
+////			auto_takebullet_statu=!auto_takebullet_statu;
+////			TakeBulletState=BULLET_ACQUIRE;
+////		}	
+////		else if(swicth_Last_state==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_DOWN)	//暂时无用
+////		{
+////		}
+		
+		if(RC_Ctl.rc.ch3-1024>30&&auto_takebullet_statu==0)
 		{
-		PID_Chassis_Speed[i].k_i=CHASSIS_SPEED_PID_I*3;
-		PID_Chassis_Speed[i].i_sum_max=CHASSIS_SPEED_I_MAX*1.5f;
-		}
-		if(swicth_Last_state==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_DOWN)	//shoot_Motor_Data.tarP-shoot_Motor_Data.fdbP	//待加入
-		{
-			auto_takebullet_statu=!auto_takebullet_statu;
+			auto_takebullet_statu=1;
 			TakeBulletState=BULLET_ACQUIRE;
-		}	
-		else if(swicth_Last_state==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_DOWN)	//暂时无用
-		{
 		}
+		else if(RC_Ctl.rc.ch3-1024<-30&&auto_takebullet_statu==0)
+		{
+			auto_takebullet_statu=0;
+			TakeBulletState=BULLET_ACQUIRE;
+		}
+		
 		
 		
 		{	//自动取弹块
@@ -114,6 +126,7 @@ void TakeBullet_Control_Center(void)
 							if(servo_fdbstate[0]==0)//车身抬起函数	/
 							{
 								ViceControlData.valve[VALVE_BULLET_CLAMP]=0;
+								auto_takebullet_statu=0;
 							//	ViceControlData.valve[VALVE_BULLET_PROTRACT]=0;	//注释以便平移取下一颗弹
 							}//如果车身抬起且舵机到位，则松开夹紧，至此一个完整取弹结束
 						}
@@ -128,6 +141,11 @@ void TakeBullet_Control_Center(void)
 				{
 					ViceControlData.valve[VALVE_BULLET_CLAMP]=0;
 				//	ViceControlData.valve[VALVE_BULLET_PROTRACT]=0;	//注释以便平移取下一颗弹
+				}
+				
+				if(valve_fdbstate[VALVE_BULLET_PROTRACT]==0)
+				{
+					SetCheck_GripLift(1);
 				}
 			}
 		}
@@ -154,122 +172,118 @@ void TakeBullet_Control_Center(void)
 //			
 //		}
 		
-		
-		
-		
-/******************************************************************
-以下三个for为反馈假设检测方案
-分别为：
-1.上升，下降沿的触发时间记录
-2.根据触发时间的推演反馈值计算
-3.数据迭代
-******************************************************************/
-
-		for(int i=0;i<6;i++)	//触发时间块
-		{
-			if(valve_last[i]==0&&ViceControlData.valve[i]==1)	//伸出触发
-			{
-				valve_startGOOD_time[i]=time_1ms_count;
-			}
-			else if(valve_last[i]==1&&ViceControlData.valve[i]==0)//收回触发
-			{
-				valve_startPOOR_time[i]=time_1ms_count;
-			}
-			
-			if(i<2)
-			{
-				if(servo_last[i]==0&&ViceControlData.servo[i]==1)
-				{
-					servo_startGOOD_time[i]=time_1ms_count;
-				}
-				else if(servo_last[i]==1&&ViceControlData.servo[i]==0)
-				{
-					servo_startPOOR_time[i]=time_1ms_count;
-				}
-			}
-		}
-		
-		for(int i=0;i<6;i++)	//反馈计算位
-		{
-			if(ViceControlData.valve[i]==1&&time_1ms_count-valve_startGOOD_time[i]>valve_GOODdelay[i])	//本数值为启动至到位延时，暂统一定为1000ms
-			{
-				valve_fdbstate[i]=1;
-			}
-			else if(ViceControlData.valve[i]==0&&time_1ms_count-valve_startPOOR_time[i]>valve_POORdelay[i])	//本数值为收回至到位延时，暂统一定为1000ms
-			{
-				valve_fdbstate[i]=0;
-			}
-			
-			if(i<2)
-			{
-				if(ViceControlData.servo[i]==1&&time_1ms_count-servo_startGOOD_time[i]>servo_GOODdelay[i])	//本数值为启动至到位延时，暂统一定为1000ms
-				{
-					servo_fdbstate[i]=1;
-				}
-				else if(ViceControlData.servo[i]==0&&time_1ms_count-servo_startPOOR_time[i]>servo_POORdelay[i])	//本数值为收回至到位延时，暂统一定为1000ms
-				{
-					servo_fdbstate[i]=0;
-				}
-			}
-		}
-		
-		for(int i=0;i<6;i++)	//迭代块
-		{
-			valve_last[i]=ViceControlData.valve[i];
-			if(i<2)	servo_last[i]=ViceControlData.servo[i];
-		}
-////////////////////////////////////////////////////////////////////////////////////////////块结束标志
-		
-		
-		//舵机执行块	//电磁阀在副板执行
-		if(ViceControlData.servo[0]==0)
-		{
-			if(pwm_l_t-STEER_UP_L_INIT>0.01f)
-			{
-				pwm_l_t-=5;
-			}
-			else
-			{
-				pwm_l_t=STEER_UP_L_INIT;
-			}
-			
-			if(STEER_UP_R_INIT-pwm_r_t>0.01f)
-			{
-				pwm_r_t+=5;
-			}
-			else
-			{
-				pwm_r_t=STEER_UP_R_INIT;
-			}
-		}
-		else
-		{
-			if(STEER_UP_L_REVERSAL-pwm_l_t>0.01f)
-			{
-				pwm_l_t+=5;
-			}
-			else
-			{
-				pwm_l_t=STEER_UP_L_REVERSAL;
-			}
-			
-			if(pwm_r_t-STEER_UP_R_REVERSAL>0.01f)
-			{
-				pwm_r_t-=5;
-			}
-			else
-			{
-				pwm_r_t=STEER_UP_R_REVERSAL;
-			}
-		}
-		
-		
 	}
 	else
 	{
 		ViceControlData.valve[VALVE_BULLET_CLAMP]=0;
 		ViceControlData.valve[VALVE_BULLET_PROTRACT]=0;
 	}
+	
+	/******************************************************************
+以下三个for为反馈假设检测方案	//在任意时刻都进行检测
+分别为：
+1.上升，下降沿的触发时间记录
+2.根据触发时间的推演反馈值计算
+3.数据迭代
+******************************************************************/
+	for(int i=0;i<6;i++)	//触发时间块
+	{
+		if(valve_last[i]==0&&ViceControlData.valve[i]==1)	//伸出触发
+		{
+			valve_startGOOD_time[i]=time_1ms_count;
+		}
+		else if(valve_last[i]==1&&ViceControlData.valve[i]==0)//收回触发
+		{
+			valve_startPOOR_time[i]=time_1ms_count;
+		}
+		
+		if(i<2)
+		{
+			if(servo_last[i]==0&&ViceControlData.servo[i]==1)
+			{
+				servo_startGOOD_time[i]=time_1ms_count;
+			}
+			else if(servo_last[i]==1&&ViceControlData.servo[i]==0)
+			{
+				servo_startPOOR_time[i]=time_1ms_count;
+			}
+		}
+	}
+	
+	for(int i=0;i<6;i++)	//反馈计算位
+	{
+		if(ViceControlData.valve[i]==1&&time_1ms_count-valve_startGOOD_time[i]>valve_GOODdelay[i])	//本数值为启动至到位延时，暂统一定为1000ms
+		{
+			valve_fdbstate[i]=1;
+		}
+		else if(ViceControlData.valve[i]==0&&time_1ms_count-valve_startPOOR_time[i]>valve_POORdelay[i])	//本数值为收回至到位延时，暂统一定为1000ms
+		{
+			valve_fdbstate[i]=0;
+		}
+		
+		if(i<2)
+		{
+			if(ViceControlData.servo[i]==1&&time_1ms_count-servo_startGOOD_time[i]>servo_GOODdelay[i])	//本数值为启动至到位延时，暂统一定为1000ms
+			{
+				servo_fdbstate[i]=1;
+			}
+			else if(ViceControlData.servo[i]==0&&time_1ms_count-servo_startPOOR_time[i]>servo_POORdelay[i])	//本数值为收回至到位延时，暂统一定为1000ms
+			{
+				servo_fdbstate[i]=0;
+			}
+		}
+	}
+	
+	for(int i=0;i<6;i++)	//迭代块
+	{
+		valve_last[i]=ViceControlData.valve[i];
+		if(i<2)	servo_last[i]=ViceControlData.servo[i];
+	}
+////////////////////////////////////////////////////////////////////////////////////////////块结束标志
+	
+	
+	//舵机执行块	//电磁阀在副板执行
+	if(ViceControlData.servo[0]==0)
+	{
+		if(pwm_l_t-STEER_UP_L_INIT>0.01f)
+		{
+			pwm_l_t-=5;
+		}
+		else
+		{
+			pwm_l_t=STEER_UP_L_INIT;
+		}
+		
+		if(STEER_UP_R_INIT-pwm_r_t>0.01f)
+		{
+			pwm_r_t+=5;
+		}
+		else
+		{
+			pwm_r_t=STEER_UP_R_INIT;
+		}
+	}
+	else
+	{
+		if(STEER_UP_L_REVERSAL-pwm_l_t>0.01f)
+		{
+			pwm_l_t+=5;
+		}
+		else
+		{
+			pwm_l_t=STEER_UP_L_REVERSAL;
+		}
+		
+		if(pwm_r_t-STEER_UP_R_REVERSAL>0.01f)
+		{
+			pwm_r_t-=5;
+		}
+		else
+		{
+			pwm_r_t=STEER_UP_R_REVERSAL;
+		}
+	}
+	
 	
 	swicth_Last_state=RC_Ctl.rc.switch_right;
 	
@@ -278,7 +292,29 @@ void TakeBullet_Control_Center(void)
 }
 
 
-#define LIFT_DISTANCE_GRIPBULLET	630	//夹弹药箱时高度
+u8 SetCheck_TakeBullet_TakeBack_statu=0;	//切出取弹保护执行标志位
+void SetCheck_TakeBullet_TakeBack(void)	//切出取弹机构回位保护
+{
+	if(SetCheck_TakeBullet_TakeBack_statu==1)//当状态为更新到1
+	{
+		ViceControlData.valve[VALVE_BULLET_CLAMP]=0;
+		ViceControlData.valve[VALVE_BULLET_PROTRACT]=0;
+		
+		if(valve_fdbstate[VALVE_BULLET_PROTRACT]==0)
+		{
+			SetCheck_FrontLift(0);//切出保护
+			SetCheck_BackLift(0);
+			if(SetCheck_FrontLift(0)==1&&SetCheck_BackLift(0)==1)
+				SetCheck_TakeBullet_TakeBack_statu=0;
+//			return 1;
+		}
+	}
+//	return 0;
+}
+
+
+
+#define LIFT_DISTANCE_GRIPBULLET	550	//夹弹药箱时高度
 #define LIFT_DISTANCE_DISGRIPBULLET	1270	//拔起来后弹药箱高度
 #define LIFT_DISTANCE_SLOPEBACKBULLET	1270	//倾斜时后腿高度
 #define LIFT_DISTANCE_SLOPEFRONTBULLET	1270	//倾斜时前腿高度

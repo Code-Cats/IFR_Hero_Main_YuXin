@@ -208,6 +208,7 @@ s16 Pitch_output_offset(s32 pitch_tarP);	//克服云台pitch轴非线性力及非对称性的补
 void Yun_Task(void);	//云台控制任务 
 void Yun_Control_External_Solution(void);	//外置反馈方案
 void Yun_Control_Inscribe_Solution(void);	//内接反馈方案
+void Yun_WorkState_Turn_Task(void);	//模式切换时云台转向任务
 
 s32 t_yun_yaw_tarV(s32 now_V);	//对速度的一阶滞后滤波
 
