@@ -28,7 +28,7 @@ void BSP_Init(void)
 	 TIM6_Configuration();
 	 CAN1_Motors_Config();
 	 CAN2_Motors_Config();
-  delay_ms(1600);
+  delay_ms(1600+15000);
 	 TIM6_Start();			
 }
 

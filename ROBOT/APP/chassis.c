@@ -32,7 +32,7 @@ float yaw_follow_error=0;	//弧度制必须浮点	//这里在云台那里扭腰部分会用到
 /*************************************************************/
 
 
-#define WAIST_RANGE 750
+#define WAIST_RANGE 780//750
 #define K_SPEED 10
 s32 t_Vw_PID=0;
 s32 yaw_follow_tarP=YAW_INIT_DEFINE;
@@ -93,7 +93,7 @@ void Remote_Task(void)
 			case 0:
 			{
 				YAW_INIT=yaw_init_def-WAIST_RANGE;
-				if(abs(YAW_INIT-yunMotorData.yaw_fdbP)<22)
+				if(abs(YAW_INIT-yunMotorData.yaw_fdbP)<45)
 				{
 					turn_flag=1;
 				}
@@ -102,7 +102,7 @@ void Remote_Task(void)
 			case 1:
 			{
 				YAW_INIT=yaw_init_def+WAIST_RANGE;
-				if(abs(YAW_INIT-yunMotorData.yaw_fdbP)<22)
+				if(abs(YAW_INIT-yunMotorData.yaw_fdbP)<45)
 				{
 					turn_flag=0;
 				}

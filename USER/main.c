@@ -5,7 +5,7 @@ int main(void)
 {
 	delay_ms(1500);
 	SetWorkState(CHECK_STATE);	//启动后默认自检状态	//后续状态切换不在主函数进行
-	delay_ms(500+16000);
+	delay_ms(500+0);	//将这个延时移到了BSP
 	BSP_Init();	//板载外设初始化	//此时定时器启动，开始计时
 	SetWorkState(CHECK_STATE);	//进入自检状态
 	delay_ms(100);

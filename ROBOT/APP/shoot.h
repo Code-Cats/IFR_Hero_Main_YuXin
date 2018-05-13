@@ -122,9 +122,10 @@ void RC_Control_Shoot(u8* fri_state);
 void Shoot_Instruction(void);	//发弹指令模块
 void Shoot_Task(void); 
 void Shoot_Feedback_Deal(SHOOT_DATA *shoot_data,SHOOT_MOTOR_DATA *shoot_motor_data,CanRxMsg *msg);
-void Prevent_Jam(SHOOT_DATA * shoot_data,SHOOT_MOTOR_DATA * shoot_motor_Data);	//防卡弹程序	//同时包含防鸡蛋的功能	//放在tarP计算出之后
+void Prevent_Jam_Down(SHOOT_DATA * shoot_data,SHOOT_MOTOR_DATA * shoot_motor_Data);	//防卡弹程序	//同时包含防鸡蛋的功能	//放在tarP计算出之后
+void Prevent_Jam_Up(SHOOT_DATA * shoot_data,SHOOT_MOTOR_DATA * shoot_motor_Data);	//防卡弹程序	//同时包含防鸡蛋的功能	//放在tarP计算出之后
 void Shoot_Frequency_Limit(int* ferquency,u16 rate,u16 heat);	//m/s为单位
 
-
+u8 Shoot_Heat_Limit(u16 heating,u8 level);	//限制热量
 
 #endif

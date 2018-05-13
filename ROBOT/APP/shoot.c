@@ -31,7 +31,7 @@ void Shoot_Task(void)	//定时频率：1ms
 
 
 
-		Friction_Send=800-(800-1845)*Friction_State;	//1888对应射速20,1800-14	1830-14.7
+		Friction_Send=800-(800-1845)*Friction_State;	//1888对应射速20,1800-14	1830-14.7	1840-15.1（5.14）	1850最高16，最低15		//经过观察，可能和电压有关系，满电时1860为17.7，空电为15.7
 	
 ////////////////	if(swicth_Last_state==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_UP)
 /////临时///////	{
@@ -99,7 +99,8 @@ void Shoot_Instruction(void)	//发弹指令模块
 	
 	shoot_Data_Down.motor_tarP=((float)shoot_Data_Down.count*SINGLE_INCREMENT);	//新2006
 	shoot_Data_Up.motor_tarP=((float)shoot_Data_Up.count*SINGLE_INCREMENT);	//新2006
-	Prevent_Jam(&shoot_Data_Down,&shoot_Motor_Data_Down);
+	Prevent_Jam_Down(&shoot_Data_Down,&shoot_Motor_Data_Down);
+	Prevent_Jam_Up(&shoot_Data_Up,&shoot_Motor_Data_Up);
 }
 
 
@@ -107,10 +108,14 @@ void RC_Control_Shoot(u8* fri_state)
 {
 	static u8 swicth_Last_state=0;	//右拨杆
 	
-	if(RC_Ctl.rc.switch_left==RC_SWITCH_UP&&swicth_Last_state==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_DOWN)
+	if(Shoot_Heat_Limit(testPowerHeatData.shooterHeat1,1)==1)	//热量限制
 	{
-		shoot_Data_Down.count+=3;
-		shoot_Data_Up.count+=3;
+		if(RC_Ctl.rc.switch_left==RC_SWITCH_UP&&swicth_Last_state==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_DOWN)
+		{
+			shoot_Data_Down.count+=3;
+			shoot_Data_Up.count+=3;
+		}
+
 	}
 	
 	if(RC_Ctl.rc.switch_left==RC_SWITCH_UP&&swicth_Last_state==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_UP)
@@ -126,10 +131,14 @@ void PC_Control_Shoot(u8* fri_state)
 {
 	static u8 last_mouse_press_l=0;
 	static u8 last_keyX_state=0;
-	if(RC_Ctl.mouse.press_l==1&&last_mouse_press_l==0)	//shoot_Motor_Data.tarP-shoot_Motor_Data.fdbP	//待加入
+
+	if(Shoot_Heat_Limit(testPowerHeatData.shooterHeat1,1)==1)	//热量限制
 	{
-		shoot_Data_Down.count++;
-		shoot_Data_Up.count++;
+		if(RC_Ctl.mouse.press_l==1&&last_mouse_press_l==0)	//shoot_Motor_Data.tarP-shoot_Motor_Data.fdbP	//待加入
+		{
+			shoot_Data_Down.count++;
+			shoot_Data_Up.count++;
+		}
 	}
 	
 	if(last_keyX_state==0&&KeyBoardData[KEY_X].value==1)
@@ -191,7 +200,7 @@ void Shoot_Frequency_Set()
 
 
 /*********************************
-Shoot_Frequency_Limit
+Shoot_Frequency_Limit	//老版的V^2已弃用
 用于自动打击
 *********************************/
 #define UPPER_LIMIT_OF_HEAT 4500	//热量上限
@@ -220,6 +229,23 @@ void Shoot_Frequency_Limit(int* ferquency,u16 rate,u16 heat)	//m/s为单位
 
 
 
+u8 Shoot_Heat_Limit(u16 heating,u8 level)
+{
+	if(80*pow(2,level-1)-heating>40)	//testPowerHeatData.shooterHeat1
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+
+void Shoot_Speed_Adjust(u16 * pwm , u16 speed_fdb)	//射速闭环
+{
+	
+}
 
 /*********************************
 Shoot_Rate_Adjust
@@ -228,10 +254,10 @@ void Shoot_Rate_Adjust()
 {
 	
 }
-u32 jam_fdbP_record;
-#define JAM_FALLBACK 80	//100
+u32 jam_DownfdbP_record;
+#define JAM_FALLBACK 55	//100	//往回走的距离
 //对tarP的操作
-void Prevent_Jam(SHOOT_DATA * shoot_data,SHOOT_MOTOR_DATA * shoot_motor_Data)	//防卡弹程序	//同时包含防鸡蛋的功能	//放在tarP计算出之后
+void Prevent_Jam_Down(SHOOT_DATA * shoot_data,SHOOT_MOTOR_DATA * shoot_motor_Data)	//防卡弹程序	//同时包含防鸡蛋的功能	//放在tarP计算出之后
 {
 	static s32 deviation=0;	//偏差
 	static u8 jam_deal_state=0;
@@ -270,15 +296,15 @@ void Prevent_Jam(SHOOT_DATA * shoot_data,SHOOT_MOTOR_DATA * shoot_motor_Data)	//
 		{
 				case 1:
 				{
-					jam_fdbP_record=shoot_motor_Data->fdbP-JAM_FALLBACK;
-					shoot_data->motor_tarP=jam_fdbP_record;
+					jam_DownfdbP_record=shoot_motor_Data->fdbP-JAM_FALLBACK;
+					shoot_data->motor_tarP=jam_DownfdbP_record;
 					jam_deal_state=2;
 					break;
 				}
 				case 2:
 				{
-					shoot_data->motor_tarP=jam_fdbP_record;
-					if(abs(shoot_motor_Data->fdbP-jam_fdbP_record)<40)	//认为已经执行了动作	//50
+					shoot_data->motor_tarP=jam_DownfdbP_record;
+					if(abs(shoot_motor_Data->fdbP-jam_DownfdbP_record)<40)	//认为已经执行了动作	//50
 					{
 						jam_deal_state=3;
 					}
@@ -298,9 +324,78 @@ void Prevent_Jam(SHOOT_DATA * shoot_data,SHOOT_MOTOR_DATA * shoot_motor_Data)	//
 }   
 
 
+/*以下为上拨弹防卡弹*/
+u32 jam_UpfdbP_record;
+//对tarP的操作
+void Prevent_Jam_Up(SHOOT_DATA * shoot_data,SHOOT_MOTOR_DATA * shoot_motor_Data)	//防卡弹程序	//同时包含防鸡蛋的功能	//放在tarP计算出之后
+{
+	static s32 deviation=0;	//偏差
+	static u8 jam_deal_state=0;
+//	static u16 ferquency_last=0;
+	
+	deviation=shoot_motor_Data->tarP-shoot_motor_Data->fdbP;
+	
+//	if(shoot_data->frequency!=ferquency_last)
+//	{
+//		shoot_data->Jam.count=0;	//重置count
+//	}
+//	ferquency_last=shoot_data->frequency;	//迭代
+	
+	
+	if(abs(deviation)>6&&abs(shoot_motor_Data->fdbV)<10)	//期望速度不为0时位置未发生变化	//bug:频率刷新时需要刷新count	//手动射击将频率检测删除
+	{
+		shoot_data->Jam.count++;
+	}
+	else
+	{
+		shoot_data->Jam.count=0;
+	}
+	
+//	if(shoot_data->cycle!=0)
+//	{
+		if(shoot_data->Jam.count>100&&shoot_data->Jam.sign==0)	//超出非正常时间	//且仅执行一次
+		{
+			 shoot_data->Jam.sign=1;	//标记卡弹
+			 jam_deal_state=1;	//标记卡弹处理进程状态
+		}
+//	}
+	
+	if(shoot_data->Jam.sign==1)	//处理卡弹模块
+	{
+		switch (jam_deal_state)
+		{
+				case 1:
+				{
+					jam_UpfdbP_record=shoot_motor_Data->fdbP-JAM_FALLBACK;
+					shoot_data->motor_tarP=jam_UpfdbP_record;
+					jam_deal_state=2;
+					break;
+				}
+				case 2:
+				{
+					shoot_data->motor_tarP=jam_UpfdbP_record;
+					if(abs(shoot_motor_Data->fdbP-jam_UpfdbP_record)<40)	//认为已经执行了动作	//50
+					{
+						jam_deal_state=3;
+					}
+					break;
+				}
+				case 3:
+				{
+					shoot_data->Jam.sign=0;	//Reset
+					jam_deal_state=0;	//
+					shoot_data->count=shoot_data->count_fdb;	//重置子弹数据，防止鸡蛋	//？是否需要+-1？
+					shoot_data->Jam.count=0;	//重置卡弹检测数据，防止误检测
+					break;
+				}
+		}
+	}
+	
+} 
 
 
-u32 shoot_fdb_count=0;
+
+
 /*****************************************
 函数名称：Shoot_Feedback_Deal
 函数功能：拨弹电机反馈数据解析+处理
@@ -308,7 +403,6 @@ u32 shoot_fdb_count=0;
 *****************************************/
 void Shoot_Feedback_Deal(SHOOT_DATA *shoot_data,SHOOT_MOTOR_DATA *shoot_motor_data,CanRxMsg *msg)
 {
-	shoot_fdb_count++;
 	shoot_motor_data->fdbP_raw=(msg->Data[0]<<8)|msg->Data[1];//接收到的真实数据值  处理频率1KHz
 	shoot_motor_data->fdbV=(msg->Data[2]<<8)|msg->Data[3];
 	
