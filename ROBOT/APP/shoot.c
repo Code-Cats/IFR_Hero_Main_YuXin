@@ -254,8 +254,8 @@ void Shoot_Rate_Adjust()
 {
 	
 }
-u32 jam_DownfdbP_record;
-#define JAM_FALLBACK 55	//100	//往回走的距离
+s32 jam_DownfdbP_record;	//这里必须是s32不然在开始时卡单会死循环
+#define JAM_FALLBACK 60	//100	//往回走的距离
 //对tarP的操作
 void Prevent_Jam_Down(SHOOT_DATA * shoot_data,SHOOT_MOTOR_DATA * shoot_motor_Data)	//防卡弹程序	//同时包含防鸡蛋的功能	//放在tarP计算出之后
 {
@@ -296,7 +296,7 @@ void Prevent_Jam_Down(SHOOT_DATA * shoot_data,SHOOT_MOTOR_DATA * shoot_motor_Dat
 		{
 				case 1:
 				{
-					jam_DownfdbP_record=shoot_motor_Data->fdbP-JAM_FALLBACK;
+					jam_DownfdbP_record=shoot_motor_Data->fdbP-JAM_FALLBACK;	//可能会在开始时候卡弹有危险？
 					shoot_data->motor_tarP=jam_DownfdbP_record;
 					jam_deal_state=2;
 					break;
@@ -325,7 +325,7 @@ void Prevent_Jam_Down(SHOOT_DATA * shoot_data,SHOOT_MOTOR_DATA * shoot_motor_Dat
 
 
 /*以下为上拨弹防卡弹*/
-u32 jam_UpfdbP_record;
+s32 jam_UpfdbP_record;
 //对tarP的操作
 void Prevent_Jam_Up(SHOOT_DATA * shoot_data,SHOOT_MOTOR_DATA * shoot_motor_Data)	//防卡弹程序	//同时包含防鸡蛋的功能	//放在tarP计算出之后
 {

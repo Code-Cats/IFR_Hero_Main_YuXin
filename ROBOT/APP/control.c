@@ -343,6 +343,7 @@ void Work_State_Change(void)
 	Switch_Right_Last=RC_Ctl.rc.switch_right;
 }
 
+extern u8 auto_takebullet_statu;
 extern u8 SetCheck_TakeBullet_TakeBack_statu;	//ÇĞ³öÈ¡µ¯±£»¤Ö´ĞĞ±êÖ¾Î»	//·ÅÔÚÇ°Ãæextern
 void Work_State_Change_BackProtect(void)	//µ±´ÓÄ³Ò»×´Ì¬ÍË³öÊ±£¬È·±£¸Ã×´Ì¬µÄÒ»ÇĞÒÅÁô¿ØÖÆ¶¼¹éÎ»
 {
@@ -352,11 +353,13 @@ void Work_State_Change_BackProtect(void)	//µ±´ÓÄ³Ò»×´Ì¬ÍË³öÊ±£¬È·±£¸Ã×´Ì¬µÄÒ»ÇĞÒ
 	if(State_Record==TAKEBULLET_STATE&&GetWorkState()!=TAKEBULLET_STATE)	//ÍË³öÈ¡µ¯Ä£Ê½
 	{
 		SetCheck_TakeBullet_TakeBack_statu=1;	//Ë¢ĞÂ´¦
+		auto_takebullet_statu=0;	//ÖØÖÃ
 	}
 	
 	if(State_Record!=TAKEBULLET_STATE&&GetWorkState()==TAKEBULLET_STATE)
 	{
 		SetCheck_GripLift(1);	//ÉÏÉıµ½È¡µ¯¸ß¶È
+		auto_takebullet_statu=0;
 	}
 	SetCheck_TakeBullet_TakeBack();	//Ö´ĞĞ´¦
 	State_Record=GetWorkState();

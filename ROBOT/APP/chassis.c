@@ -93,7 +93,7 @@ void Remote_Task(void)
 			case 0:
 			{
 				YAW_INIT=yaw_init_def-WAIST_RANGE;
-				if(abs(YAW_INIT-yunMotorData.yaw_fdbP)<45)
+				if(abs(YAW_INIT-yunMotorData.yaw_fdbP)<50)
 				{
 					turn_flag=1;
 				}
@@ -102,7 +102,7 @@ void Remote_Task(void)
 			case 1:
 			{
 				YAW_INIT=yaw_init_def+WAIST_RANGE;
-				if(abs(YAW_INIT-yunMotorData.yaw_fdbP)<45)
+				if(abs(YAW_INIT-yunMotorData.yaw_fdbP)<50)
 				{
 					turn_flag=0;
 				}
@@ -245,11 +245,11 @@ void Remote_Task(void)
 	
 	
 	
-	if(RC_Ctl.rc.switch_left==RC_SWITCH_DOWN&&GetWorkState()!=ASCEND_STATE&&GetWorkState()!=TAKEBULLET_STATE)	//云台中心转向	//在自动取弹时不生效
-	{
-		float chassis_vw_record=Chassis_Vw;
-		Chassis_Vy-=(s16)(chassis_vw_record/1.7f);	//2
-	}
+//////////	if(RC_Ctl.rc.switch_left==RC_SWITCH_DOWN&&GetWorkState()!=ASCEND_STATE&&GetWorkState()!=TAKEBULLET_STATE)	//云台中心转向	//在自动取弹时不生效
+//////////	{	//等到CTRL写好了开启
+//////////		float chassis_vw_record=Chassis_Vw;
+//////////		Chassis_Vy-=(s16)(chassis_vw_record/1.7f);	//2
+//////////	}
 
 				
 	chassis_Data.lf_wheel_tarV=(Chassis_Vx+Chassis_Vy+Chassis_Vw)*K_SPEED;

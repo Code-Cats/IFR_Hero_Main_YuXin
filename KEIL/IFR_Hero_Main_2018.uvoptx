@@ -327,12 +327,22 @@
         <Ww>
           <count>24</count>
           <WinNumber>1</WinNumber>
-          <ItemText>lift_control_all_state,0x0A</ItemText>
+          <ItemText>testGameRobotState,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>25</count>
           <WinNumber>1</WinNumber>
-          <ItemText>testGameRobotState,0x0A</ItemText>
+          <ItemText>shoot_Data_Up,0x0A</ItemText>
+        </Ww>
+        <Ww>
+          <count>26</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>shoot_Motor_Data_Up,0x0A</ItemText>
+        </Ww>
+        <Ww>
+          <count>27</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>jam_deal_state</ItemText>
         </Ww>
       </WatchWindow1>
       <WatchWindow2>
@@ -485,6 +495,11 @@
           <count>29</count>
           <WinNumber>2</WinNumber>
           <ItemText>Steer_Image_state,0x0A</ItemText>
+        </Ww>
+        <Ww>
+          <count>30</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>jam_DownfdbP_record,0x0A</ItemText>
         </Ww>
       </WatchWindow2>
       <MemoryWindow1>

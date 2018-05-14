@@ -314,7 +314,7 @@ void SetCheck_TakeBullet_TakeBack(void)	//切出取弹机构回位保护
 
 
 
-#define LIFT_DISTANCE_GRIPBULLET	550	//夹弹药箱时高度
+#define LIFT_DISTANCE_GRIPBULLET	500	//夹弹药箱时高度
 #define LIFT_DISTANCE_DISGRIPBULLET	1270	//拔起来后弹药箱高度
 #define LIFT_DISTANCE_SLOPEBACKBULLET	1270	//倾斜时后腿高度
 #define LIFT_DISTANCE_SLOPEFRONTBULLET	1270	//倾斜时前腿高度
