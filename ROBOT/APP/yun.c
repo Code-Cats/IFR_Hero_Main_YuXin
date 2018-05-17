@@ -29,6 +29,8 @@ extern u8 Chassis_Follow_Statu;	//底盘跟随标志位
 extern volatile float yaw_follow_real_error;	//扭腰时的底盘跟随偏差
 extern float yaw_follow_error;	//普通时的底盘跟随误差
 
+extern u8 Replenish_Bullet_Statu;	//补弹状态位
+
 extern u32 time_1ms_count;
 s32 t_pitch____=0;
 s32 t_yaw___=0;
@@ -74,7 +76,7 @@ void Yun_Control_External_Solution(void)	//外置反馈方案
 		{
 			case CALI_SELF_STATE:
 			{
-				yunMotorData.yaw_tarP=(s32)(Gyro_Data.angle[2]*10+(YAW_INIT-yunMotorData.yaw_fdbP)*3600/8192);	//反馈放大10倍并将目标位置置为中点
+				yunMotorData.yaw_tarP=(Gyro_Data.angle[2]*10+(YAW_INIT-yunMotorData.yaw_fdbP)*3600/8192);	//反馈放大10倍并将目标位置置为中点
 				break;
 			}
 			case CORRECT_CHASSIS_STATE:
@@ -86,7 +88,11 @@ void Yun_Control_External_Solution(void)	//外置反馈方案
 	}
 	else if(GetWorkState()==TAKEBULLET_STATE&&Yun_WorkState_Turn180_statu==1)	//取弹模式且已经转了180°一直校准
 	{
-		yunMotorData.yaw_tarP=(s32)(Gyro_Data.angle[2]*10+(YAW_INIT-yunMotorData.yaw_fdbP)*3600/8192);	//反馈放大10倍并将目标位置置为中点
+		yunMotorData.yaw_tarP=(Gyro_Data.angle[2]*10+(YAW_INIT-yunMotorData.yaw_fdbP)*3600/8192);	//反馈放大10倍并将目标位置置为中点
+	}
+	else if(GetWorkState()==NORMAL_STATE&&Replenish_Bullet_Statu==1)
+	{
+		yunMotorData.yaw_tarP=(Gyro_Data.angle[2]*10+(YAW_INIT-yunMotorData.yaw_fdbP)*3600/8192);	//反馈放大10倍并将目标位置置为中点
 	}
 
 	
@@ -126,23 +132,23 @@ void Yun_Control_Inscribe_Solution(void)	//内接反馈方案
 //	yunMotorData.pitch_tarV=yun_pitch_tarV(yunMotorData.pitch_tarV);
 }
 
-void RC_Control_Yun(s32 * yaw_tarp,s32 * pitch_tarp)	//1000Hz
+void RC_Control_Yun(float * yaw_tarp,float * pitch_tarp)	//1000Hz
 {
 	if(time_1ms_count%15==0)	//66.67hz
 	{
-		yunMotorData.yaw_tarP-=(int32_t)((RC_Ctl.rc.ch2-1024)*20.0/660.0);
+		yunMotorData.yaw_tarP-=((RC_Ctl.rc.ch2-1024)*20.0/660.0);
 		yunMotorData.yaw_tarP=yunMotorData.yaw_tarP>1800?yunMotorData.yaw_tarP-3600:yunMotorData.yaw_tarP;	//过零点
 		yunMotorData.yaw_tarP=yunMotorData.yaw_tarP<-1800?yunMotorData.yaw_tarP+3600:yunMotorData.yaw_tarP;	//过零点
 	}
 	
-	yunMotorData.pitch_tarP=(int32_t)(-(RC_Ctl.rc.ch3-1024)*460.0/660.0)+PITCH_INIT;	//-50是因为陀螺仪水平时云台上扬
+	yunMotorData.pitch_tarP=(-(RC_Ctl.rc.ch3-1024)*460.0/660.0)+PITCH_INIT;	//-50是因为陀螺仪水平时云台上扬
 }
 
 
 #define YUN_UPMAX 430
 #define YUN_DOWNMAX 430	//偏差量
 extern KeyBoardTypeDef KeyBoardData[KEY_NUMS];
-void PC_Control_Yun(s32 * yaw_tarp,s32 * pitch_tarp)	//1000Hz	
+void PC_Control_Yun(float * yaw_tarp,float * pitch_tarp)	//1000Hz	
 {
 	static float yaw_tarp_float=0;
 	static float pitch_tarp_float=PITCH_INIT;
@@ -181,8 +187,8 @@ void PC_Control_Yun(s32 * yaw_tarp,s32 * pitch_tarp)	//1000Hz
 		pitch_tarp_float=pitch_tarp_float>(PITCH_INIT+500)?(PITCH_INIT+500):pitch_tarp_float;	//限制行程
 		pitch_tarp_float=pitch_tarp_float<(PITCH_INIT-650)?(PITCH_INIT-650):pitch_tarp_float;	//限制行程
 		
-		*yaw_tarp=(s32)yaw_tarp_float;
-		*pitch_tarp=(s32)pitch_tarp_float;
+		*yaw_tarp=yaw_tarp_float;
+		*pitch_tarp=pitch_tarp_float;
 	}
 }
 
@@ -202,7 +208,7 @@ void Yun_WorkState_Turn_Task(void)	//模式切换时云台转向任务	//当转向完成标志位为
 		Yun_WorkState_Turn180_statu=0;
 	}
 	
-	if(abs(yunMotorData.yaw_tarP-Gyro_Data.angle[2]*10)<1)	//5度范围认为到位
+	if(abs(yunMotorData.yaw_tarP-Gyro_Data.angle[2]*10)<2)	//2度范围认为到位
 	{
 		Yun_WorkState_Turn180_statu=1;	//置为1
 	}

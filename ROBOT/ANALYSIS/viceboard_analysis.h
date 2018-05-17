@@ -18,6 +18,7 @@ typedef struct
 {
 	u8 valve[6];
 	u8 servo[2];
+	u8 image_cut[2];	//英雄是第1位有效
 }ViceControlDataTypeDef;	//控制副板
 
 
@@ -45,7 +46,7 @@ typedef struct
 
 typedef struct
 {
-	u8 Infrare[4];
+	u8 Infrare[6];	//新加入两个红外
 	u8 Limit[4];
 }SensorDataTypeDef;	//经解析得到的传感器数据
 

@@ -175,13 +175,13 @@ typedef struct  __YUN_MOTOR_DATA__
 		int32_t   pitch_fdbP;  //俯仰轴电机
 		int32_t   pitch_fdbV;
 		int32_t   pitch_tarV;
-		int32_t   pitch_tarP;
+		float   pitch_tarP;	//现在以角度为单位
     int32_t   pitch_output;
 
 		int32_t   yaw_fdbP;  //航向轴电机
 		int32_t   yaw_fdbV;
 		int32_t   yaw_tarV;
-		int32_t   yaw_tarP;
+		float   yaw_tarP;
     int32_t   yaw_output;
 }YUN_MOTOR_DATA;
 
@@ -214,8 +214,8 @@ s32 t_yun_yaw_tarV(s32 now_V);	//对速度的一阶滞后滤波
 
 void __yun_yaw_offset(void);
 
-void RC_Control_Yun(s32 * yaw_tarp,s32 * pitch_tarp);	//1000Hz
-void PC_Control_Yun(s32 * yaw_tarp,s32 * pitch_tarp);	//1000Hz
+void RC_Control_Yun(float * yaw_tarp,float * pitch_tarp);	//1000Hz
+void PC_Control_Yun(float * yaw_tarp,float * pitch_tarp);	//1000Hz
 
 #endif
 

@@ -15,10 +15,14 @@ PID_GENERAL   PID_Shoot_Up_Speed=PID_SHOOT_SPEED_DEFAULT;
 
 extern u32 time_1ms_count;
 
+extern u8 auto_takebullet_statu;	//自动取弹标志位，此处用来自动拨弹
 
+extern KeyBoardTypeDef KeyBoardData[KEY_NUMS];
 
 u8 Friction_State=0;	//初始化不开启
-u16 Friction_Send=800;
+//const u16 FRICTION_INIT=800;
+u16 FRICTION_SHOOT=1845;	//发弹的PWM
+u16 Friction_Send=FRICTION_INIT;
 void Shoot_Task(void)	//定时频率：1ms
 { 
 	
@@ -31,7 +35,7 @@ void Shoot_Task(void)	//定时频率：1ms
 
 
 
-		Friction_Send=800-(800-1845)*Friction_State;	//1888对应射速20,1800-14	1830-14.7	1840-15.1（5.14）	1850最高16，最低15		//经过观察，可能和电压有关系，满电时1860为17.7，空电为15.7
+		Friction_Send=FRICTION_INIT-(FRICTION_INIT-FRICTION_SHOOT)*Friction_State;	//1888对应射速20,1800-14	1830-14.7	1840-15.1（5.14）	1850最高16，最低15		//经过观察，可能和电压有关系，满电时1860为17.7，空电为15.7
 	
 ////////////////	if(swicth_Last_state==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_UP)
 /////临时///////	{
@@ -90,49 +94,73 @@ u16 shoot_time_measure(const s16 tarP,const s16 fbdP,const u8 last_mouse_press_l
 //或者将发弹逻辑改为基于增量式方法的频率控制
 void Shoot_Instruction(void)	//发弹指令模块
 {
-	
+	static u8 auto_takebullet_statu_last=0;
+	static WorkState_e State_Record=CHECK_STATE;
 	PC_Control_Shoot(&Friction_State);
 	RC_Control_Shoot(&Friction_State);
 
 	
+	if(GetWorkState()!=TAKEBULLET_STATE&&auto_takebullet_statu_last==1&&auto_takebullet_statu==0)	//取完弹自动拨下3颗	//提前退出取弹模式
+	{
+		shoot_Data_Up.count+=3;
+	}
+	if(State_Record==TAKEBULLET_STATE&&GetWorkState()!=TAKEBULLET_STATE&&auto_takebullet_statu==0)	//正常退出取弹模式
+	{
+		shoot_Data_Up.count+=3;
+	}
+	
+	if((auto_takebullet_statu_last==0&&auto_takebullet_statu==1)||KeyBoardData[KEY_R].value==1)	//开摩擦轮
+	{
+		Friction_State=1;	//自动开摩擦轮
+	}
 //	shoot_time_record=shoot_time_measure(shoot_Data_Down.count,shoot_Data_Down.count_fdb,last_mouse_press_l);////////////////////////////////
 	
 	shoot_Data_Down.motor_tarP=((float)shoot_Data_Down.count*SINGLE_INCREMENT);	//新2006
 	shoot_Data_Up.motor_tarP=((float)shoot_Data_Up.count*SINGLE_INCREMENT);	//新2006
 	Prevent_Jam_Down(&shoot_Data_Down,&shoot_Motor_Data_Down);
 	Prevent_Jam_Up(&shoot_Data_Up,&shoot_Motor_Data_Up);
+	
+	auto_takebullet_statu_last=auto_takebullet_statu;
+	State_Record=GetWorkState();
 }
 
-
+u8 Shoot_RC_Control_State=1;	//当进行按键操作后，进行RC屏蔽
 void RC_Control_Shoot(u8* fri_state)
 {
 	static u8 swicth_Last_state=0;	//右拨杆
-	
-	if(Shoot_Heat_Limit(testPowerHeatData.shooterHeat1,1)==1)	//热量限制
+	if(Shoot_RC_Control_State==1)
 	{
-		if(RC_Ctl.rc.switch_left==RC_SWITCH_UP&&swicth_Last_state==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_DOWN)
+		if(Shoot_Heat_Limit(testPowerHeatData.shooterHeat1,1)==1&&*fri_state==1)	//热量限制
 		{
-			shoot_Data_Down.count+=3;
-			shoot_Data_Up.count+=3;
-		}
+			if(RC_Ctl.rc.switch_left==RC_SWITCH_UP&&swicth_Last_state==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_DOWN)
+			{
+				shoot_Data_Down.count+=3;
+				shoot_Data_Up.count+=3;
+			}
 
-	}
-	
-	if(RC_Ctl.rc.switch_left==RC_SWITCH_UP&&swicth_Last_state==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_UP)
-	{
-		*fri_state=!*fri_state;
+		}
+		
+		if(RC_Ctl.rc.switch_left==RC_SWITCH_UP&&swicth_Last_state==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_UP)
+		{
+			*fri_state=!*fri_state;
+		}
 	}
 	swicth_Last_state=RC_Ctl.rc.switch_right;
 }
 
 
-extern KeyBoardTypeDef KeyBoardData[KEY_NUMS];
 void PC_Control_Shoot(u8* fri_state)
 {
 	static u8 last_mouse_press_l=0;
 	static u8 last_keyX_state=0;
 
-	if(Shoot_Heat_Limit(testPowerHeatData.shooterHeat1,1)==1)	//热量限制
+	if(RC_Ctl.mouse.press_l==1||RC_Ctl.mouse.press_r==1||RC_Ctl.mouse.x>1||RC_Ctl.mouse.y>1)
+	{
+		Shoot_RC_Control_State=0;	//屏蔽RC，后期加入若PC失效临时启用RC的操作
+	}
+	
+	
+	if(Shoot_Heat_Limit(testPowerHeatData.shooterHeat1,1)==1&&*fri_state==1)	//热量限制
 	{
 		if(RC_Ctl.mouse.press_l==1&&last_mouse_press_l==0)	//shoot_Motor_Data.tarP-shoot_Motor_Data.fdbP	//待加入
 		{
@@ -255,7 +283,7 @@ void Shoot_Rate_Adjust()
 	
 }
 s32 jam_DownfdbP_record;	//这里必须是s32不然在开始时卡单会死循环
-#define JAM_FALLBACK 60	//100	//往回走的距离
+#define JAM_FALLBACK 34	//100	//往回走的距离
 //对tarP的操作
 void Prevent_Jam_Down(SHOOT_DATA * shoot_data,SHOOT_MOTOR_DATA * shoot_motor_Data)	//防卡弹程序	//同时包含防鸡蛋的功能	//放在tarP计算出之后
 {

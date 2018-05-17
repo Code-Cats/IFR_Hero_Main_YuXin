@@ -23,6 +23,7 @@ extern IslandAttitudeCorrectState_e IslandAttitude_Correct_State;	//登岛姿态自校
 extern ViceControlDataTypeDef ViceControlData;
 
 extern u8 Yun_WorkState_Turn180_statu;	//180旋转到位标志位，放在了上面
+extern u8 Replenish_Bullet_Statu;
 /*************************************************************/
 
 
@@ -45,6 +46,7 @@ u8 Chassis_Control_RCorPC=RC_CONTROL;
 
 void Remote_Task(void)
 {
+	static u8 chassis_follow_statu_last=0;	//记录上一次状态、目的是消除按下键盘触发不跟随模式和键盘控制模式有Vw残留的问题
 	
 	if(GetWorkState()!=ASCEND_STATE&&GetWorkState()!=DESCEND_STATE)	//其他状态下均收起导轮	//需要改进，在切换到手动模式时不收导轮
 	{
@@ -66,7 +68,7 @@ void Remote_Task(void)
 		{
 			Chassis_Control_RCorPC=PC_CONTROL;
 		}
-		else if(abs(RC_Ctl.rc.ch0-1024)>3||abs(RC_Ctl.rc.ch1-1024)>3)
+		else if(abs(RC_Ctl.rc.ch0-1024)>3||abs(RC_Ctl.rc.ch1-1024)>3||abs(RC_Ctl.rc.ch2-1024)>3)
 		{
 			Chassis_Control_RCorPC=RC_CONTROL;
 		}
@@ -136,8 +138,7 @@ void Remote_Task(void)
 	
 	
 	
-	
-	if(GetWorkState()==NORMAL_STATE||GetWorkState()==WAIST_STATE)	//底盘跟随标志位定义块	//取弹不受云台控
+	if((GetWorkState()==NORMAL_STATE||GetWorkState()==WAIST_STATE)&&Replenish_Bullet_Statu==0)	//底盘跟随标志位定义块	//取弹、补弹不受云台控
 	{
 		Chassis_Follow_Statu=1;
 	}
@@ -145,7 +146,7 @@ void Remote_Task(void)
 	{
 		Chassis_Follow_Statu=1;
 	}
-	else if(GetWorkState()==TAKEBULLET_STATE&&Yun_WorkState_Turn180_statu==1)	//取弹转向后不受控
+	else if((GetWorkState()==TAKEBULLET_STATE&&Yun_WorkState_Turn180_statu==1)||Replenish_Bullet_Statu==1)	//取弹转向后不受控+补弹位=1时
 	{
 		Chassis_Follow_Statu=0;
 	}
@@ -154,6 +155,13 @@ void Remote_Task(void)
 //		Chassis_Follow_Statu=0;
 //	}
 	
+	
+	if(chassis_follow_statu_last!=Chassis_Follow_Statu)
+	{
+		Chassis_Vw=0;	//防止Vw残留的问题
+	}
+	
+	chassis_follow_statu_last=Chassis_Follow_Statu;
 	
 	
 	if(Chassis_Follow_Statu==1)	//底盘跟随部分解算
@@ -292,7 +300,7 @@ void RC_Control_Chassis(void)
 {
 	static s16 Chassis_Vx_last=0;
 	static s16 Chassis_Vy_last=0;
-	if(GetWorkState()==NORMAL_STATE||GetWorkState()==WAIST_STATE)
+	if((GetWorkState()==NORMAL_STATE||GetWorkState()==WAIST_STATE)&&Replenish_Bullet_Statu==0)	//如果在普通模式且补弹=0
 	{
 		if(time_1ms_count%1==0)
 		{
@@ -312,7 +320,7 @@ void RC_Control_Chassis(void)
 //		Chassis_Vx=RC_Ctl.rc.ch1-1024;	//代替为斜坡函数
 		Chassis_Vx_last=Chassis_Vx;
 	}
-	else if(GetWorkState()==TAKEBULLET_STATE)	//取弹时反向
+	else if(GetWorkState()==TAKEBULLET_STATE||Replenish_Bullet_Statu==1)	//取弹时反向，补弹时反向
 	{
 		if(time_1ms_count%1==0)
 		{
@@ -324,7 +332,7 @@ void RC_Control_Chassis(void)
 	
 	if(time_1ms_count%1==0)
 	{
-		if(GetWorkState()!=TAKEBULLET_STATE)	//取弹时反向
+		if(GetWorkState()!=TAKEBULLET_STATE&&Replenish_Bullet_Statu==0)	//取弹时反向
 		{
 			if(RC_Ctl.rc.ch0-1024-Chassis_Vy_last>1&&RC_Ctl.rc.ch0-1024>10)
 			{
@@ -347,7 +355,7 @@ void RC_Control_Chassis(void)
 	}
 	Chassis_Vy_last=Chassis_Vy;
 	
-	if(GetWorkState()==TAKEBULLET_STATE)	//取弹模式
+	if(GetWorkState()==TAKEBULLET_STATE||Replenish_Bullet_Statu==1)	//取弹模式
 	{
 		Chassis_Vw=(RC_Ctl.rc.ch2-1024)*300/660;
 	}

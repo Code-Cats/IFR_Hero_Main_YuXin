@@ -16,12 +16,13 @@ PID_GENERAL PID_Lift_Position[4]={PID_LIFT_POSITION_DEFAULT,PID_LIFT_POSITION_DE
 PID_GENERAL PID_Lift_Speed[4]={PID_LIFT_SPEED_DEFAULT,PID_LIFT_SPEED_DEFAULT,PID_LIFT_SPEED_DEFAULT,PID_LIFT_SPEED_DEFAULT};
 
 
-
+extern KeyBoardTypeDef KeyBoardData[KEY_NUMS];
 extern RC_Ctl_t RC_Ctl;
 extern LIFT_POSITION_ENCODER lift_position_encoder[4];
 extern GYRO_DATA Gyro_Data;
 extern YUN_MOTOR_DATA 	yunMotorData;
 extern CHASSIS_DATA chassis_Data;
+extern ViceControlDataTypeDef ViceControlData;
 
 extern SHOOT_DATA shoot_Data_Down;
 extern SHOOT_MOTOR_DATA shoot_Motor_Data_Down;
@@ -34,6 +35,7 @@ extern s16 Chassis_Vx;
 extern s16 Chassis_Vy;
 extern s16 Chassis_Vw;
 extern u8 cali_state_Entirety_PID;
+extern u8 Replenish_Bullet_Statu;
 
 s16 lift_tem=0;
 s16 LIFT_tarP=0;
@@ -91,7 +93,7 @@ if(time_1ms_count%1000==0)
 					SetWorkState(PREPARE_STATE);	//此步意味自检通过，一切硬件模块正常
 					//数据初始化↓
 					yunMotorData.pitch_tarP=PITCH_INIT;	//-50是因为陀螺仪水平时云台上扬	//陀螺仪正方向云台向下
-					yunMotorData.yaw_tarP=(s32)(Gyro_Data.angle[2]*10+(YAW_INIT-yunMotorData.yaw_fdbP)*3600/8192);	//反馈放大10倍并将目标位置置为中点
+					yunMotorData.yaw_tarP=(Gyro_Data.angle[2]*10+(YAW_INIT-yunMotorData.yaw_fdbP)*3600/8192);	//反馈放大10倍并将目标位置置为中点
 				}
 			}
 			break;
@@ -120,6 +122,7 @@ if(time_1ms_count%1000==0)
 		}
 		case NORMAL_STATE:	//正常操作模式
 		{
+			Replenish_Bullet_Task(KeyBoardData[KEY_R].value);
 			Teleconltroller_Data_protect();	//遥控器数据保护
 			Yun_Task();	//开启云台处理
 			Remote_Task();	//执行移动
@@ -151,6 +154,7 @@ if(time_1ms_count%1000==0)
 		}
 		case DESCEND_STATE:	//自动下岛模式
 		{
+			ViceControlData.image_cut[0]=1;	//高电平
 			Descend_Control_Center();
 			Yun_Task();	//开启云台处理
 			Remote_Task();	//执行移动
@@ -334,7 +338,7 @@ void Work_State_Change(void)
 		{
 			if(Error_Check.statu[LOST_DBUS]==0||abs(RC_Ctl.rc.ch0+RC_Ctl.rc.ch1+RC_Ctl.rc.ch2+RC_Ctl.rc.ch3-1024*4)>8)
 			{
-				yunMotorData.yaw_tarP=(s32)(Gyro_Data.angle[2]*10+(YAW_INIT-yunMotorData.yaw_fdbP)*3600/8192);	//重置云台目标位置
+				yunMotorData.yaw_tarP=(Gyro_Data.angle[2]*10+(YAW_INIT-yunMotorData.yaw_fdbP)*3600/8192);	//重置云台目标位置
 				SetWorkState(NORMAL_STATE);
 			}
 			break;
@@ -343,23 +347,32 @@ void Work_State_Change(void)
 	Switch_Right_Last=RC_Ctl.rc.switch_right;
 }
 
+
+extern u8 descend_valve_prepare_state;	//自动下岛电磁阀到位保护
+extern  u32 descend_valve_prepare_state_count;
+
 extern u8 auto_takebullet_statu;
 extern u8 SetCheck_TakeBullet_TakeBack_statu;	//切出取弹保护执行标志位	//放在前面extern
 void Work_State_Change_BackProtect(void)	//当从某一状态退出时，确保该状态的一切遗留控制都归位
 {
 	static WorkState_e State_Record=CHECK_STATE;
  
+	if(State_Record!=DESCEND_STATE&&GetWorkState()==DESCEND_STATE)
+	{
+		descend_valve_prepare_state=0;
+		descend_valve_prepare_state_count=0;
+	}
 	
 	if(State_Record==TAKEBULLET_STATE&&GetWorkState()!=TAKEBULLET_STATE)	//退出取弹模式
 	{
 		SetCheck_TakeBullet_TakeBack_statu=1;	//刷新处
-		auto_takebullet_statu=0;	//重置
+//		auto_takebullet_statu=0;	//重置//因为5.15现行逻辑是在等待取弹完成，又一次为检测，所以不能对其进行操作
 	}
 	
 	if(State_Record!=TAKEBULLET_STATE&&GetWorkState()==TAKEBULLET_STATE)
 	{
 		SetCheck_GripLift(1);	//上升到取弹高度
-		auto_takebullet_statu=0;
+		auto_takebullet_statu=0;	//这里待定影不影响
 	}
 	SetCheck_TakeBullet_TakeBack();	//执行处
 	State_Record=GetWorkState();

@@ -1,6 +1,6 @@
 #include "pwm.h"
 
-#define STEER_UP_L_INIT 500//1210	//2500
+#define STEER_UP_L_INIT 560//500//1210	//2500
 #define STEER_UP_R_INIT 2500//1950	//500
 /***********************************
 º¯ÊýÃû³Æ£ºPWM_Config

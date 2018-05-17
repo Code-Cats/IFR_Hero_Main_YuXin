@@ -5,6 +5,8 @@
 
 TakeBulletState_e TakeBulletState=BULLET_ACQUIRE;	//（自动）取弹状态位
 
+u8 take_bullet_auto_move_statu=0;	//取弹自动平移标志，在每一个自动取弹结束周期结束时触发，仅在连续取弹时触发，期间需要暂时屏蔽chassis的RC控制，执行完成自动归零	//暂时未加，因为弹药箱无法保证在正常归位
+u8 take_bullet_end_state=0;	//一次取弹结束的标志位	//作用是不管切出到什么状态，取弹能够顺利完成，其他比如舵机等等不受该控制，切出取弹保护预计需要跟随修改
 
 extern u32 time_1ms_count;
 extern KeyBoardTypeDef KeyBoardData[KEY_NUMS];
@@ -13,9 +15,9 @@ extern ViceControlDataTypeDef ViceControlData;
 extern PID_GENERAL PID_Chassis_Speed[4];
 
 
-#define STEER_UP_L_INIT 500//
+#define STEER_UP_L_INIT 560//
 #define STEER_UP_R_INIT 2500//1950	//
-#define STEER_UP_L_REVERSAL 1700//
+#define STEER_UP_L_REVERSAL 1750//
 #define STEER_UP_R_REVERSAL 1300//
 float pwm_l_t=STEER_UP_L_INIT;
 float pwm_r_t=STEER_UP_R_INIT;
@@ -25,15 +27,15 @@ u8 valve_fdbstate[6]={0};	//记录是否伸出的反馈标志
 u8 servo_fdbstate[2]={0};
 const u32 valve_GOODdelay[6]={300,1200,300,1000,1000,1000};	//待加入，延时参数
 const u32 valve_POORdelay[6]={300,1200,300,1000,1000,1000};	//待加入，延时参数
-const u32 servo_GOODdelay[2]={2700,1000};	//延时参数	//第一段为2000是将子弹落下的延时也加进去了，因为舵机翻转和子弹下落必须是连在一体的
-const u32 servo_POORdelay[2]={600,600};	//延时参数
+const u32 servo_GOODdelay[2]={2500,800};	//延时参数	//第一段为2500是将子弹落下的延时也加进去了，因为舵机翻转和子弹下落必须是连在一体的
+const u32 servo_POORdelay[2]={500,500};	//延时参数
 
 
 //#define VALVE_ISLAND 0		//电磁阀控制位定义
 //#define VALVE_BULLET_PROTRACT 1	//前伸
 //#define VALVE_BULLET_CLAMP 2	//夹紧
 
-u8 auto_takebullet_statu=0;
+u8 auto_takebullet_statu=0;	//不能在切出时置0，因为要等待一个流程完整结束
 void TakeBullet_Control_Center(void)
 {
 	static u8 swicth_Last_state=0;	//右拨杆
@@ -51,7 +53,7 @@ void TakeBullet_Control_Center(void)
 	static u32 servo_startPOOR_time[2]={0};	//记录逆向触发时间	//保持与工程车兼容性
 	
 
-	if(GetWorkState()==TAKEBULLET_STATE&&RC_Ctl.rc.switch_left==RC_SWITCH_DOWN)
+	if(1)	//GetWorkState()==TAKEBULLET_STATE&&RC_Ctl.rc.switch_left==RC_SWITCH_DOWN	//将条件注释移到标志位受控处，根据标志位执行处不受影响
 	{
 //		for(int i=0;i<4;i++)
 //		{
@@ -66,16 +68,18 @@ void TakeBullet_Control_Center(void)
 ////		else if(swicth_Last_state==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_DOWN)	//暂时无用
 ////		{
 ////		}
-		
-		if(RC_Ctl.rc.ch3-1024>30&&auto_takebullet_statu==0)
+		if(GetWorkState()==TAKEBULLET_STATE&&RC_Ctl.rc.switch_left==RC_SWITCH_DOWN)
 		{
-			auto_takebullet_statu=1;
-			TakeBulletState=BULLET_ACQUIRE;
-		}
-		else if(RC_Ctl.rc.ch3-1024<-30&&auto_takebullet_statu==0)
-		{
-			auto_takebullet_statu=0;
-			TakeBulletState=BULLET_ACQUIRE;
+			if(RC_Ctl.rc.ch3-1024>30&&auto_takebullet_statu==0)
+			{
+				auto_takebullet_statu=1;
+				TakeBulletState=BULLET_ACQUIRE;
+			}
+			else if(RC_Ctl.rc.ch3-1024<-30&&auto_takebullet_statu==0)
+			{
+				auto_takebullet_statu=0;
+				TakeBulletState=BULLET_ACQUIRE;
+			}
 		}
 		
 		
@@ -134,7 +138,7 @@ void TakeBullet_Control_Center(void)
 					}
 				}
 			}
-			else
+			else if(GetWorkState()==TAKEBULLET_STATE)	//因为改变了结构，该函数一直执行，所以在完成了完整取弹流程且不在取弹模式后，不应该执行这里,因为fi else的逻辑，这里仅会在auto=0时执行
 			{
 				ViceControlData.servo[0]=0;
 				if(servo_fdbstate[0]==0)
@@ -295,7 +299,7 @@ void TakeBullet_Control_Center(void)
 u8 SetCheck_TakeBullet_TakeBack_statu=0;	//切出取弹保护执行标志位
 void SetCheck_TakeBullet_TakeBack(void)	//切出取弹机构回位保护
 {
-	if(SetCheck_TakeBullet_TakeBack_statu==1)//当状态为更新到1
+	if(SetCheck_TakeBullet_TakeBack_statu==1&&auto_takebullet_statu==0)//当状态为更新到1
 	{
 		ViceControlData.valve[VALVE_BULLET_CLAMP]=0;
 		ViceControlData.valve[VALVE_BULLET_PROTRACT]=0;
@@ -314,10 +318,10 @@ void SetCheck_TakeBullet_TakeBack(void)	//切出取弹机构回位保护
 
 
 
-#define LIFT_DISTANCE_GRIPBULLET	500	//夹弹药箱时高度
-#define LIFT_DISTANCE_DISGRIPBULLET	1270	//拔起来后弹药箱高度
-#define LIFT_DISTANCE_SLOPEBACKBULLET	1270	//倾斜时后腿高度
-#define LIFT_DISTANCE_SLOPEFRONTBULLET	1270	//倾斜时前腿高度
+#define LIFT_DISTANCE_GRIPBULLET	490	//夹弹药箱时高度
+#define LIFT_DISTANCE_DISGRIPBULLET	1400	//拔起来后弹药箱高度
+#define LIFT_DISTANCE_SLOPEBACKBULLET	1400	//倾斜时后腿高度
+#define LIFT_DISTANCE_SLOPEFRONTBULLET	1400	//倾斜时前腿高度
 extern LIFT_DATA lift_Data;
 
 u8 SetCheck_GripLift(u8 grip_state)	//是否与弹药箱平齐,grip抓住的意思	//0表示不抓住，即需要丢弹药箱或拔起弹药箱高度，1表示抓住，即需要夹紧弹药箱时的高度

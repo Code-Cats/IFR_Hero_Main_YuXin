@@ -533,6 +533,11 @@
               <FileType>1</FileType>
               <FilePath>..\ROBOT\APP\image_control.c</FilePath>
             </File>
+            <File>
+              <FileName>replenish_bullet.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\APP\replenish_bullet.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
