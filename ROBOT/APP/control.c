@@ -126,7 +126,7 @@ if(time_1ms_count%1000==0)
 			Teleconltroller_Data_protect();	//遥控器数据保护
 			Yun_Task();	//开启云台处理
 			Remote_Task();	//执行移动
-//			AutoChassisAttitude_Lift_V2(Chassis_GYRO[PITCH]);
+			AutoChassisAttitude_Lift_V2(Chassis_GYRO[PITCH]);	//再内部加模式限制和键位处理
 			Lift_Task();	//开启升降
 			Shoot_Task();
 			TakeBullet_Control_Center();	//取弹控制中心
@@ -973,7 +973,7 @@ void Chassis_Attitude_Angle_Convert(void)	//综合得出底盘姿态
 	float deviation_pitch=PITCH_GYRO_INIT-yunMotorData.pitch_fdbP;	//对于底盘来说，云台中值即是底盘在云台坐标系上的位置
 	float deviation_yaw=YAW_INIT-yunMotorData.yaw_fdbP;
 	//对yaw轴进行限制，标准过零（-180——+180）
-	Chassis_GYRO[PITCH]=-Gyro_Data.angle[PITCH]-deviation_pitch*360.0f/8192+1;	//因为云台电机位置反馈正方向与陀螺仪正方向相反pitch？-2
+	Chassis_GYRO[PITCH]=-Gyro_Data.angle[PITCH]-deviation_pitch*360.0f/8192;	//因为云台电机位置反馈正方向与陀螺仪正方向相反pitch？-2
 	Chassis_GYRO[ROLL]=Gyro_Data.angle[ROLL]-3;	//roll	-3为静止时补偿
 	Chassis_GYRO[YAW]=Gyro_Data.angle[YAW]+deviation_yaw*360.0f/8192;	//因为云台电机位置反馈正方向与陀螺仪正方向相同
  

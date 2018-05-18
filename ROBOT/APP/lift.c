@@ -4,6 +4,8 @@
 extern LIFT_DATA lift_Data;
 extern u32 time_1ms_count;
 
+extern KeyBoardTypeDef KeyBoardData[KEY_NUMS];
+
 #define AUTOCHASSIS_LIFT 12
 void AutoChassisAttitude_Lift(float chassis_pitch_raw)	//自动调整姿态	//pitch正方向为前上	//注意放在lift_task前面
 {
@@ -128,7 +130,7 @@ void AutoChassisAttitude_Lift_V2(float chassis_pitch_raw)	//自动调整姿态	//pitch
 	
 	chassis_pitch=chassis_pitch*(1-ka)+chassis_pitch_raw*ka;
 	
-	if(GetWorkState()==NORMAL_STATE)
+	if(GetWorkState()==NORMAL_STATE)	//加入CTRL控制   &&KeyBoardData[KEY_CTRL].value==1		//先不加入以便测试，后期必须加上
 	{
 		switch(Adjust_Statu)
 		{
@@ -139,11 +141,11 @@ void AutoChassisAttitude_Lift_V2(float chassis_pitch_raw)	//自动调整姿态	//pitch
 				lift_Data.rf_lift_tarP=LIFT_DISTANCE_FALL;
 				lift_Data.lb_lift_tarP=LIFT_DISTANCE_FALL;
 				lift_Data.rb_lift_tarP=LIFT_DISTANCE_FALL;
-				if(chassis_pitch>(8+Gyro_Data.acc[0]*4.0f/200)&&tilt_change_count<0xFFFE)	//触发阈值	为7时有意外触发现象
+				if(chassis_pitch>(8)&&tilt_change_count<0xFFFE)	//触发阈值	为7时有意外触发现象			+Gyro_Data.acc[0]*4.0f/200云台不水平影响较大
 				{
 					tilt_change_count++;
 				}
-				else if((chassis_pitch<(-8+Gyro_Data.acc[0]*4.0f/200)&&tilt_change_count<0xFFFE))
+				else if((chassis_pitch<(-8)&&tilt_change_count<0xFFFE))		//+Gyro_Data.acc[0]*4.0f/200
 				{
 					tilt_change_count++;
 				}
