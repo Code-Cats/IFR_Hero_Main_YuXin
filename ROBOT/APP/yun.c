@@ -41,6 +41,7 @@ void Yun_Task(void)	//云台控制任务
 
 u8 Yun_WorkState_Turn180_statu=0;	//180旋转到位标志位，放在了上面
 u8 Yun_Control_RCorPC=RC_CONTROL;
+u8 yun_control_pcorrc_last=RC_CONTROL;	//记录上一次控制模式，便于在切换时对某些数据进行处理	//这里时架构问题，更改架构可以不用该变量
 void Yun_Control_External_Solution(void)	//外置反馈方案
 {
 	if(GetWorkState()!=PREPARE_STATE&&GetWorkState()!=CALI_STATE)	//模式切换
@@ -69,6 +70,7 @@ void Yun_Control_External_Solution(void)	//外置反馈方案
 		}
 	}
 	
+	yun_control_pcorrc_last=Yun_Control_RCorPC;
 	
 	if(GetWorkState()==ASCEND_STATE||GetWorkState()==DESCEND_STATE)	//登岛姿态调整 当自校正状态时利用底盘跟随，其他主动矫正状态进行云台归位
 	{
@@ -154,7 +156,12 @@ void PC_Control_Yun(float * yaw_tarp,float * pitch_tarp)	//1000Hz
 	static float pitch_tarp_float=PITCH_INIT;
 	static u8 start_state=0;	//初始位置
 
-	if(start_state==0)
+	if(yun_control_pcorrc_last==RC_CONTROL&&Yun_Control_RCorPC==PC_CONTROL)
+	{
+		yaw_tarp_float=(float)*yaw_tarp;
+	}
+	
+	if(start_state==0)	//初始时记录
 	{
 		yaw_tarp_float=(float)*yaw_tarp;
 		start_state=1;

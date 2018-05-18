@@ -253,11 +253,12 @@ void Remote_Task(void)
 	
 	
 	
-//////////	if(RC_Ctl.rc.switch_left==RC_SWITCH_DOWN&&GetWorkState()!=ASCEND_STATE&&GetWorkState()!=TAKEBULLET_STATE)	//云台中心转向	//在自动取弹时不生效
-//////////	{	//等到CTRL写好了开启
-//////////		float chassis_vw_record=Chassis_Vw;
-//////////		Chassis_Vy-=(s16)(chassis_vw_record/1.7f);	//2
-//////////	}
+	if(GetWorkState()==WAIST_STATE&&KeyBoardData[KEY_CTRL].value==1	)	//云台中心转向	//仅在扭腰时生效
+	{	//等到CTRL写好了开启
+		float chassis_vw_record=Chassis_Vw;
+		Chassis_Vy-=(s16)(chassis_vw_record/1.7f);	//2
+		Chassis_Vx+=21;	//对后退的补偿	//每次调节轮压需要重新调节		//思考？加在这里还是上面扭腰前进补偿之前合适
+	}
 
 				
 	chassis_Data.lf_wheel_tarV=(Chassis_Vx+Chassis_Vy+Chassis_Vw)*K_SPEED;
