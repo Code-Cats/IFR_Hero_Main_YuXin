@@ -67,6 +67,7 @@ typedef struct
 {
 	s16 count;
 	s16 count_fdb;
+	u32 last_time;	//上一次射击时间，以此可以限制射频
 	u16 cycle;
 	u16 frequency;
 	float motor_tarP;
@@ -127,5 +128,6 @@ void Prevent_Jam_Up(SHOOT_DATA * shoot_data,SHOOT_MOTOR_DATA * shoot_motor_Data)
 void Shoot_Frequency_Limit(int* ferquency,u16 rate,u16 heat);	//m/s为单位
 
 u8 Shoot_Heat_Limit(u16 heating,u8 level);	//限制热量
+u8 Shoot_Heat_Lost_Fre_Limit(void);	//裁判lost情况对射频的限制，反返回1是OK
 
 #endif

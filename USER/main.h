@@ -26,6 +26,7 @@
 #include "auto_takebullet.h"
 #include "image_control.h"
 #include "replenish_bullet.h"
+#include "judge_analysis.h"
 
 #include "mpu6050IIC.h"
 #include "mpu6050_it.h"

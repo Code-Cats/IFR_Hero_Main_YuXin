@@ -19,6 +19,8 @@ extern u8 auto_takebullet_statu;	//自动取弹标志位，此处用来自动拨弹
 
 extern KeyBoardTypeDef KeyBoardData[KEY_NUMS];
 
+extern tGameRobotState         testGameRobotState;      //比赛机器人状态
+
 u8 Friction_State=0;	//初始化不开启
 //const u16 FRICTION_INIT=800;
 u16 FRICTION_SHOOT=1845;	//发弹的PWM
@@ -103,10 +105,12 @@ void Shoot_Instruction(void)	//发弹指令模块
 	if(GetWorkState()!=TAKEBULLET_STATE&&auto_takebullet_statu_last==1&&auto_takebullet_statu==0)	//取完弹自动拨下3颗	//提前退出取弹模式
 	{
 		shoot_Data_Up.count+=3;
+		shoot_Data_Up.last_time=time_1ms_count;	//记录
 	}
 	if(State_Record==TAKEBULLET_STATE&&GetWorkState()!=TAKEBULLET_STATE&&auto_takebullet_statu==0)	//正常退出取弹模式
 	{
 		shoot_Data_Up.count+=3;
+		shoot_Data_Up.last_time=time_1ms_count;	//记录
 	}
 	
 	if((auto_takebullet_statu_last==0&&auto_takebullet_statu==1)||KeyBoardData[KEY_R].value==1)	//开摩擦轮
@@ -130,12 +134,14 @@ void RC_Control_Shoot(u8* fri_state)
 	static u8 swicth_Last_state=0;	//右拨杆
 	if(Shoot_RC_Control_State==1)
 	{
-		if(Shoot_Heat_Limit(testPowerHeatData.shooterHeat1,1)==1&&*fri_state==1)	//热量限制
+		if(Shoot_Heat_Limit(testPowerHeatData.shooterHeat1,testGameRobotState.robotLevel)==1&&Shoot_Heat_Lost_Fre_Limit()==1&&*fri_state==1)	//热量限制
 		{
 			if(RC_Ctl.rc.switch_left==RC_SWITCH_UP&&swicth_Last_state==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_DOWN)
 			{
-				shoot_Data_Down.count+=3;
-				shoot_Data_Up.count+=3;
+				shoot_Data_Down.count+=2;
+				shoot_Data_Up.count+=2;
+				shoot_Data_Up.last_time=time_1ms_count;	//记录
+				shoot_Data_Down.last_time=time_1ms_count;
 			}
 
 		}
@@ -160,12 +166,14 @@ void PC_Control_Shoot(u8* fri_state)
 	}
 	
 	
-	if(Shoot_Heat_Limit(testPowerHeatData.shooterHeat1,1)==1&&*fri_state==1)	//热量限制
+	if(Shoot_Heat_Limit(testPowerHeatData.shooterHeat1,testGameRobotState.robotLevel)==1&&Shoot_Heat_Lost_Fre_Limit()==1&&*fri_state==1)	//热量限制
 	{
 		if(RC_Ctl.mouse.press_l==1&&last_mouse_press_l==0)	//shoot_Motor_Data.tarP-shoot_Motor_Data.fdbP	//待加入
 		{
 			shoot_Data_Down.count++;
 			shoot_Data_Up.count++;
+			shoot_Data_Up.last_time=time_1ms_count;	//记录
+			shoot_Data_Down.last_time=time_1ms_count;
 		}
 	}
 	
@@ -259,7 +267,7 @@ void Shoot_Frequency_Limit(int* ferquency,u16 rate,u16 heat)	//m/s为单位
 
 u8 Shoot_Heat_Limit(u16 heating,u8 level)
 {
-	if(80*pow(2,level-1)-heating>40)	//testPowerHeatData.shooterHeat1
+	if(80*pow(2,level-1)-heating>42)	//testPowerHeatData.shooterHeat1
 	{
 		return 1;
 	}
@@ -269,6 +277,22 @@ u8 Shoot_Heat_Limit(u16 heating,u8 level)
 	}
 }
 
+u8 Shoot_Heat_Lost_Fre_Limit(void)	//裁判lost情况对射频的限制，反返回1是OK
+{
+	u8 limit_state=0;
+	if(Error_Check.statu[LOST_REFEREE]==1)	//裁判lost
+	{
+		if(time_1ms_count-shoot_Data_Down.last_time>1000)	//大于1s
+		{
+			limit_state=1;
+		}
+	}
+	else
+	{
+		limit_state=1;
+	}
+	return limit_state;
+}
 
 void Shoot_Speed_Adjust(u16 * pwm , u16 speed_fdb)	//射速闭环
 {

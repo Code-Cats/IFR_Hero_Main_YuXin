@@ -703,6 +703,11 @@
               <FileType>1</FileType>
               <FilePath>..\ROBOT\ANALYSIS\viceboard_analysis.c</FilePath>
             </File>
+            <File>
+              <FileName>judge_analysis.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ROBOT\ANALYSIS\judge_analysis.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

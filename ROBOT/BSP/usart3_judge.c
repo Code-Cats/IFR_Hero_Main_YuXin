@@ -1,34 +1,40 @@
 #include "usart3_judge.h"
 
+extern int realBulletNum;
 static uint8_t   _USART3_DMA_RX_BUF[2][BSP_USART3_DMA_RX_BUF_LEN];
-u8              JudgeSendBuff[21];
-char            this_dma_type=0;
+uint8_t  testbuff[100]={0};
+uint8_t d;
+uint8_t g_guiding_lights=0;
+u8              JudgeSendBuff[22];
 uint16_t        testcmdId;
+uint16_t        testcmdIdCnt;
+uint16_t        recordData;
 JUDGEMENT_DATA judgementData={0};
 tFrameHeader            testFrameHeader;
 tGameRobotState         testGameRobotState;      //比赛机器人状态
 tRobotHurt              testRobotHurt;          //机器人伤害数据
 tShootData              testShootData;          //实时射击数据
-tPowerHeatData 				  testPowerHeatData;      //实时功率热量数据
+tPowerHeatData 		    testPowerHeatData;      //实时功率热量数据
 tRfidDetect             testRfidDetect;          //场地交互数据
 tGameResult             testGameResult;          //比赛胜负数据
 tGetBuff                testGetBuff;             //Buff获取数据
 tGameRobotPos           testGameRobotPos;        //机器人位置朝向信息
 tShowData               testShowData;            //自定义数据
 JudgementSendData       testJudgementSendData=JUDGEMENTSENDDATA_DEFAULT;
+char            this_dma_type=0;
 void USART3_Configuration(uint32_t baud_rate)
 {
 
     GPIO_InitTypeDef gpio;
-	  USART_InitTypeDef usart;
-	  NVIC_InitTypeDef nvic;
+	USART_InitTypeDef usart;
+	NVIC_InitTypeDef nvic;
     DMA_InitTypeDef dma;
     
-    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE); 
-    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA1, ENABLE); //启动DMA时钟 
-		RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);// 打开串口对应的外设时钟 
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);  //使能USART3，GPIOB时钟
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA1, ENABLE);   //使能DMA传输
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE); //使能USART3时钟
 	
-	
+	USART_DeInit(USART3);//复位串口3
     
     GPIO_PinAFConfig(GPIOB,GPIO_PinSource10,GPIO_AF_USART3);
     GPIO_PinAFConfig(GPIOB,GPIO_PinSource11,GPIO_AF_USART3); 
@@ -40,60 +46,53 @@ void USART3_Configuration(uint32_t baud_rate)
     gpio.GPIO_PuPd = GPIO_PuPd_NOPULL;
     GPIO_Init(GPIOB,&gpio);
     
-    USART_DeInit(USART3);
-    USART_StructInit(&usart);
-    usart.USART_BaudRate = baud_rate;
-    usart.USART_WordLength = USART_WordLength_8b;
-    usart.USART_StopBits = USART_StopBits_1;
-    usart.USART_Parity = USART_Parity_No;
-    usart.USART_Mode = USART_Mode_Tx|USART_Mode_Rx;
-    usart.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-    USART_Init(USART3, &usart);
-		
-		USART_DMACmd(USART3, USART_DMAReq_Rx, ENABLE);
-		
-		USART_ITConfig(USART3, USART_IT_IDLE, ENABLE);        //usart rx idle interrupt  enabled
-    USART_Cmd(USART3, ENABLE);
-		
-		nvic.NVIC_IRQChannel = USART3_IRQn;
+	nvic.NVIC_IRQChannel = USART3_IRQn;
     nvic.NVIC_IRQChannelPreemptionPriority = 2;
     nvic.NVIC_IRQChannelSubPriority = 1;
     nvic.NVIC_IRQChannelCmd = ENABLE; 
     NVIC_Init(&nvic);
+    
+    USART_StructInit(&usart);
+    usart.USART_BaudRate = baud_rate;
+    usart.USART_WordLength = USART_WordLength_8b; //字长为8位数据格式
+    usart.USART_StopBits = USART_StopBits_1;  //一个停止位
+    usart.USART_Parity = USART_Parity_No;   //无奇偶校验位
+    usart.USART_Mode = USART_Mode_Tx|USART_Mode_Rx;  //收发模式
+    usart.USART_HardwareFlowControl = USART_HardwareFlowControl_None;  //无硬件数据流控制
 		
-	  DMA_DeInit(DMA1_Stream1);
-    DMA_StructInit(&dma);
+    USART_Init(USART3, &usart);  //初始化串口3
+	USART_ITConfig(USART3, USART_IT_IDLE, ENABLE);        //开启空闲中断
+	USART_DMACmd(USART3, USART_DMAReq_Rx, ENABLE);   //使能串口1 DMA接收
+	USART_Cmd(USART3, ENABLE);                 //使能串口 
+		
+		//相应的DMA配置
+	DMA_DeInit(DMA1_Stream1);
+   // DMA_StructInit(&dma);
     dma.DMA_Channel = DMA_Channel_4;
-    dma.DMA_PeripheralBaseAddr = (uint32_t)(&USART3->DR); //外设地址 
-    dma.DMA_Memory0BaseAddr = (uint32_t)&_USART3_DMA_RX_BUF[0][0]; //内存地址
-    dma.DMA_DIR = DMA_DIR_PeripheralToMemory;//dma传输方向单向 
-    dma.DMA_BufferSize = 100;   //没用 //设置DMA在传输时缓冲区的长度
-	 //dma.DMA_BufferSize = BSP_USART3_DMA_RX_BUF_LEN;
-    dma.DMA_PeripheralInc = DMA_PeripheralInc_Disable;  //设置DMA的外设递增模式，一个外设
-    dma.DMA_MemoryInc = DMA_MemoryInc_Enable;//设置DMA的内存递增模式
-    dma.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte; //外设数据字长
-    dma.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte; //外设数据字长
-    dma.DMA_Mode = DMA_Mode_Normal;   //设置DMA的传输模式  
-    dma.DMA_Priority = DMA_Priority_VeryHigh;  //设置DMA的优先级别
-    dma.DMA_FIFOMode = DMA_FIFOMode_Disable;
+    dma.DMA_PeripheralBaseAddr = (uint32_t)(&USART3->DR);  //DMA外设ADC基地址
+    dma.DMA_Memory0BaseAddr = (uint32_t)&_USART3_DMA_RX_BUF[0][0]; //DMA内存基地址
+    dma.DMA_DIR = DMA_DIR_PeripheralToMemory;
+    dma.DMA_BufferSize = BSP_USART3_DMA_RX_BUF_LEN;
+    dma.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+    dma.DMA_MemoryInc = DMA_MemoryInc_Enable;
+    dma.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
+    dma.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+    dma.DMA_Mode = DMA_Mode_Normal;      //工作在正常缓存模式
+    dma.DMA_Priority = DMA_Priority_Medium;   //DMA通道 x拥有中优先级 
+    dma.DMA_FIFOMode = DMA_FIFOMode_Disable;   //DMA通道x没有设置为内存到内存传输
     dma.DMA_FIFOThreshold = DMA_FIFOThreshold_1QuarterFull;
     dma.DMA_MemoryBurst = DMA_MemoryBurst_Single;
     dma.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
     DMA_Init(DMA1_Stream1, &dma);
-		
-		
+				
 		    //配置Memory1,Memory0是第一个使用的Memory
     DMA_DoubleBufferModeConfig(DMA1_Stream1, (uint32_t)&_USART3_DMA_RX_BUF[1][0], DMA_Memory_0);   //first used memory configuration
     DMA_DoubleBufferModeCmd(DMA1_Stream1, ENABLE);
     
-		//DMA_ITConfig(DMA1_Stream1,DMA_IT_TC,ENABLE);
     DMA_Cmd(DMA1_Stream1, ENABLE);
-		
-    
-		
-		
+		   			   
 }
-
+			
 const uint8_t CRC8_INIT = 0xff;
 const uint8_t CRC8_TAB[256] =
 {
@@ -115,9 +114,6 @@ const uint8_t CRC8_TAB[256] =
   0x74, 0x2a, 0xc8, 0x96, 0x15, 0x4b, 0xa9, 0xf7, 0xb6, 0xe8, 0x0a, 0x54, 0xd7, 0x89, 0x6b, 0x35,
 };
 
-
-
-
 /*
 ** Descriptions: CRC8 checksum function
 ** Input: Data to check,Stream length, initialized checksum
@@ -134,7 +130,6 @@ uint8_t Get_CRC8_Check_Sum(uint8_t *pchMessage,uint16_t dwLength,uint8_t ucCRC8)
   return(ucCRC8);
 }
 
-
 /*
 ** Descriptions: CRC8 Verify function
 ** Input: Data to Verify,Stream length = Data + checksum
@@ -148,7 +143,6 @@ uint16_t Verify_CRC8_Check_Sum(uint8_t *pchMessage, uint16_t dwLength)
   return ( ucExpected == pchMessage[dwLength-1] );
 }
 
-
 /*
 ** Descriptions: append CRC8 to the end of data
 ** Input: Data to CRC and append,Stream length = Data + checksum
@@ -161,7 +155,6 @@ void Append_CRC8_Check_Sum(uint8_t *pchMessage, uint16_t dwLength)
   ucCRC = Get_CRC8_Check_Sum ( (uint8_t *)pchMessage, dwLength-1, CRC8_INIT);
   pchMessage[dwLength-1] = ucCRC;
 }
-
 
 /*
 ** Descriptions: CRC16 checksum function
@@ -219,7 +212,6 @@ uint16_t Get_CRC16_Check_Sum(uint8_t *pchMessage,uint32_t dwLength,uint16_t wCRC
   return wCRC;
 }
 
-
 /*
 ** Descriptions: CRC16 Verify function
 ** Input: Data to Verify,Stream length = Data + checksum
@@ -235,7 +227,6 @@ uint32_t Verify_CRC16_Check_Sum(uint8_t *pchMessage, uint32_t dwLength)
   wExpected = Get_CRC16_Check_Sum ( pchMessage, dwLength - 2, CRC_INIT);
   return ((wExpected & 0xff) == pchMessage[dwLength - 2] && ((wExpected >> 8) & 0xff)== pchMessage[dwLength - 1]);
 }
-
 
 /*
 ** Descriptions: append CRC16 to the end of data
@@ -264,7 +255,7 @@ void USART3_IRQHandler(void)
 			if(DMA_GetCurrentMemoryTarget(DMA1_Stream1) == 0)
 		  {
 			   this_dma_type=0;
-				 DMA_Cmd(DMA1_Stream1, DISABLE);
+			   DMA_Cmd(DMA1_Stream1, DISABLE);
 			   this_frame_rx_len = BSP_USART3_DMA_RX_BUF_LEN - DMA_GetCurrDataCounter(DMA1_Stream1);
 			   DMA1_Stream1->NDTR = (uint16_t)BSP_USART3_DMA_RX_BUF_LEN;     //没用relocate the dma memory pointer to the beginning position
 			   DMA1_Stream1->CR |= (uint32_t)(DMA_SxCR_CT);                  //enable the current selected memory is Memory 1
@@ -273,87 +264,107 @@ void USART3_IRQHandler(void)
 		  }
 			else 
 		  {
-					this_dma_type=1;
-					DMA_Cmd(DMA1_Stream1, DISABLE);
-					this_frame_rx_len = BSP_USART3_DMA_RX_BUF_LEN - DMA_GetCurrDataCounter(DMA1_Stream1);
-					DMA1_Stream1->NDTR = (uint16_t)BSP_USART3_DMA_RX_BUF_LEN;      //没用relocate the dma memory pointer to the beginning position
-					DMA1_Stream1->CR &= ~(uint32_t)(DMA_SxCR_CT);                  //enable the current selected memory is Memory 0
-					DMA_Cmd(DMA1_Stream1, ENABLE);
-					judgementDataHandler();
+			   this_dma_type=1;
+			   DMA_Cmd(DMA1_Stream1, DISABLE);
+			   this_frame_rx_len = BSP_USART3_DMA_RX_BUF_LEN - DMA_GetCurrDataCounter(DMA1_Stream1);
+			   DMA1_Stream1->NDTR = (uint16_t)BSP_USART3_DMA_RX_BUF_LEN;      //没用relocate the dma memory pointer to the beginning position
+			   DMA1_Stream1->CR &= ~(uint32_t)(DMA_SxCR_CT);                  //enable the current selected memory is Memory 0
+			   DMA_Cmd(DMA1_Stream1, ENABLE);
+			   judgementDataHandler();
 		  }
 	 }
 
 }
-
-
 void judgementDataHandler(void)
 {
-  uint8_t cnt = 5;
-  memcpy(&testFrameHeader, _USART3_DMA_RX_BUF[this_dma_type],FRAMEHEADER_LEN);
-	LostCountFeed(&Error_Check.count[LOST_REFEREE]);//////////////////////////////
+    uint8_t cnt = 5;
+	
+	LostCountFeed(&Error_Check.count[LOST_REFEREE]);//////////////////////////////////////
+	
+    memcpy(&testFrameHeader, _USART3_DMA_RX_BUF[this_dma_type],FRAMEHEADER_LEN); 
+    memcpy(&testbuff, _USART3_DMA_RX_BUF[this_dma_type],100);
+
 	if(judgementData.flag==0)
 	{
 	  judgementData.flag=1;
 	}
 	
-  if((testFrameHeader.sOF==(uint16_t)SOF_FIXED) \
+    if(testFrameHeader.sOF==(uint16_t)SOF_FIXED\
       &&(1==Verify_CRC8_Check_Sum(_USART3_DMA_RX_BUF[this_dma_type],FRAMEHEADER_LEN)) \
       &&(1==Verify_CRC16_Check_Sum(_USART3_DMA_RX_BUF[this_dma_type], testFrameHeader.dataLenth+9)))
-  {
-    memcpy(&testcmdId, (_USART3_DMA_RX_BUF[this_dma_type]+cnt), sizeof(testcmdId)); 
-     cnt+=2;
-		
-     switch(testcmdId)
      {
-        case GameRobotStateId://比赛机器人状态0x0001
-			  { 
-              memcpy(&testGameRobotState,(_USART3_DMA_RX_BUF[this_dma_type]+cnt),testFrameHeader.dataLenth); 
-				}break;
-        case RobotHurtId://机器人伤害数据0x0002
-			  {
-           memcpy(&testRobotHurt, (_USART3_DMA_RX_BUF[this_dma_type]+cnt), testFrameHeader.dataLenth);
-			  }break;
-        case ShootDataId://实时射击数据0x0003
-			  {		  
-               memcpy(&testShootData, (_USART3_DMA_RX_BUF[this_dma_type]+cnt), testFrameHeader.dataLenth);
-				}break;
-			  case PowerHeatDataId://实时功率热量数据0x0004
-			  {		
-            memcpy(&testPowerHeatData, (_USART3_DMA_RX_BUF[this_dma_type]+cnt), testFrameHeader.dataLenth);		  
-				}break;		  
+		 testcmdIdCnt++;
+		 if(testcmdIdCnt<100) 
+		 {
+		     memcpy(&testcmdId, (_USART3_DMA_RX_BUF[this_dma_type]+cnt), sizeof(testcmdId));  //04
+			 recordData=cnt+2;
 		 }
-  }
+		 else if(testcmdIdCnt==100)
+		 {
+		     memcpy(&testcmdId, (_USART3_DMA_RX_BUF[this_dma_type]+cnt+54), sizeof(testcmdId)); //01
+			 recordData=cnt+54+2;	
+		 }
+		 else
+		 {
+		     testcmdIdCnt=0;
+		 }
+		 
+         switch(testcmdId)
+         {
+              case GameRobotStateId://比赛机器人状态0x0001
+			  { 
+                  memcpy(&testGameRobotState,(_USART3_DMA_RX_BUF[this_dma_type]+recordData),testFrameHeader.dataLenth); 
+			  }break;
+              case RobotHurtId://机器人伤害数据0x0002
+			  {
+                  memcpy(&testRobotHurt, (_USART3_DMA_RX_BUF[this_dma_type]+recordData), testFrameHeader.dataLenth);
+			  }break;
+              case ShootDataId://实时射击数据0x0003
+			  {		  
+                  memcpy(&testShootData, (_USART3_DMA_RX_BUF[this_dma_type]+recordData), testFrameHeader.dataLenth);
+			  }break;
+	          case PowerHeatDataId://实时功率热量数据0x0004
+			  {				
+					RED_LED_ON();
+                    memcpy(&testPowerHeatData, (_USART3_DMA_RX_BUF[this_dma_type]+recordData), testFrameHeader.dataLenth);		  
+			  }break;		  
+	     }
+    }
 	
 }
+
 union var
 {
-  char c[4];
+    char c[4];
 	float f;
 };
+
 union var Data_A;
 union var Data_B;
 union var Data_C;
-void Judgement_DataSend(float a,float b,float c)
+union var Data_D;
+void Judgement_DataSend(float a,float b,float c,uint8_t d)
 {
-	  int i=0;
+	    int i=0;
 		testJudgementSendData.cSeq++;
 		testJudgementSendData.Data_A=a;
 		testJudgementSendData.Data_B=b;
 		testJudgementSendData.Data_C=c;
-		
-		JudgeSendBuff[0]=testJudgementSendData.sOF;
+		testJudgementSendData.Data_D=d;
+	
+		JudgeSendBuff[0]=0x00A5;
 		JudgeSendBuff[1]=testJudgementSendData.dataLenth;
 		JudgeSendBuff[2]=testJudgementSendData.dataLenth>>8;
 		JudgeSendBuff[3]=testJudgementSendData.cRC8;
 		Append_CRC8_Check_Sum(JudgeSendBuff,5);
-//		JudgeSendBuff[5]=StudentSend;
+		JudgeSendBuff[5]=StudentSend;
 		JudgeSendBuff[6]=StudentSend>>8;
 		
 		Data_A.f=testJudgementSendData.Data_A;	
-		JudgeSendBuff[7]=Data_A.c[0];
-		JudgeSendBuff[8]=Data_A.c[1];
-		JudgeSendBuff[9]=Data_A.c[2];
-		JudgeSendBuff[10]=Data_A.c[3];
+		JudgeSendBuff[7]=Data_A.c[0];;
+		JudgeSendBuff[8]=Data_A.c[1];;
+		JudgeSendBuff[9]=Data_A.c[2];;
+		JudgeSendBuff[10]=Data_A.c[3];;
 
 		Data_B.f=testJudgementSendData.Data_B;			
 		JudgeSendBuff[11]=Data_B.c[0];
@@ -367,54 +378,21 @@ void Judgement_DataSend(float a,float b,float c)
 		JudgeSendBuff[17]=Data_C.c[2];
 		JudgeSendBuff[18]=Data_C.c[3];
 		
-		Append_CRC16_Check_Sum(JudgeSendBuff,21);
-		for(i=0;i<21;i++)
+		Data_D.f=testJudgementSendData.Data_D;	
+		JudgeSendBuff[19]=d;
+		Append_CRC16_Check_Sum(JudgeSendBuff,22);
+		for(i=0;i<22;i++)
 		{
-    USART_SendData(USART3, (uint8_t)JudgeSendBuff[i]);
-		while (USART_GetFlagStatus(USART3,USART_FLAG_TC) == RESET);			
+       USART_SendData(USART3, (uint8_t)JudgeSendBuff[i]);
+		   while (USART_GetFlagStatus(USART3,USART_FLAG_TC) == RESET);			
 		}
 }
 
-void Judagement_Send_Change_hero(float *a,float *b,float *c)
+u8 Guiding_Lights_Data=0;	//指示灯
+uint8_t Judagement_Send_Guiding_lights(u8 stateA, u8 stateB, u8 stateC, u8 stateD, u8 stateE, u8 stateF)
 {
-//		char color=testStudentPropInfo.RobotColor;	
-//		//获取弹量，数值a不做任何操作,
-//		if(color==0)//该机器人为红
-//		{
-//		//基地无敌状态	
-//		if(testStudentPropInfo.BlueBaseSta==0x01)*a=1000.001;
-//		else 	*a=1111.111;
-//		//恢复立柱状态
-//		if(testStudentPropInfo.BlueAirPortSta==0x02)*b=1999.001;
-//		else if(testStudentPropInfo.BlueAirPortSta==0x03)*b=1999.991;
-//		else 	*b=1000.001;
-//		//大神符状态	
-//		if((testStudentPropInfo.No0BigRuneSta==0x03)||(testStudentPropInfo.No1BigRuneSta==0x03))*c=1555.001;
-//		else if((testStudentPropInfo.No0BigRuneSta==0x05)||(testStudentPropInfo.No1BigRuneSta==0x05))*c=1555.551;
-//		else 	*c=1000.001;		
-//		}
-//		else if(color==1)//该机器人为蓝
-//		{
-//		if(testStudentPropInfo.RedBaseSta==0x01)*a=1000.001;
-//		else 	*a=1111.111;
-//		//神符立柱状态
-//		if(testStudentPropInfo.RedAirPortSta==0x02)*b=1999.001;
-//		else if(testStudentPropInfo.RedAirPortSta==0x03)*b=1999.991;
-//		else 	*b=1000.001;
-//		//大神符状态	
-//		if((testStudentPropInfo.No0BigRuneSta==0x02)||(testStudentPropInfo.No1BigRuneSta==0x02))*c=1555.001;
-//		else if((testStudentPropInfo.No0BigRuneSta==0x04)||(testStudentPropInfo.No1BigRuneSta==0x04))*c=1555.551;
-//		else 	*c=1000.001;		
-//		}
-//		else//获取数据失败
-//		{
-//		*a=0;
-//		*b=0;
-//		*c=0;	
-//		}
-		*a=1.00;
-		*b=2.00;
-		*c=3.00;	
-
+    static uint8_t output=0;
+    output=stateA|(stateB<<1)|(stateC<<2)|(stateD<<3)|(stateE<<4)|(stateF<<5);
+    return output;
 }
 

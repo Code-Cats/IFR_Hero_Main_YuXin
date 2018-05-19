@@ -159,6 +159,7 @@ void Remote_Task(void)
 	if(chassis_follow_statu_last!=Chassis_Follow_Statu)
 	{
 		Chassis_Vw=0;	//·ÀÖ¹Vw²ĞÁôµÄÎÊÌâ
+		Chassis_Control_RCorPC=RC_CONTROL;
 	}
 	
 	chassis_follow_statu_last=Chassis_Follow_Statu;
@@ -444,6 +445,7 @@ s16 chassis_Vw_filter(s16 now_V)
 	return now_acc_V;
 }
 
+extern Error_check_t Error_Check;
 #define POWERLIMIT 120 	//120w¹¦ÂÊÏŞÖÆ
 #define POWERBUFFER 60	//60J¹¦ÂÊ»º³å
 float Limit_Power(float power,float powerbuffer)	//Ó¢ĞÛ120JÈÈÁ¿ÏŞÖÆ£¬Ö±½ÓÏŞÖÆ×ÜÊä³ö
@@ -456,6 +458,12 @@ float Limit_Power(float power,float powerbuffer)	//Ó¢ĞÛ120JÈÈÁ¿ÏŞÖÆ£¬Ö±½ÓÏŞÖÆ×ÜÊ
 		limit_k=limit_k<0.1f?0.1f:limit_k;
 //	}
 //	limit_k=0.9;	//È¡Ïû¹¦ÂÊÏŞÖÆ£¬ÆÁ±ÎºóÈ¡Ïû
+	
+	if(Error_Check.statu[LOST_REFEREE]==1)	//²ÃÅĞlost
+	{
+		limit_k=0.8;
+	}
+	
 	return limit_k;
 }
 

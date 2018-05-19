@@ -19,18 +19,26 @@ extern ViceControlDataTypeDef ViceControlData;
 #define IMAGE_START_DELAY	(1000*5)	//5s后开始
 void Screen_Start(void)	//屏幕启动切换到AV信道
 {
-	if(time_1ms_count<IMAGE_START_DELAY)	//5s后开始
+	if(KeyBoardData[KEY_G].value!=1)
 	{
-		IMAGE_START=PWM_IO_ON;
-	}
-	else if(time_1ms_count>IMAGE_START_DELAY&&time_1ms_count<IMAGE_START_DELAY+1000)
-	{
-		IMAGE_START=PWM_IO_OFF;
+		if(time_1ms_count<IMAGE_START_DELAY)	//5s后开始
+		{
+			IMAGE_START=PWM_IO_ON;
+		}
+		else if(time_1ms_count>IMAGE_START_DELAY&&time_1ms_count<IMAGE_START_DELAY+1000)
+		{
+			IMAGE_START=PWM_IO_OFF;
+		}
+		else
+		{
+			IMAGE_START=PWM_IO_ON;
+		}
 	}
 	else
 	{
-		IMAGE_START=PWM_IO_ON;
+		IMAGE_START=PWM_IO_OFF;
 	}
+		
 
 }
 

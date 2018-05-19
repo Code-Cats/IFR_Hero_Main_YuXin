@@ -1,7 +1,9 @@
 #ifndef __BSP_H__
 #define __BSP_H__
 
-#include "main.h"
+#include "common_definition.h"
+
+
 #include "can1.h"
 #include "can2.h"
 #include "pwm.h"
@@ -18,6 +20,8 @@
 #include "imu_data_decode.h"
 #include "packet.h"
 #include "dma_uart4.h"
+
+#include "main.h"
 
 void BSP_Init(void);
 

@@ -37,6 +37,8 @@ extern s16 Chassis_Vw;
 extern u8 cali_state_Entirety_PID;
 extern u8 Replenish_Bullet_Statu;
 
+extern u8 Judge_Send_Statu;	//刷新标志位
+
 s16 lift_tem=0;
 s16 LIFT_tarP=0;
 
@@ -54,13 +56,24 @@ if(time_1ms_count%1000==0)
 	t_up_sm_recorf=t_up_sm_count_1s;
 	t_up_sm_count_1s=0;
 }
+
+if(time_1ms_count%100==0)
+{
+	Judge_Send_Statu=1;
+}
+
+
+	BulletNum_Calculate();
+
 	Lift_Time_Gauge(&t_lift_time_start);
 	
 	Check_Task();
+
+	KeyboardRetset();	//对战场发生意外情况时，进行复位处理		CTRL SHIFT Z X按下	C V为0
 	#ifdef USART6_WIFIDEBUG
 	if(time_1ms_count%50==0)
 	{
-		Debug_Send_OSC();
+//		Debug_Send_OSC();
 	}
 	#endif
 //	Vw_tem=Chassis_Attitude_Correct(Chassis_GYRO[2],Gyro_Data.angvel[2]+2);
@@ -127,9 +140,10 @@ if(time_1ms_count%1000==0)
 			Yun_Task();	//开启云台处理
 			Remote_Task();	//执行移动
 			AutoChassisAttitude_Lift_V2(Chassis_GYRO[PITCH]);	//再内部加模式限制和键位处理
+			TakeBullet_Control_Center();	//取弹控制中心
 			Lift_Task();	//开启升降
 			Shoot_Task();
-			TakeBullet_Control_Center();	//取弹控制中心
+			
 			break;
 		}
 		case WAIST_STATE:
@@ -304,6 +318,10 @@ void Work_State_Change(void)
 		}
 		case ERROR_STATE:	//错误模式
 		{
+			if(RC_Ctl.key.v_h!=0||RC_Ctl.key.v_l!=0||abs(RC_Ctl.mouse.x)>3)	//退出该模式
+			{
+				SetWorkState(NORMAL_STATE);
+			}
 			break;
 		}
 		case LOST_STATE:	//错误模式
@@ -336,10 +354,18 @@ void Work_State_Change(void)
 		}
 		case PROTECT_STATE:	//自我保护模式
 		{
-			if(Error_Check.statu[LOST_DBUS]==0||abs(RC_Ctl.rc.ch0+RC_Ctl.rc.ch1+RC_Ctl.rc.ch2+RC_Ctl.rc.ch3-1024*4)>8)
+			static u32 time_count=0;
+			time_count++;
+			if(Error_Check.statu[LOST_DBUS]==0&&abs(RC_Ctl.rc.ch0+RC_Ctl.rc.ch1+RC_Ctl.rc.ch2+RC_Ctl.rc.ch3-1024*4)>8)
 			{
 				yunMotorData.yaw_tarP=(Gyro_Data.angle[2]*10+(YAW_INIT-yunMotorData.yaw_fdbP)*3600/8192);	//重置云台目标位置
 				SetWorkState(NORMAL_STATE);
+				time_count=0;
+			}
+			
+			if(Error_Check.statu[LOST_DBUS]==0&&time_count>8000)	//有反馈认为无法恢复
+			{
+				NVIC_SystemReset();
 			}
 			break;
 		}
@@ -1055,6 +1081,24 @@ void Lift_Time_Gauge(u8 *trigger)	//升降时间自测量
 }
 
 
+void KeyboardRetset(void)	//如果战场发生意外，就进行复位处理
+{
+	if(KeyBoardData[KEY_CTRL].value==1&&KeyBoardData[KEY_SHIFT].value==1&&KeyBoardData[KEY_Z].value==0&&KeyBoardData[KEY_X].value==0&&KeyBoardData[KEY_C].value==1&&KeyBoardData[KEY_V].value==1)	//后面的是防止初始化时全部为0
+	{
+		NVIC_SystemReset();
+	}
+}
+
+void Data_Init(void)	//内核复位后数据重置
+{
+	RC_Ctl.rc.ch0=1024;
+	RC_Ctl.rc.ch1=1024;
+	RC_Ctl.rc.ch2=1024;
+	RC_Ctl.rc.ch3=1024;
+	RC_Ctl.rc.switch_left=3;
+	RC_Ctl.rc.switch_right=3;
+	time_1ms_count=0;
+}
 
 void RC_Calibration(void)	//上电检测遥控器接收值并与默认参数比较，判断是否正常，否则软复位
 {													//注：必须放在遥控器接收初始化后

@@ -13,7 +13,7 @@ extern KeyBoardTypeDef KeyBoardData[KEY_NUMS];
 extern RC_Ctl_t RC_Ctl;
 extern ViceControlDataTypeDef ViceControlData;
 extern PID_GENERAL PID_Chassis_Speed[4];
-
+extern u8 Replenish_Bullet_Statu;	//补弹模式特殊舵机状态
 
 #define STEER_UP_L_INIT 560//
 #define STEER_UP_R_INIT 2500//1950	//
@@ -70,12 +70,12 @@ void TakeBullet_Control_Center(void)
 ////		}
 		if(GetWorkState()==TAKEBULLET_STATE&&RC_Ctl.rc.switch_left==RC_SWITCH_DOWN)
 		{
-			if(RC_Ctl.rc.ch3-1024>30&&auto_takebullet_statu==0)
+			if(RC_Ctl.rc.ch3-1024>40&&auto_takebullet_statu==0)
 			{
 				auto_takebullet_statu=1;
 				TakeBulletState=BULLET_ACQUIRE;
 			}
-			else if(RC_Ctl.rc.ch3-1024<-30&&auto_takebullet_statu==0)
+			else if(RC_Ctl.rc.ch3-1024<-40&&auto_takebullet_statu==0)
 			{
 				auto_takebullet_statu=0;
 				TakeBulletState=BULLET_ACQUIRE;
@@ -247,46 +247,56 @@ void TakeBullet_Control_Center(void)
 	
 	
 	//舵机执行块	//电磁阀在副板执行
-	if(ViceControlData.servo[0]==0)
+	if(Replenish_Bullet_Statu!=1)	//非取弹模式
 	{
-		if(pwm_l_t-STEER_UP_L_INIT>0.01f)
+		if(ViceControlData.servo[0]==0)
 		{
-			pwm_l_t-=5;
+			if(pwm_l_t-STEER_UP_L_INIT>0.01f)
+			{
+				pwm_l_t-=5;
+			}
+			else
+			{
+				pwm_l_t=STEER_UP_L_INIT;
+			}
+			
+			if(STEER_UP_R_INIT-pwm_r_t>0.01f)
+			{
+				pwm_r_t+=5;
+			}
+			else
+			{
+				pwm_r_t=STEER_UP_R_INIT;
+			}
 		}
 		else
 		{
-			pwm_l_t=STEER_UP_L_INIT;
+			if(STEER_UP_L_REVERSAL-pwm_l_t>0.01f)
+			{
+				pwm_l_t+=5;
+			}
+			else
+			{
+				pwm_l_t=STEER_UP_L_REVERSAL;
+			}
+			
+			if(pwm_r_t-STEER_UP_R_REVERSAL>0.01f)
+			{
+				pwm_r_t-=5;
+			}
+			else
+			{
+				pwm_r_t=STEER_UP_R_REVERSAL;
+			}
 		}
-		
-		if(STEER_UP_R_INIT-pwm_r_t>0.01f)
-		{
-			pwm_r_t+=5;
-		}
-		else
-		{
-			pwm_r_t=STEER_UP_R_INIT;
-		}
+
 	}
-	else
+	else	//补弹模式舵机
 	{
-		if(STEER_UP_L_REVERSAL-pwm_l_t>0.01f)
-		{
-			pwm_l_t+=5;
-		}
-		else
-		{
-			pwm_l_t=STEER_UP_L_REVERSAL;
-		}
-		
-		if(pwm_r_t-STEER_UP_R_REVERSAL>0.01f)
-		{
-			pwm_r_t-=5;
-		}
-		else
-		{
-			pwm_r_t=STEER_UP_R_REVERSAL;
-		}
+		pwm_l_t=1100;
+		pwm_r_t=2100;
 	}
+	
 	
 	
 	swicth_Last_state=RC_Ctl.rc.switch_right;

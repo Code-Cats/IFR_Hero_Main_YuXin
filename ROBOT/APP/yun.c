@@ -23,6 +23,7 @@ extern  FIRST_ORDER_FILTER   FILTER_MOUSE_YAW;
 extern  FIRST_ORDER_FILTER   FILTER_WAIST_YAW;
 extern  MPU6050_REAL_DATA    MPU6050_Real_Data;
 extern	RC_Ctl_t RC_Ctl;
+extern KeyBoardTypeDef KeyBoardData[KEY_NUMS];
 extern GYRO_DATA Gyro_Data;
 extern IslandAttitudeCorrectState_e IslandAttitude_Correct_State;	//登岛姿态自校正
 extern u8 Chassis_Follow_Statu;	//底盘跟随标志位
@@ -113,6 +114,12 @@ void Yun_Control_External_Solution(void)	//外置反馈方案
 		yunMotorData.yaw_tarV=-PID_General(yunMotorData.yaw_tarP,Gyro_Data.angle[2]*10,&PID_YAW_POSITION);
 	}
 	
+	if(KeyBoardData[KEY_SHIFT].value==1)
+	{
+		Yun_Pitch_Extension(yunMotorData.pitch_tarP);
+	}
+	
+	
 	yunMotorData.pitch_output=PID_General(yunMotorData.pitch_tarV,(-Gyro_Data.angvel[1]/10.0),&PID_PITCH_SPEED);
 	yunMotorData.yaw_output=PID_General(yunMotorData.yaw_tarV,(-Gyro_Data.angvel[2]/10.0),&PID_YAW_SPEED);	//采用外界陀螺仪做反馈
 }
@@ -147,8 +154,11 @@ void RC_Control_Yun(float * yaw_tarp,float * pitch_tarp)	//1000Hz
 }
 
 
-#define YUN_UPMAX 430
-#define YUN_DOWNMAX 430	//偏差量
+#define YUN_UPMAX 660	//正常的活动范围，UP为负
+#define YUN_DOWNMAX 460	//正常的活动范围，DOWN为正
+
+#define YUN_UPMAX_EXTENSION (YUN_UPMAX+200)	//补偿的活动范围，UP为负
+#define YUN_DOWNMAX_EXTENSION (YUN_DOWNMAX+200)	//补偿的活动范围，DOWN为正
 extern KeyBoardTypeDef KeyBoardData[KEY_NUMS];
 void PC_Control_Yun(float * yaw_tarp,float * pitch_tarp)	//1000Hz	
 {
@@ -191,11 +201,47 @@ void PC_Control_Yun(float * yaw_tarp,float * pitch_tarp)	//1000Hz
 		yaw_tarp_float=yaw_tarp_float>1800?yaw_tarp_float-3600:yaw_tarp_float;	//过零点
 		yaw_tarp_float=yaw_tarp_float<-1800?yaw_tarp_float+3600:yaw_tarp_float;	//过零点
 		
-		pitch_tarp_float=pitch_tarp_float>(PITCH_INIT+500)?(PITCH_INIT+500):pitch_tarp_float;	//限制行程
-		pitch_tarp_float=pitch_tarp_float<(PITCH_INIT-650)?(PITCH_INIT-650):pitch_tarp_float;	//限制行程
+		if(KeyBoardData[KEY_SHIFT].value!=1)
+		{
+			pitch_tarp_float=pitch_tarp_float>(PITCH_INIT+YUN_DOWNMAX)?(PITCH_INIT+YUN_DOWNMAX):pitch_tarp_float;	//限制行程
+			pitch_tarp_float=pitch_tarp_float<(PITCH_INIT-YUN_UPMAX)?(PITCH_INIT-YUN_UPMAX):pitch_tarp_float;	//限制行程
+		}
+		else	//shift模式
+		{
+			pitch_tarp_float=pitch_tarp_float>(PITCH_INIT+YUN_DOWNMAX_EXTENSION)?(PITCH_INIT+YUN_DOWNMAX_EXTENSION):pitch_tarp_float;	//限制行程
+			pitch_tarp_float=pitch_tarp_float<(PITCH_INIT-YUN_UPMAX_EXTENSION)?(PITCH_INIT-YUN_UPMAX_EXTENSION):pitch_tarp_float;	//限制行程
+		}
+		
 		
 		*yaw_tarp=yaw_tarp_float;
 		*pitch_tarp=pitch_tarp_float;
+	}
+}
+
+
+extern LIFT_DATA lift_Data;
+/*******************************
+云台电机反馈同陀螺仪：下为正，上为负
+********************************/
+#define PITCH_EXTENSION_UP 550
+#define PITCH_EXTENSION_DOWN	550
+#define PITCH_EXTENSION_TRIGGER_UP	620	//实际活动范围：860
+#define PITCH_EXTENSION_TRIGGER_DOWN	450	//实际活动范围：650
+void Yun_Pitch_Extension(float pitch_tar)	//pitch轴扩展范围
+{
+	if(pitch_tar>PITCH_INIT+PITCH_EXTENSION_TRIGGER_DOWN)	//向下触发,即后腿升起
+	{
+		lift_Data.lf_lift_tarP=LIFT_DISTANCE_FALL;
+		lift_Data.rf_lift_tarP=LIFT_DISTANCE_FALL;
+		lift_Data.lb_lift_tarP=PITCH_EXTENSION_DOWN;
+		lift_Data.rb_lift_tarP=PITCH_EXTENSION_DOWN;
+	}
+	else if(pitch_tar<PITCH_INIT-PITCH_EXTENSION_TRIGGER_UP)	//向上触发
+	{
+		lift_Data.lf_lift_tarP=PITCH_EXTENSION_UP;
+		lift_Data.rf_lift_tarP=PITCH_EXTENSION_UP;
+		lift_Data.lb_lift_tarP=LIFT_DISTANCE_FALL;
+		lift_Data.rb_lift_tarP=LIFT_DISTANCE_FALL;
 	}
 }
 
@@ -203,8 +249,11 @@ void PC_Control_Yun(float * yaw_tarp,float * pitch_tarp)	//1000Hz
 void Yun_WorkState_Turn_Task(void)	//模式切换时云台转向任务	//当转向完成标志位为1时切换到云台跟随底盘
 {
 	static WorkState_e State_Record=CHECK_STATE;
+	static u32 time_start_record=0;
+	
 	if(State_Record!=TAKEBULLET_STATE&&GetWorkState()==TAKEBULLET_STATE)
 	{
+		time_start_record=time_1ms_count;
 		Yun_WorkState_Turn180_statu=0;
 		yunMotorData.yaw_tarP-=1800;
 		yunMotorData.yaw_tarP=yunMotorData.yaw_tarP>1800?yunMotorData.yaw_tarP-3600:yunMotorData.yaw_tarP;	//过零点
@@ -215,7 +264,7 @@ void Yun_WorkState_Turn_Task(void)	//模式切换时云台转向任务	//当转向完成标志位为
 		Yun_WorkState_Turn180_statu=0;
 	}
 	
-	if(abs(yunMotorData.yaw_tarP-Gyro_Data.angle[2]*10)<2)	//2度范围认为到位
+	if(abs(yunMotorData.yaw_tarP-Gyro_Data.angle[2]*10)<2&&time_1ms_count-time_start_record>1500)	//2度范围认为到位
 	{
 		Yun_WorkState_Turn180_statu=1;	//置为1
 	}
@@ -223,7 +272,7 @@ void Yun_WorkState_Turn_Task(void)	//模式切换时云台转向任务	//当转向完成标志位为
 	State_Record=GetWorkState();
 }
 
-float yaw_move_optimize_PC(s16 mouse_x)
+float yaw_move_optimize_PC(s16 mouse_x,s16 mouse_y)	//对鼠标处理
 {
 	return 0;
 }

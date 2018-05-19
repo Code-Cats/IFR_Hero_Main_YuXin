@@ -135,6 +135,8 @@ void Teleconltroller_Data_protect(void);	//遥控器数据自保护
 
 void Lift_Time_Gauge(u8 *trigger);	//升降时间自测量
 
+void KeyboardRetset(void);	//如果战场发生意外，就进行复位处理
+void Data_Init(void);	//内核复位后数据重置
 
 /***********************--标定状态--**********************/
 typedef enum

@@ -13,6 +13,8 @@
 
 Error_check_t Error_Check={LOST_CYCLE,{0},{0}};
 
+u8 Error_check_workstate=1;
+
 s16 t_error_record=0;
 void LostCountAdd(u16* lostcount)
 {
@@ -42,23 +44,29 @@ void Check_Task(void)
 		LostCountCheck(Error_Check.count[i],&Error_Check.statu[i],Error_Check.cycle[i]);
 	}
 	
-	if(Error_Check.statu[LOST_IMU]==1)
-	{
-		test_error_Satrt=1;
-		t_error_record=LOST_IMU;
-		SetWorkState(ERROR_STATE);
-	}
 	
-	for(int i=4;i<LOST_TYPE_NUM-2;i++)	//电机比控更重要
+	if(Error_check_workstate==1)	//工作状态
 	{
-		if(Error_Check.statu[i]==1)
+		if(Error_Check.statu[LOST_IMU]==1)
 		{
-			test_error_Satrt=-1;
-			t_error_record=i;
+			test_error_Satrt=1;
+			t_error_record=LOST_IMU;
 			SetWorkState(ERROR_STATE);
 		}
-			
+		
+		for(int i=4;i<LOST_TYPE_NUM-2;i++)	//电机比控更重要
+		{
+			if(Error_Check.statu[i]==1)
+			{
+				test_error_Satrt=-1;
+				t_error_record=i;
+				SetWorkState(ERROR_STATE);
+			}
+				
+		}
+
 	}
+	
 	
 	if(Error_Check.statu[LOST_DBUS]==1)
 	{
@@ -73,6 +81,10 @@ void Check_Task(void)
 		
 	}
 	
+	if(RC_Ctl.key.v_h!=0||RC_Ctl.key.v_l!=0||abs(RC_Ctl.mouse.x)>3)
+	{
+		Error_check_workstate=0;
+	}
 
 }
 

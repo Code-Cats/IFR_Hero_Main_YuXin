@@ -5,7 +5,7 @@
 
 #include "bsp.h"
 
-#define JUDGEMENTSENDDATA_DEFAULT {0,SOF_FIXED,12,0,0,0,0,0,} 
+#define JUDGEMENTSENDDATA_DEFAULT {0,SOF_FIXED,13,0,0,0,0,0,0} 
 #define  SOF_FIXED                          0xA5    //固定帧头字节
 #define  FRAMEHEADER_SIZE                  0x04      //帧头长度
 #define  FRAMEHEADER_LEN                   0x05    //帧头长度
@@ -122,6 +122,7 @@ typedef __packed struct
   float Data_A; 
 	float Data_B;
 	float Data_C;
+	uint8_t Data_D;
 }JudgementSendData;
 
 typedef struct  __JUDGEMENT_DATA__
@@ -130,9 +131,13 @@ typedef struct  __JUDGEMENT_DATA__
   char shootflag;	
 
 }JUDGEMENT_DATA;
-extern u8 JudgeSendBuff[21];
+
+
+extern u8 JudgeSendBuff[22];
+extern u8 Guiding_Lights_Data;	//指示灯
 void judgementDataHandler(void);
-void Judgement_DataSend(float a,float b,float c);
+void Judgement_DataSend(float a,float b,float c,uint8_t d);
+uint8_t Judagement_Send_Guiding_lights(u8 stateA, u8 stateB, u8 stateC, u8 stateD, u8 stateE, u8 stateF);
 void Judagement_Send_Change_hero(float *a,float *b,float *c);
 extern uint8_t judgementBuf[];
 extern JUDGEMENT_DATA judgementData;
