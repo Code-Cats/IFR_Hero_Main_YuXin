@@ -99,7 +99,7 @@ void Yun_Control_External_Solution(void)	//外置反馈方案
 	}
 
 	
-	yunMotorData.pitch_tarV=-PID_General(yunMotorData.pitch_tarP,(Gyro_Data.angle[0]*8192/360.0f+PITCH_INIT),&PID_PITCH_POSITION);
+	yunMotorData.pitch_tarV=-PID_General(yunMotorData.pitch_tarP,(yunMotorData.pitch_fdbP),&PID_PITCH_POSITION);
 		
 	if(yunMotorData.yaw_tarP-Gyro_Data.angle[2]*10>1800)	//过零点
 	{
