@@ -95,7 +95,7 @@ void Remote_Task(void)
 			case 0:
 			{
 				YAW_INIT=yaw_init_def-WAIST_RANGE;
-				if(abs(YAW_INIT-yunMotorData.yaw_fdbP)<50)
+				if(abs(YAW_INIT-yunMotorData.yaw_fdbP)<55)
 				{
 					turn_flag=1;
 				}
@@ -104,7 +104,7 @@ void Remote_Task(void)
 			case 1:
 			{
 				YAW_INIT=yaw_init_def+WAIST_RANGE;
-				if(abs(YAW_INIT-yunMotorData.yaw_fdbP)<50)
+				if(abs(YAW_INIT-yunMotorData.yaw_fdbP)<55)
 				{
 					turn_flag=0;
 				}
