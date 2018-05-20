@@ -221,10 +221,13 @@ void Remote_Task(void)
 	if(GetWorkState()==NORMAL_STATE&&abs(YAW_INIT-yunMotorData.yaw_fdbP)>200)	//过弯漂移	//发现过弯飘移会影响转向，解决方法1，转向驱动力达到极限触顶导致实际速度比例偏差预期，设置一函数检测任意输出值大于8000时限制整体使比例预期，方法二，减弱Vy
 	{	//智能转向块
 		s16 Vx_record=Chassis_Vx;
+		float yaw_follow_error_deal=0.0;	//5.21加入的优化	防止转向过大直接停顿
 		Chassis_Vx=0;
+		
+		yaw_follow_error_deal=yaw_follow_error*0.8f;	//5.21加入的优化	防止转向过大直接停顿
 //		yaw_follow_error=yaw_follow_error/8192.0f*2*PI;
-		Chassis_Vx+=(s16)(Vx_record*(cos(yaw_follow_error)));
-		Chassis_Vy+=(s16)(Vx_record*(sin(yaw_follow_error))*1);
+		Chassis_Vx+=(s16)(Vx_record*(cos(yaw_follow_error_deal)));	//还原只需将yaw_follow_error_deal换成yaw_follow_error
+		Chassis_Vy+=(s16)(Vx_record*(sin(yaw_follow_error_deal))*1);
 	}
 	
 	
@@ -248,8 +251,8 @@ void Remote_Task(void)
 		yaw_follow_real_error=yaw_follow_real_error/8192.0f*2*PI;
 		Chassis_Vx+=(s16)(Vx_record*(cos(yaw_follow_real_error)));
 		Chassis_Vy+=(s16)(Vx_record*(sin(yaw_follow_real_error))*1);	
-		t_Vy_k=sin(yaw_follow_real_error);
-		t_Vx_k=cos(yaw_follow_real_error);
+//		t_Vy_k=sin(yaw_follow_real_error);
+//		t_Vx_k=cos(yaw_follow_real_error);
 	}
 	
 	

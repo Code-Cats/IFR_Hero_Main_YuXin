@@ -123,7 +123,7 @@ void CAN1_Yun_SendMsg(int16_t motor_205,int16_t motor_206)	//yaw  pitch
     CAN_Transmit(CAN1,&tx_message);
 }
 
-void CAN_Motor6623_calibration(void)
+void CAN_Motor6623_calibration(void)	//6623±ê¶¨
 {
 	  CanTxMsg tx_message;
     tx_message.StdId = 0x3f0;
