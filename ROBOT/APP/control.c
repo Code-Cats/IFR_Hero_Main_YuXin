@@ -4,6 +4,8 @@
 #define ROLL 1
 #define YAW 2
 
+extern u8 IMU_Check_Useless_State;	//陀螺仪失效检测位
+
 WorkState_e workState=PREPARE_STATE;
 
 u16 t_up_sm_count_1s=0;
@@ -69,6 +71,8 @@ if(time_1ms_count%100==0)
 	
 	Check_Task();
 
+	IMU_Check_Useless();	//陀螺仪检测失效
+
 	KeyboardRetset();	//对战场发生意外情况时，进行复位处理		CTRL SHIFT Z X按下	C V为0
 	#ifdef USART6_WIFIDEBUG
 	if(time_1ms_count%50==0)
@@ -114,7 +118,8 @@ if(time_1ms_count%100==0)
 		case PREPARE_STATE:	//预备模式
 		{	//等待车身状态稳定，并设置初值
 			Yun_Task();	//开启底盘
-			if(abs(Gyro_Data.angvel[0])<20&&abs(Gyro_Data.angvel[2])<20&&abs(yunMotorData.pitch_tarP-(Gyro_Data.angle[0]*8192/360.0f+PITCH_INIT))<50)	//云台已就位
+//			if(abs(Gyro_Data.angvel[0])<20&&abs(Gyro_Data.angvel[2])<20&&abs(yunMotorData.pitch_tarP-(Gyro_Data.angle[0]*8192/360.0f+PITCH_INIT))<50)	//云台已就位	//位置环情况下
+			if(abs(Gyro_Data.angvel[0])<20)	//云台已就位，单速度环情况
 			{
 				SetWorkState(CALI_STATE);
 			}
@@ -783,7 +788,10 @@ void Motor_Send(void)
 			Cali_Output_Limit(lift_Data.lb_lift_output,&cali_send[LB]);
 			Cali_Output_Limit(lift_Data.rb_lift_output,&cali_send[RB]);
 //		Entirety_PID(&lift_Data,cali_send);  	//整体PID补偿
-			Lift_Cali_GYRO_Compensate(cali_send);	//陀螺仪补偿.存在问题3.14
+			if(IMU_Check_Useless_State==0)
+			{
+				Lift_Cali_GYRO_Compensate(cali_send);	//陀螺仪补偿.存在问题3.14
+			}
 //			CAN1_Yun_SendMsg(yunMotorData.yaw_output+Yaw_output_offset(yunMotorData.yaw_fdbP),yunMotorData.pitch_output+Pitch_output_offset(yunMotorData.pitch_tarP));	//CAN2-1000	//加入反馈补偿
 			CAN1_Yun_SendMsg(yunMotorData.yaw_output,yunMotorData.pitch_output);	//CAN2-1000	//取消反馈补偿
 //			CAN1_Yun_SendMsg(0,0);
@@ -1049,7 +1057,7 @@ s16 t_cali_gyro_rb=0;
 void Lift_Cali_GYRO_Compensate(float cali_send[4])	//基于陀螺仪的底盘标定输出补偿3.13晚存在问题
 {	//当chassis_pitch>0时前高后低  需要减前两个LF RF，加后两个LB RB
 	//当roll>0时左高右低	需要减左两个LF LB,加右两个RF RB
-	if(cali_state_Entirety_PID==1)
+	if(cali_state_Entirety_PID==1)	
 	{
 		cali_send[LF]+=LIFT_GYRO_CALI_K*(-Chassis_GYRO[PITCH]-Chassis_GYRO[ROLL]);
 		cali_send[RF]+=LIFT_GYRO_CALI_K*(-Chassis_GYRO[PITCH]+Chassis_GYRO[ROLL]);

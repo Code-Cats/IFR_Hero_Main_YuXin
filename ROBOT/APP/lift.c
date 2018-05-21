@@ -6,6 +6,9 @@ extern u32 time_1ms_count;
 
 extern KeyBoardTypeDef KeyBoardData[KEY_NUMS];
 
+/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
+extern u8 IMU_Check_Useless_State;	//陀螺仪失效检测位
+
 #define AUTOCHASSIS_LIFT 12
 void AutoChassisAttitude_Lift(float chassis_pitch_raw)	//自动调整姿态	//pitch正方向为前上	//注意放在lift_task前面
 {
@@ -130,7 +133,7 @@ void AutoChassisAttitude_Lift_V2(float chassis_pitch_raw)	//自动调整姿态	//pitch
 	
 	chassis_pitch=chassis_pitch*(1-ka)+chassis_pitch_raw*ka;
 	
-	if(GetWorkState()==NORMAL_STATE&&KeyBoardData[KEY_CTRL].value==1)	//加入CTRL控制   &&KeyBoardData[KEY_CTRL].value==1		//先不加入以便测试，后期必须加上
+	if(GetWorkState()==NORMAL_STATE&&KeyBoardData[KEY_CTRL].value==1&&IMU_Check_Useless_State==0)	//加入陀螺仪失效处理//加入CTRL控制   &&KeyBoardData[KEY_CTRL].value==1		//先不加入以便测试，后期必须加上
 	{
 		switch(Adjust_Statu)
 		{

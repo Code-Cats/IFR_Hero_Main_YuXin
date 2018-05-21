@@ -105,6 +105,10 @@ typedef struct
 
 
 void Remote_Task(void);
+
+void Chassis_Control_External_Solution(void);	//外置反馈方案
+void Chassis_Control_Inscribe_Solution(void);	//内接反馈方案
+
 void RC_Control_Chassis(void);
 void PC_Control_Chassis(s16 * chassis_vx,s16 * chassis_vy);	//1000Hz
 s16 chassis_Vw_filter(s16 now_V);
