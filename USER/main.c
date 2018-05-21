@@ -17,6 +17,8 @@ extern GYRO_DATA Gyro_Data;
 
 extern u8 auto_takebullet_statu;
 
+extern u8 IMU_Check_Useless_State;
+
 float Judge_Data_Send_A=0.0;
 float Judge_Data_Send_B=0.0;
 float Judge_Data_Send_C=0.0;
@@ -41,10 +43,12 @@ int main(void)
 			 Judge_Data_Send_A=realBulletNum;	//发弹量
 			 Judge_Data_Send_B=(lift_Data.lf_lift_fdbP+lift_Data.rf_lift_fdbP)/2.0;	//前升降
 			 Judge_Data_Send_C=Gyro_Data.angle[YAW];//(lift_Data.lb_lift_fdbP+lift_Data.rb_lift_fdbP)/2.0;	//后升降
-			 Guiding_Lights_Data=Judagement_Send_Guiding_lights(auto_takebullet_statu,0,!Error_Check.statu[LOST_REFEREE],0,0,1);
+			 Guiding_Lights_Data=Judagement_Send_Guiding_lights(auto_takebullet_statu,0,!Error_Check.statu[LOST_REFEREE],0,0,IMU_Check_Useless_State);
 			 Judgement_DataSend(Judge_Data_Send_A,Judge_Data_Send_B,Judge_Data_Send_C,Guiding_Lights_Data);
 		 }
-		 
+		get_raw_acc(Gyro_Data.acc);
+    get_raw_gyo(Gyro_Data.angvel);
+    get_eular(Gyro_Data.angle);
 	 }
 }
 

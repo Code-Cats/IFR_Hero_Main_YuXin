@@ -105,7 +105,7 @@ void IMU_Check_Useless(void)	//мсбщрг╪Л╡Бй╖п╖
 	}
 	else
 	{
-		//IMU_Check_Useless_State=0;	//хон╙мсбщрг╩ж╦╢
+		IMU_Check_Useless_State=0;	//хон╙мсбщрг╩ж╦╢
 		IMU_check_useless_count=0;
 	}
 }

@@ -23,7 +23,7 @@ extern tGameRobotState         testGameRobotState;      //比赛机器人状态
 
 u8 Friction_State=0;	//初始化不开启
 //const u16 FRICTION_INIT=800;
-u16 FRICTION_SHOOT=1845;	//发弹的PWM
+u16 FRICTION_SHOOT=1840;	//发弹的PWM
 u16 Friction_Send=FRICTION_INIT;
 void Shoot_Task(void)	//定时频率：1ms
 { 
