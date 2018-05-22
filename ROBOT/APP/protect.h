@@ -39,17 +39,17 @@ extern Error_check_t Error_Check;
 	17,\
 	4,\
 	10,\
-	1,\
-	1,\
-	1,\
-	1,\
-	1,\
-	1,\
-	1,\
-	1,\
-	1,\
-	1,\
-	1,\
+	2,\
+	2,\
+	2,\
+	2,\
+	2,\
+	2,\
+	2,\
+	2,\
+	2,\
+	2,\
+	2,\
 	3,\
 }
 
@@ -61,5 +61,6 @@ void Check_Task(void);	//control.c
 void IMU_Check_Useless(void);	//Õ”¬›“«ºÏ≤‚ ß–ß
 
 extern Error_check_t Error_Check;
+extern u8 IMU_Check_Useless_State;
 
 #endif

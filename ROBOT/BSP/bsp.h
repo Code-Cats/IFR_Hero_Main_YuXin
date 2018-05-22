@@ -19,7 +19,6 @@
 #include "uart4.h"
 #include "imu_data_decode.h"
 #include "packet.h"
-#include "dma_uart4.h"
 
 #include "main.h"
 

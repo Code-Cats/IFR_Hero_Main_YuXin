@@ -252,7 +252,7 @@ u8 Ascend_FullFall_GO(void)	//¶¼Ì§Æğµ½¶¼Ì§Æğºó	//Í¨¹ı¹Û²ìÊÓÆµµÃÖªÔÚÅö×²Ò»Ë²¼äµ¯º
 				if(time_record==0)	//time_record=0ÒâË¼¼´ÎªµÚÒ»´ÎÖ´ĞĞ
 				{
 					time_record=time_1ms_count;
-					Chassis_Vx=-VX_SPEED_RUSH;
+					Chassis_Vx=-(VX_SPEED_RUSH-50);
 					Chassis_Vw=0;
 				}
 				

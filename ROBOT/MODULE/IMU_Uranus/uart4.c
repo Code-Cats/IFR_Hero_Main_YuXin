@@ -6,7 +6,7 @@
  * @param  void
  * @retval void
  */
- 
+GYRO_DATA Gyro_Data={0};
 void uart4_init(void)
 {
   GPIO_InitTypeDef GPIO_InitStructure; 
