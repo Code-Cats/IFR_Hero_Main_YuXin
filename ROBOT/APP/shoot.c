@@ -20,10 +20,11 @@ extern u8 auto_takebullet_statu;	//自动取弹标志位，此处用来自动拨弹
 extern KeyBoardTypeDef KeyBoardData[KEY_NUMS];
 
 extern tGameRobotState         testGameRobotState;      //比赛机器人状态
+extern u8 Robot_Level;
 
 u8 Friction_State=0;	//初始化不开启
 //const u16 FRICTION_INIT=800;
-u16 FRICTION_SHOOT=1840;	//发弹的PWM
+u16 FRICTION_SHOOT=1840;	//发弹的PWM	在检录处测的射速13米每秒
 u16 Friction_Send=FRICTION_INIT;
 void Shoot_Task(void)	//定时频率：1ms
 { 
@@ -134,7 +135,7 @@ void RC_Control_Shoot(u8* fri_state)
 	static u8 swicth_Last_state=0;	//右拨杆
 	if(Shoot_RC_Control_State==1)
 	{
-		if(Shoot_Heat_Limit(testPowerHeatData.shooterHeat1,testGameRobotState.robotLevel)==1&&Shoot_Heat_Lost_Fre_Limit()==1&&*fri_state==1)	//热量限制
+		if(Shoot_Heat_Limit(testPowerHeatData.shooterHeat1,Robot_Level)==1&&Shoot_Heat_Lost_Fre_Limit()==1&&*fri_state==1)	//热量限制
 		{
 			if(RC_Ctl.rc.switch_left==RC_SWITCH_UP&&swicth_Last_state==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_DOWN)
 			{
@@ -166,7 +167,7 @@ void PC_Control_Shoot(u8* fri_state)
 	}
 	
 	
-	if(Shoot_Heat_Limit(testPowerHeatData.shooterHeat1,testGameRobotState.robotLevel)==1&&Shoot_Heat_Lost_Fre_Limit()==1&&*fri_state==1)	//热量限制
+	if(Shoot_Heat_Limit(testPowerHeatData.shooterHeat1,Robot_Level)==1&&Shoot_Heat_Lost_Fre_Limit()==1&&*fri_state==1)	//热量限制
 	{
 		if(RC_Ctl.mouse.press_l==1&&last_mouse_press_l==0)	//shoot_Motor_Data.tarP-shoot_Motor_Data.fdbP	//待加入
 		{
@@ -200,6 +201,15 @@ void PC_Control_Shoot(u8* fri_state)
 	last_keyX_state=KeyBoardData[KEY_X].value;
 }
 
+
+
+u16 Friction_Adjust_DependOn_Vol(float voltage)
+{
+	static float voltage_deal=0.0;
+	voltage_deal=0.999f+0.001f*voltage;
+	
+	//根据电压得出最优PWM
+}
 
 
 #define G 9.80151f
@@ -265,9 +275,9 @@ void Shoot_Frequency_Limit(int* ferquency,u16 rate,u16 heat)	//m/s为单位
 
 
 
-u8 Shoot_Heat_Limit(u16 heating,u8 level)
+u8 Shoot_Heat_Limit(u16 heating,u8 level)	//还应当限制射频
 {
-	if(80*pow(2,level-1)-heating>42)	//testPowerHeatData.shooterHeat1
+	if((80*pow(2,level-1)-heating>45)&&time_1ms_count-shoot_Data_Down.last_time>210)	//testPowerHeatData.shooterHeat1
 	{
 		return 1;
 	}

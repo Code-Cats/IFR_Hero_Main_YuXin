@@ -4,6 +4,7 @@
 extern LIFT_DATA lift_Data;
 
 extern u8 valve_fdbstate[6];	//假设的电磁阀反馈
+extern u8 Steer_Image_state;
 
 extern ViceControlDataTypeDef ViceControlData;
 AscendState_e AscendState=FULLRISE_GO1;	//登岛状态位
@@ -14,6 +15,7 @@ extern PID_GENERAL PID_Chassis_Speed[4];
 void Ascend_Control_Center(void)	//全自动登岛控制中心
 {
 	ViceControlData.image_cut[0]=1;	//高电平
+	Steer_Image_state=1;
 	for(int i=0;i<4;i++)
 	{
 		PID_Chassis_Speed[i].k_i=CHASSIS_SPEED_PID_I*3;

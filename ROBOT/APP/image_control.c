@@ -70,7 +70,7 @@ void Image_Cut_Task(void)	//摄像头切换、舵机
 		Steer_Image_state=0;
 	}
 	
-	if(GetWorkState()==NORMAL_STATE&&Replenish_Bullet_Statu==0)
+	if(State_Record!=NORMAL_STATE&&GetWorkState()==NORMAL_STATE)
 	{
 		Image_Cut_Screen(IMAGE_CUTLIST_TAKEBULLET);	//低电平
 		Steer_Image_state=0;
@@ -86,12 +86,29 @@ void Image_Cut_Task(void)	//摄像头切换、舵机
 		Image_Cut_Screen(IMAGE_CUTLIST_TAKEBULLET);	//低电平
 		Steer_Image_state=0;
 	}
+	
+	if((State_Record!=ASCEND_STATE&&GetWorkState()==ASCEND_STATE)||(State_Record!=DESCEND_STATE&&GetWorkState()==DESCEND_STATE))	//自动上下岛模式
+	{
+		Image_Cut_Screen(IMAGE_CUTLIST_CHASSIS);	//低电平
+		Steer_Image_state=1;
+	}
+	else if((State_Record==ASCEND_STATE&&GetWorkState()!=ASCEND_STATE)||(State_Record==DESCEND_STATE&&GetWorkState()!=DESCEND_STATE))
+	{
+		Image_Cut_Screen(IMAGE_CUTLIST_CHASSIS);	//低电平
+		Steer_Image_state=0;
+	}
+	
 //	if(key_r_last==0&&KeyBoardData[KEY_R].value==1)
 //	{
 //		ViceControlData.image_cut[0]=0;	//低电平
 //		Steer_Image_state=!Steer_Image_state;
 //		Replenish_Bullet_Statu=Steer_Image_state;
 //	}
+	if(key_c_last==0&&KeyBoardData[KEY_C].value==1)
+	{
+		Steer_Image_state=!Steer_Image_state;
+	}
+	
 	
 	STEER_IMAGE=STEER_IMAGE_INIT-Steer_Image_state*(STEER_IMAGE_INIT-STEER_IMAGE_REVERSAL);
 	

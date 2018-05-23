@@ -9,6 +9,8 @@ extern tGameRobotState         testGameRobotState;      //比赛机器人状态
 描述：根据裁判系统的枪口热量检测频率和冷却值可计算其射速；
       100ms之内可能打出好几发，做相应处理即可计算出射出子弹数目
 ***************************************************/
+u8 Robot_Level=1;
+
 
 int realBulletNum=0;	//发弹量
 int speedCnt=0;
@@ -53,20 +55,24 @@ void Heat_MAX_COOL_calc(int* maxheat,float* coolheat,int maxhp)	//根据步兵最大血
 	{
 		*maxheat=80;
 		*coolheat=20;
+		Robot_Level=1;
 	}
 	else if(maxhp==2500)
 	{
 		*maxheat=160;
 		*coolheat=40;
+		Robot_Level=2;
 	}
 	else if(maxhp==3500)
 	{
 		*maxheat=320;
 		*coolheat=80;
+		Robot_Level=3;
 	}
 	else
 	{
 		*maxheat=80;
 		*coolheat=20;
+		Robot_Level=1;
 	}
 }
