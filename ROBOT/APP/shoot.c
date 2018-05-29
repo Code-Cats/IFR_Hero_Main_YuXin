@@ -24,10 +24,14 @@ extern u8 Robot_Level;
 
 u8 Friction_State=0;	//初始化不开启
 //const u16 FRICTION_INIT=800;
-u16 FRICTION_SHOOT=1840;	//发弹的PWM	在检录处测的射速13米每秒
+u16 FRICTION_SHOOT=1800;	//发弹的PWM	在检录处测的射速13米每秒
 u16 Friction_Send=FRICTION_INIT;
 void Shoot_Task(void)	//定时频率：1ms
 { 
+	if(time_1ms_count%100==0)
+	{
+		FRICTION_SHOOT=Friction_Adjust_DependOn_Vol(testPowerHeatData.chassisVolt);
+	}
 	
 	Shoot_Instruction();
 	shoot_Motor_Data_Down.tarP=(s32)shoot_Data_Down.motor_tarP;
@@ -139,8 +143,8 @@ void RC_Control_Shoot(u8* fri_state)
 		{
 			if(RC_Ctl.rc.switch_left==RC_SWITCH_UP&&swicth_Last_state==RC_SWITCH_MIDDLE&&RC_Ctl.rc.switch_right==RC_SWITCH_DOWN)
 			{
-				shoot_Data_Down.count+=2;
-				shoot_Data_Up.count+=2;
+				shoot_Data_Down.count+=1;
+				shoot_Data_Up.count+=1;
 				shoot_Data_Up.last_time=time_1ms_count;	//记录
 				shoot_Data_Down.last_time=time_1ms_count;
 			}
@@ -202,12 +206,31 @@ void PC_Control_Shoot(u8* fri_state)
 }
 
 
-
-u16 Friction_Adjust_DependOn_Vol(float voltage)
+const float Friction_Set_Record[2][2]={	\
+{21.6f,1866},\
+{24.4f,1838}\
+};	//记录两个电压值端点最优摩擦轮参数，第一个是低，第二个是高
+u16 Friction_Adjust_DependOn_Vol(float voltage)	//运算频率10HZ
 {
-	static float voltage_deal=0.0;
-	voltage_deal=0.999f+0.001f*voltage;
+	u16 pwm_set=800;
+	static float voltage_deal=24.2f;
+	float ratio_vol=0.0;	//记录电压点在总量程比例
+	voltage_deal=0.96f*voltage_deal+0.04f*voltage;
 	
+	ratio_vol=(float)(voltage_deal-Friction_Set_Record[0][0])/(float)(Friction_Set_Record[1][0]-Friction_Set_Record[0][0]);	//待完善
+	pwm_set=(u16)((Friction_Set_Record[1][1]-Friction_Set_Record[0][1])*ratio_vol+Friction_Set_Record[0][1]);
+	
+	if(pwm_set<1820)	pwm_set=1820;
+	if(pwm_set>1865)	pwm_set=1865;
+//	pwm_set=pwm_set<1840?1840:pwm_set;
+//	pwm_set=pwm_set>1865?1865:pwm_set;
+	
+//	if(Error_Check.statu[LOST_REFEREE]==1)	//裁判lost
+//	{
+		pwm_set=1800;//1808;
+//	}
+	
+	return pwm_set;
 	//根据电压得出最优PWM
 }
 
@@ -277,7 +300,7 @@ void Shoot_Frequency_Limit(int* ferquency,u16 rate,u16 heat)	//m/s为单位
 
 u8 Shoot_Heat_Limit(u16 heating,u8 level)	//还应当限制射频
 {
-	if((80*pow(2,level-1)-heating>45)&&time_1ms_count-shoot_Data_Down.last_time>210)	//testPowerHeatData.shooterHeat1
+	if((80*pow(2,level-1)-heating>46)&&time_1ms_count-shoot_Data_Down.last_time>250)	//testPowerHeatData.shooterHeat1
 	{
 		return 1;
 	}

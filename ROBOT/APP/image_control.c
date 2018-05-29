@@ -13,8 +13,8 @@ extern KeyBoardTypeDef KeyBoardData[KEY_NUMS];
 extern RC_Ctl_t RC_Ctl;
 extern ViceControlDataTypeDef ViceControlData;
 
-#define STEER_IMAGE_INIT	1730
-#define STEER_IMAGE_REVERSAL	950
+#define STEER_IMAGE_INIT	1640
+#define STEER_IMAGE_REVERSAL	510
 
 #define IMAGE_START_DELAY	(1000*5)	//5s后开始
 void Screen_Start(void)	//屏幕启动切换到AV信道

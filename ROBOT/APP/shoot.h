@@ -130,4 +130,6 @@ void Shoot_Frequency_Limit(int* ferquency,u16 rate,u16 heat);	//m/s为单位
 u8 Shoot_Heat_Limit(u16 heating,u8 level);	//限制热量
 u8 Shoot_Heat_Lost_Fre_Limit(void);	//裁判lost情况对射频的限制，反返回1是OK
 
+u16 Friction_Adjust_DependOn_Vol(float voltage);	//运算频率10HZ
+
 #endif

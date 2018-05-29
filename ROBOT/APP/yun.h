@@ -4,7 +4,7 @@
 
 #include "main.h"
 
-#define  YAW_INIT_DEFINE 2550//2505//4900//4900
+#define  YAW_INIT_DEFINE 205//2550//2505//4900//4900
 //s32 YAW_INIT=YAW_INIT_DEFINE;
 extern s32 YAW_INIT;
 #define PITCH_INIT          2720// 2900//5900//6000	//2018.3.3	гріЮ6000

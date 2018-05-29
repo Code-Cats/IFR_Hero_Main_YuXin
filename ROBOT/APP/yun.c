@@ -132,7 +132,7 @@ void Yun_Control_External_Solution(void)	//外置反馈方案
 	
 	
 	yunMotorData.pitch_output=PID_General(yunMotorData.pitch_tarV,(-Gyro_Data.angvel[1]/10.0),&PID_PITCH_SPEED);
-	yunMotorData.yaw_output=-PID_General(yunMotorData.yaw_tarV,(-Gyro_Data.angvel[2]/10.0),&PID_YAW_SPEED);	//采用外界陀螺仪做反馈
+	yunMotorData.yaw_output=PID_General(yunMotorData.yaw_tarV,(-Gyro_Data.angvel[2]/10.0),&PID_YAW_SPEED);	//采用外界陀螺仪做反馈
 }
 
 
@@ -280,7 +280,7 @@ void Yun_Control_Inscribe_Solution(void)	//当陀螺仪崩了时单速度反馈方案
 	}
 	
 	yunMotorData.pitch_output=PID_General(yunMotorData.pitch_tarV,(-Gyro_Data.angvel[1]/10.0),&PID_PITCH_SPEED);
-	yunMotorData.yaw_output=-PID_General(yunMotorData.yaw_tarV,(-Gyro_Data.angvel[2]/10.0),&PID_YAW_SPEED);	//采用外界陀螺仪做反馈
+	yunMotorData.yaw_output=PID_General(yunMotorData.yaw_tarV,(-Gyro_Data.angvel[2]/10.0),&PID_YAW_SPEED);	//采用外界陀螺仪做反馈
 }
 
 

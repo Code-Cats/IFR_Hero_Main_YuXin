@@ -319,6 +319,11 @@ void Work_State_Change(void)
 			{
 				SetWorkState(STOP_STATE);
 			}
+			
+			if(RC_Ctl.rc.switch_left==RC_SWITCH_UP)	
+			{
+				SetWorkState(NORMAL_STATE);
+			}
 			break;
 		}
 		case ERROR_STATE:	//错误模式
@@ -873,7 +878,7 @@ void Motor_Send(void)
 			CAN1_Yun_SendMsg(yunMotorData.yaw_output,yunMotorData.pitch_output);	//CAN2-1000	//取消反馈补偿
 			CAN2_Chassis_SendMsg(chassis_Data.lf_wheel_output,chassis_Data.rf_wheel_output,chassis_Data.lb_wheel_output,chassis_Data.rb_wheel_output);
 			CAN1_Lift_SendMsg((s16)lift_Data.lf_lift_output,(s16)lift_Data.rf_lift_output,(s16)lift_Data.lb_lift_output,(s16)lift_Data.rb_lift_output);
-			CAN2_Shoot_SendMsg(0,0);//下拨弹、上拨弹
+			CAN2_Shoot_SendMsg((s16)shoot_Motor_Data_Down.output,(s16)shoot_Motor_Data_Up.output);//下拨弹、上拨弹
 			break;
 		}
 		default:

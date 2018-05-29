@@ -14,7 +14,7 @@
 
 /************行程限制**************/
 #define LIFT_DISTANCE_FALL 30
-#define LIFT_DISTANCE_ISLAND 1100//1170//1200是取弹的
+#define LIFT_DISTANCE_ISLAND 1170//1170//1200是取弹的
 #define LIFT_DISTANCE_LIMIT 1400
 
 
